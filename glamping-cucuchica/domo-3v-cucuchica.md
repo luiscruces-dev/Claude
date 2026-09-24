@@ -245,25 +245,51 @@ Por eso el chequeo de viento de abajo no es opcional.
 huésped cargan sobre la plataforma/deck, no sobre los nodos del domo, y se calculan
 aparte cuando se diseñe esa plataforma.)*
 
-## 6.2 Cargas pendientes de calcular (necesitan un dato de sitio)
+## 6.2 Viento — estimación ilustrativa (⚠ NO reemplaza COVENIN-MINDUR 2003)
 
-Dos cálculos de carga siguen pendientes — no porque falte trabajo, sino porque
-ambos dependen de un valor específico del sitio que **no se debe inventar**:
+No hay velocidad de diseño oficial (mapa de zonificación COVENIN-MINDUR 2003) para
+Tovar todavía, así que este cálculo usa un **valor ilustrativo, elegido a propósito
+"medio agresivo"** a partir de la referencia dada: viento de temporada capaz de
+arrancar árboles (aprox. Beaufort 10–11). Sirve para tener un orden de magnitud y
+saber qué tan en serio hay que tomar el anclaje — **no es un cálculo de código, y no
+sustituye la verificación de un ingeniero estructural con el dato real del sitio.**
 
-- **Viento:** para calcular la presión de viento (y de ahí la fuerza sobre cada nodo
-  de anclaje) hace falta la velocidad básica de diseño para Tovar/Mérida según el
-  mapa de zonificación de COVENIN-MINDUR 2003, o un registro histórico confiable de
-  la zona. Con ese único dato puedo calcular la presión y el reparto de fuerza sobre
-  el domo en minutos — la geometría y las áreas ya están listas.
-- **Sismo:** Mérida está en una región de actividad sísmica real (proximidad a la
-  falla de Boconó). Un domo geodésico es estructuralmente favorable para sismo (poca
-  masa, muy triangulado, múltiples trayectorias de carga), pero el anclaje a la
-  fundación sí debe revisarse. Para esto hace falta el factor de zona sísmica de la
-  norma venezolana (COVENIN 1756) correspondiente a Tovar.
+**Supuesto:** V = 100 km/h (27.78 m/s), como velocidad de ráfaga ilustrativa.
 
-Si tienes esos dos valores (o me autorizas a usar un valor ilustrativo conservador
-solo para tener un orden de magnitud mientras se consigue el dato real), lo calculo
-en la siguiente vuelta.
+| Paso | Cálculo | Resultado |
+|---|---|---|
+| Presión dinámica | q = 0.613 × V² | **473 Pa** (48.2 kgf/m²) |
+| Área de silueta frontal del domo | segmento circular del corte (R=3.045 m, cresta a 2.52 m) | **11.40 m²** |
+| Coeficiente de arrastre (Cd) | valor típico para cúpula de superficie rugosa (membrana) | 0.6 (supuesto) |
+| **Empuje lateral total** | q × Cd × A_frontal | **≈ 3 235 N (330 kgf)** |
+| Coeficiente de succión en la cresta (Cp) | típico de domos, zona de succión máxima | −0.8 (supuesto) |
+| **Succión local máxima** | q × \|Cp\| | **≈ 378 Pa (38.6 kgf/m²)** |
+
+**Lo que esto confirma, incluso como estimación:**
+- El empuje lateral de viento (**330 kgf**) ya es **mayor que el peso propio del domo
+  completo** (278 kgf) a esta velocidad ilustrativa — 1.18×.
+- La succión en la cresta, aplicada sobre el área de piso como referencia gruesa, da
+  **≈1 091 kgf** — casi **4 veces el peso propio**. Aunque este número no es una
+  fuerza neta real (la succión no actúa uniforme sobre toda el área a la vez), confirma
+  que el domo **puede tender a levantarse**, no solo a deslizar.
+- **Conclusión práctica:** los 15 nodos de fundación necesitan un anclaje mecánico
+  positivo (perno de anclaje embebido, no solo apoyo por peso), diseñado para
+  **tensión (arranque/uplift), no solo compresión.** Esto aplica sobre todo a los
+  nodos H5 (los 5 "altos" del zigzag — ver §4), que quedan más expuestos por estar en
+  la cresta del zigzag de la base.
+- Fuerza lateral promedio por nodo: ≈22 kgf. Succión ilustrativa promedio por nodo:
+  ≈73 kgf — este segundo número es el que debería usarse para dimensionar el perno de
+  anclaje, con el factor de seguridad que indique el ingeniero.
+
+## 6.3 Sismo — sigue pendiente
+
+Mérida está en una región de actividad sísmica real (proximidad a la falla de
+Boconó). Un domo geodésico es estructuralmente favorable para sismo (poca masa, muy
+triangulado, múltiples trayectorias de carga), pero el anclaje a la fundación sí debe
+revisarse. Para este cálculo hace falta el factor de zona sísmica de la norma
+venezolana (COVENIN 1756) correspondiente a Tovar — no se estimó todavía porque no se
+pidió un valor ilustrativo para este caso. Se puede hacer con el mismo enfoque que el
+viento en cuanto se tenga (o se acepte) un valor de referencia.
 
 ---
 
@@ -304,10 +330,11 @@ ellos.
 **Cálculo puro — resuelto en este documento:**
 - [x] Peso total de la estructura y carga por nodo de fundación (§6.1)
 - [x] Patronaje de los paneles de membrana — solo 2 formas distintas (§5.1)
+- [x] Empuje y succión de viento — **estimación ilustrativa** con V=100 km/h supuesta, no con el dato oficial de sitio (§6.2)
 
 **Cálculo pendiente — bloqueado por un dato de sitio, no por falta de trabajo:**
-- [ ] Fuerza y presión de viento sobre el domo (necesita velocidad básica de diseño, COVENIN-MINDUR 2003 — §6.2)
-- [ ] Fuerza sísmica sobre el anclaje (necesita factor de zona, COVENIN 1756 — §6.2)
+- [ ] Viento: repetir §6.2 con la velocidad básica de diseño real de COVENIN-MINDUR 2003 para Tovar (o un registro histórico confiable) en vez del valor ilustrativo
+- [ ] Fuerza sísmica sobre el anclaje (necesita factor de zona, COVENIN 1756 — §6.3)
 - [ ] Verificación estructural final por ingeniero matriculado, una vez resueltos los dos puntos anteriores
 
 **Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
