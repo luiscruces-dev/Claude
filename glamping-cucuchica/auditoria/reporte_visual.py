@@ -445,8 +445,8 @@ def page():
 
     missing = [
         ("good", "Resuelto", "Puerta", "Ya diseñada y verificada: portal con marco de 50×50 sobre dos anclajes existentes, techo de vestíbulo y vano libre de 117.9 × 207.5 cm (dome_door.py y §11 del documento). Sube el corte en los anclajes de los postes de 59 a 94 kgf: el perno sigue sobrando."),
-        ("crit", "Alto", "Plataforma y pilotes", "§9 dimensiona los pilotes con el domo (0.28 t). El piso con personas, cama y muebles (unos 200 kgf/m², cerca de 6 t) pesa unas 20 veces más. Probablemente hacen falta pilotes interiores. El jacuzzi va afuera, con fundación propia."),
-        ("crit", "Alto", "Arranque de pilotes", "Levantamiento neto de viento con presión interna: 1.3–1.5 t, contra ≈1.95 t de peso de pilotes. Casi sin margen."),
+        ("good", "Resuelto", "Plataforma y pilotes", "Ya diseñada y verificada (dome_platform.py): 23 pilotes con zapata, uno bajo cada anclaje, viga de anillo de concreto, vigas de acero y viguetas cada 40 cm para 200 kgf/m². El jacuzzi va afuera. Falta confirmar el suelo."),
+        ("good", "Resuelto", "Arranque de pilotes", "Con la viga de anillo y un pilote bajo cada anclaje, el peso que sujeta cada anclaje es ≈5.9 veces el arranque del viento."),
         ("serious", "Medio", "Diseño del conector (hub)", "De él dependen el retiro de corte, la lista de corte, el galvanizado y la resistencia de las uniones."),
         ("serious", "Medio", "Lista de materiales incompleta", "Pestañas (~0.77 m² de plancha), pernos, soldadura, anclajes, tacos, concreto, deck, aislante, forro, ventanas, puerta, faldón."),
         ("serious", "Medio", "Grado real del tubo local", "Confirmar Fy, espesor real y diámetro disponible (1¼\" = 31.75 mm)."),

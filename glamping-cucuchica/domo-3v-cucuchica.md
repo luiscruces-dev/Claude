@@ -553,6 +553,7 @@ de §11 son 119 piezas en 8 pasos; con `--sin-puerta`, 120 barras en 7 pasos.
 cd glamping-cucuchica
 python3 dome_verify.py               # imprime el reporte de verificación
 python3 dome_door.py                 # verifica la puerta (§11)
+python3 dome_platform.py             # verifica la plataforma y los pilotes (§9.6)
 python3 dome_build_sequence.py       # regenera secuencia_de_armado.md (con puerta; --sin-puerta para el domo cerrado)
 python3 dome_viewer.py               # regenera el plano de taller domo-3v-cucuchica.html
 ```
@@ -563,7 +564,11 @@ un parámetro (por ejemplo, el diámetro de base o la frecuencia del domo), se e
 
 ---
 
-## 9. Plataforma y anclaje (diseño conceptual)
+## 9. Plataforma y anclaje
+
+> **Actualizado:** la plataforma ya está diseñada y verificada. Ver **§9.6**, que
+> reemplaza el concepto de 9.1–9.5. Ese concepto se deja abajo como historia del
+> proyecto.
 
 Diseño de primera pasada, usando directamente las cargas de §6. No sustituye el
 estudio de suelo pendiente (§10) — es la base de partida para que el ingeniero
@@ -665,7 +670,72 @@ del deck.
   entablado no termine exactamente en el borde del domo — da margen para ajuste en
   obra y para la terraza/fogatero exterior ya contemplada en el concepto original.
 
-### 9.6 Pendiente antes de construir
+### 9.6 Diseño de la plataforma (reemplaza el concepto de 9.1–9.5)
+
+Diseño completo y verificado en `dome_platform.py` (`python3 dome_platform.py`). Los
+dibujos, en planta y en corte, y el replanteo están en el plano de taller. **Cambio
+respecto al concepto:** son **23 pilotes** en vez de 10: uno bajo **cada** anclaje del domo
+(15), así cada perno baja directo a su pilote, más 6 interiores para el piso y 2 para
+el descanso de entrada. El jacuzzi va en la terraza, con fundación propia.
+
+| Elemento | Especificación |
+|---|---|
+| Niveles | Piso terminado ±0.00 (nivel de los nodos bajos) · terreno -0.50 · fondo de zapata -1.50 m |
+| Pilote | Pedestal de concreto 25×25 cm (4 Ø12, estribos Ø8 c/15) sobre zapata 50×50×20 cm (parrilla Ø10 c/15). Fondo a 1.00 m bajo el terreno, **a confirmar con estudio de suelo** |
+| Viga de anillo | Concreto armado 25×30 cm, 2 Ø12 por cara, estribos Ø8 c/15. Sigue el polígono de los 15 anclajes; su cara superior es el piso. Lleva los 15 pernos del domo |
+| Vigas principales | 3 líneas de tubo rectangular 100×50×3, paralelas al eje de la puerta a v = −1.50 / 0 / +1.50 m, apoyadas en el anillo y en pilotes interiores a u = ±1.00 m (luz máxima 2.00 m) |
+| Viguetas | Pino tratado 2×4" cada 40 cm, apoyadas en las vigas y en un angular 50×50×5 fijado al anillo (luz máxima 1.50 m) |
+| Entablado | Machihembrado de 1" (o contrachapado marino de 18 mm) |
+| Descanso de entrada | 1.80 × 1.20 m frente a la puerta, a nivel del piso, sobre la viga de anillo y 2 pilotes, con 3 escalones de 16.7 cm |
+
+**Verificación** (cargas: 200 kgf/m² en la habitación, 300 en el descanso y 60 de peso propio del piso):
+
+- **Viguetas:** 5.8 MPa de 8 admisibles, y 2.6 mm de flecha, dentro de L/360.
+- **Vigas:** 92 MPa de 150, y 2.8 mm de flecha.
+- **Viga de anillo:** 237 kgf·m contra una capacidad de 2047.
+- **Presión bajo la zapata:** hasta **0.52 kgf/cm²** (se supusieron 1.0 kgf/cm² admisibles).
+- **Arranque por viento:** en el anclaje más exigido, el peso que lo sujeta (viga de anillo, pilote, zapata y relleno) es **5.9 veces** el arranque del domo con puerta. Con este diseño, el arranque deja de ser un problema.
+- **Sismo lateral:** con Ao 0.30 en la meseta y sin reducir, el momento en los pedestales es 400 kgf·m contra una capacidad de 1625.
+
+**Replanteo de pilotes.** X/Y en el sistema de los anclajes; u/v a lo largo del eje de
+la puerta. La carga es en servicio, en kgf:
+
+| Pilote | Tipo | X (m) | Y (m) | u (m) | v (m) | Carga |
+|---|---|---|---|---|---|---|
+| 1 | perimetral · anclaje #5 | +2.991 | +0.000 | +2.420 | -1.758 | 987 |
+| 2 | perimetral · anclaje #6 | +2.737 | +1.229 | +2.936 | -0.614 | 1190 |
+| 3 | perimetral · anclaje #14 | +2.014 | +2.223 | +2.936 | +0.614 | 1129 |
+| 4 | perimetral · anclaje #15 | +0.924 | +2.845 | +2.420 | +1.758 | 988 |
+| 5 | perimetral · anclaje #17 | -0.323 | +2.983 | +1.492 | +2.603 | 896 |
+| 6 | perimetral · anclaje #12 | -1.492 | +2.603 | +0.323 | +2.983 | 965 |
+| 7 | perimetral · anclaje #10 | -2.420 | +1.758 | -0.924 | +2.845 | 938 |
+| 8 | perimetral · anclaje #8 | -2.936 | +0.614 | -2.014 | +2.223 | 912 |
+| 9 | perimetral · anclaje #43 | -2.936 | -0.614 | -2.737 | +1.229 | 917 |
+| 10 | perimetral · anclaje #45 | -2.420 | -1.758 | -2.991 | +0.000 | 1032 |
+| 11 | perimetral · anclaje #44 | -1.492 | -2.603 | -2.737 | -1.229 | 922 |
+| 12 | perimetral · anclaje #19 | -0.323 | -2.983 | -2.014 | -2.223 | 913 |
+| 13 | perimetral · anclaje #21 | +0.924 | -2.845 | -0.924 | -2.845 | 938 |
+| 14 | perimetral · anclaje #23 | +2.014 | -2.223 | +0.323 | -2.983 | 965 |
+| 15 | perimetral · anclaje #4 | +2.737 | -1.229 | +1.492 | -2.603 | 896 |
+| 16 | interior | +0.073 | -1.801 | -1.000 | -1.500 | 1116 |
+| 17 | interior | +1.691 | -0.626 | +1.000 | -1.500 | 1118 |
+| 18 | interior | -0.809 | -0.588 | -1.000 | +0.000 | 1295 |
+| 19 | interior | +0.809 | +0.588 | +1.000 | +0.000 | 1287 |
+| 20 | interior | -1.691 | +0.626 | -1.000 | +1.500 | 1116 |
+| 21 | interior | -0.073 | +1.801 | +1.000 | +1.500 | 1118 |
+| 22 | descanso | +3.868 | +1.883 | +4.236 | -0.750 | 730 |
+| 23 | descanso | +2.986 | +3.097 | +4.236 | +0.750 | 730 |
+
+**Materiales:**
+- **Concreto:** 4.03 m³ (1.15 de zapatas, 1.48 de pedestales y 1.40 de viga de anillo), más desperdicio.
+- **Acero de refuerzo:** ≈339 kg.
+- **Tubo 100×50×3:** 4 barras de 6 m.
+- **Angular 50×50×5:** 4 barras de 6 m.
+- **Placas y asientos:** 8 placas de 150×150×8 con 2 pernos y 6 asientos L 75×75×6.
+- **Viguetas 2×4":** 27 piezas de 10 pies.
+- **Entablado:** 31.4 m², con 15% de desperdicio.
+
+### 9.7 Pendiente antes de construir
 
 - [ ] Estudio de suelo (capacidad portante, nivel freático, cercanía a la quebrada) — define profundidad y sección real de los pilotes
 - [ ] Estudio hidrológico puntual del sitio exacto dentro del balneario — define el freeboard real, no el valor ilustrativo de §9.3
@@ -690,7 +760,7 @@ plataforma/anclaje (§9).** Lo que queda ya no es "cálculo pendiente" sino dato
 sitio oficiales + decisiones de diseño + verificación profesional:
 
 - [ ] Reemplazar los valores ilustrativos de viento (§6.2) y sismo (§6.3) por los datos oficiales de COVENIN-MINDUR 2003 y COVENIN 1756 para Tovar en cuanto estén disponibles
-- [ ] Estudio de suelo y estudio hidrológico puntual del sitio (§9.6) — definen profundidad de pilotes, freeboard real y `f'c` del concreto
+- [ ] Estudio de suelo y estudio hidrológico puntual del sitio (§9.7) — definen profundidad de pilotes, freeboard real y `f'c` del concreto
 - [ ] Verificación estructural final por ingeniero matriculado (incluye combinación de cargas viento+sismo+peso propio, y el anclaje a tensión de §9.4)
 
 **Detectado en la auditoría — no estaba en ninguna lista (ver `auditoria/AUDITORIA.md`):**
@@ -699,9 +769,10 @@ sitio oficiales + decisiones de diseño + verificación profesional:
 - [ ] **Altura útil.** Solo el 32% del piso (9.1 m²) tiene 2.0 m o más de altura libre.
       Los domos comerciales de glamping de 6 m suelen ser más altos (5/8 de esfera o
       montados sobre un muro).
-- [ ] **Carga de la plataforma** (personas, cama y muebles, unos 200 kgf/m², cerca de 6 t) y
-      pilotes interiores. El jacuzzi va afuera, con fundación propia.
-- [ ] **Arranque de pilotes** frente al levantamiento neto de viento con presión interna.
+- [x] **Carga de la plataforma y pilotes interiores.** Diseñada en §9.6: 23 pilotes, viga
+      de anillo, vigas de acero y viguetas. El jacuzzi va afuera, con fundación propia.
+- [x] **Arranque de pilotes.** Verificado en §9.6: el peso que sujeta cada anclaje es ~5.9
+      veces el arranque del viento.
 
 **Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
 - [ ] En cuál de los 5 tramos iguales va la puerta (hacia la terraza; §11.1)

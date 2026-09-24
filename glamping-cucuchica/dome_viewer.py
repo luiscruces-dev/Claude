@@ -20,6 +20,7 @@ from collections import Counter, defaultdict
 
 import dome_build_sequence as seq
 import dome_door as door
+import dome_platform as plat
 from dome_model import v_sub, v_norm
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -305,10 +306,220 @@ def cutbar_svg(pieces, L, stock=6.0):
     return "".join(o)
 
 
+
+# ------------------------------------------------------------------ plataforma
+
+def platform_plan_svg(P):
+    """Planta de fundaciones y entrepiso con el eje de la puerta hacia arriba."""
+    s = 58
+    umax = P.steps[-1]["u1"] + 0.3; umin = -3.4
+    vmin, vmax = -3.45, 3.45
+    W = (vmax-vmin)*s + 20; H = (umax-umin)*s + 30
+    def X(v): return 10 + (v-vmin)*s
+    def Y(u): return 18 + (umax-u)*s
+    o = [f'<svg viewBox="0 0 {f(W)} {f(H)}" role="img" aria-label="Planta de la plataforma y los pilotes">']
+    for p in P.piles:
+        o.append(f'<rect x="{f(X(p["v"]-plat.FOOT/2))}" y="{f(Y(p["u"]+plat.FOOT/2))}" width="{f(plat.FOOT*s)}" height="{f(plat.FOOT*s)}" class="zap"/>')
+    ring = "M " + " L ".join(f"{f(X(v))} {f(Y(u))}" for u, v in P.outer) + " Z M " + " L ".join(f"{f(X(v))} {f(Y(u))}" for u, v in P.inner) + " Z"
+    o.append(f'<path d="{ring}" class="ringband" fill-rule="evenodd" data-tip="Viga de anillo de concreto 25×30 cm"/>')
+    for j in P.joists:
+        o.append(f'<line x1="{f(X(j["v0"]))}" y1="{f(Y(j["u"]))}" x2="{f(X(j["v1"]))}" y2="{f(Y(j["u"]))}" class="joist" data-tip="Vigueta 2×4&quot; a {j["u"]:+.2f} m"/>')
+    for lj in P.landing_joists:
+        o.append(f'<line x1="{f(X(lj["v"]))}" y1="{f(Y(lj["u0"]))}" x2="{f(X(lj["v"]))}" y2="{f(Y(lj["u1"]))}" class="joist"/>')
+    for bm in P.beams:
+        o.append(f'<rect x="{f(X(bm["v"]-plat.BEAM_B/2))}" y="{f(Y(bm["u1"]))}" width="{f(plat.BEAM_B*s)}" height="{f((bm["u1"]-bm["u0"])*s)}" class="beam" '
+                 f'data-tip="Viga principal 100×50×3, {bm["u1"]-bm["u0"]:.2f} m"/>')
+    L = P.landing
+    o.append(f'<rect x="{f(X(L["v0"]))}" y="{f(Y(L["u1"]))}" width="{f((L["v1"]-L["v0"])*s)}" height="{f((L["u1"]-L["u0"])*s)}" class="landing" data-tip="Descanso de entrada 1.80 × 1.20 m"/>')
+    o.append(f'<rect x="{f(X(L["v0"]))}" y="{f(Y(L["beam_u"]+plat.BEAM_B/2))}" width="{f((L["v1"]-L["v0"])*s)}" height="{f(plat.BEAM_B*s)}" class="beam"/>')
+    for st in P.steps:
+        o.append(f'<rect x="{f(X(st["v0"]))}" y="{f(Y(st["u1"]))}" width="{f((st["v1"]-st["v0"])*s)}" height="{f((st["u1"]-st["u0"])*s)}" class="step" data-tip="Escalón, contrahuella {plat.STEP_RISE*100:.1f} cm"/>')
+    for p in P.piles:
+        o.append(f'<rect x="{f(X(p["v"]-plat.PED/2))}" y="{f(Y(p["u"]+plat.PED/2))}" width="{f(plat.PED*s)}" height="{f(plat.PED*s)}" class="ped" '
+                 f'data-tip="Pilote {p["id"]} ({p["kind"]}) · X {p["x"]:+.3f} · Y {p["y"]:+.3f}"/>')
+        dx = 0.22 if p["v"] >= 0 else -0.22
+        o.append(f'<text x="{f(X(p["v"]+dx))}" y="{f(Y(p["u"]+0.2))}" text-anchor="{"start" if dx > 0 else "end"}" class="t-pile">{p["id"]}</text>')
+    nodes = [r["node"] for r in P.rows]
+    ia, ib = nodes.index(P.D.door["a"]), nodes.index(P.D.door["b"])
+    (ua, va), (ub, vb) = P.ring[ia], P.ring[ib]
+    o.append(f'<line x1="{f(X(va))}" y1="{f(Y(ua))}" x2="{f(X(vb))}" y2="{f(Y(ub))}" class="door-plan"/>')
+    o.append(f'<text x="{f(X(0))}" y="{f(Y(ua)+16)}" text-anchor="middle" class="t-door">PUERTA</text>')
+    o.append(f'<text x="{f(X(0))}" y="{f(Y(-0.5))}" text-anchor="middle" class="t-muted">↑ eje de la puerta (u)</text>')
+    o.append(f'<text x="{f(X(0.75))}" y="{f(Y(-2.3))}" text-anchor="middle" class="t-muted halo">vigas c/1.50 m</text>')
+    o.append(f'<text x="{f(X(-0.75))}" y="{f(Y(-2.3))}" text-anchor="middle" class="t-muted halo">viguetas c/40 cm</text>')
+    o.append("</svg>")
+    return "".join(o)
+
+
+def platform_section_svg(P):
+    """Corte por el eje de la puerta (v = 0), del fondo de zapata al domo."""
+    D = P.D; lv = P.levels
+    s = 58
+    umin = -3.45; umax = P.steps[-1]["u1"] + 0.35
+    zmin, zmax = lv["footing_bottom"] - 0.12, 2.72
+    W = (umax-umin)*s + 110; H = (zmax-zmin)*s + 16
+    def X(u): return 10 + (u-umin)*s
+    def Y(z): return 8 + (zmax-z)*s
+    o = [f'<svg viewBox="0 0 {f(W)} {f(H)}" role="img" aria-label="Corte de la plataforma por el eje de la puerta">']
+    o.append(f'<rect x="{f(X(umin))}" y="{f(Y(lv["ground"]))}" width="{f((umax-umin)*s)}" height="{f((lv["ground"]-zmin)*s)}" class="soil"/>')
+    o.append(f'<line x1="{f(X(umin))}" y1="{f(Y(lv["ground"]))}" x2="{f(X(umax))}" y2="{f(Y(lv["ground"]))}" class="ground"/>')
+    # pilotes en (o proyectados sobre) el corte
+    sec_piles = [p for p in P.piles if abs(p["v"]) < 0.05]
+    proj = [p for p in P.piles if p["kind"] == "descanso"][:1] + \
+           [p for p in P.piles if p["kind"] == "perimetral" and p["anchor"] == D.door["a"]]
+    for p, cls in [(p, "") for p in sec_piles] + [(p, " proj") for p in proj]:
+        top = lv["ring_bottom"] if p["kind"] == "perimetral" else lv["beam_bottom"]
+        o.append(f'<rect x="{f(X(p["u"]-plat.FOOT/2))}" y="{f(Y(lv["footing_top"]))}" width="{f(plat.FOOT*s)}" height="{f(plat.FOOT_T*s)}" class="conc{cls}"/>')
+        o.append(f'<rect x="{f(X(p["u"]-plat.PED/2))}" y="{f(Y(top))}" width="{f(plat.PED*s)}" height="{f((top-lv["footing_top"])*s)}" class="conc{cls}" '
+                 f'data-tip="Pilote {p["id"]}{" (proyectado)" if cls else ""}: pedestal 25×25, zapata 50×50×20"/>')
+    # viga de anillo donde el corte la cruza
+    for u in (P.ring[[r["node"] for r in P.rows].index(D.door["a"])][0],
+              min(P.ring, key=lambda q: abs(q[1]) + (0 if q[0] < 0 else 99))[0]):
+        o.append(f'<rect x="{f(X(u-plat.RING_B/2))}" y="{f(Y(0))}" width="{f(plat.RING_B*s)}" height="{f(plat.RING_H*s)}" class="conc" data-tip="Viga de anillo 25×30"/>')
+    bm = [b for b in P.beams if b["v"] == 0.0][0]
+    o.append(f'<rect x="{f(X(bm["u0"]))}" y="{f(Y(lv["beam_top"]))}" width="{f((bm["u1"]-bm["u0"])*s)}" height="{f(plat.BEAM_H*s)}" class="beam" data-tip="Viga principal 100×50×3"/>')
+    for j in P.joists:
+        o.append(f'<rect x="{f(X(j["u"]-plat.JOIST_B/2))}" y="{f(Y(lv["joist_top"]))}" width="{f(max(1.5, plat.JOIST_B*s))}" height="{f(plat.JOIST_H*s)}" class="wood"/>')
+    u_in = [q[0] for q in P.inner]
+    o.append(f'<rect x="{f(X(bm["u0"]))}" y="{f(Y(0))}" width="{f((bm["u1"]-bm["u0"])*s)}" height="{f(plat.DECK_T*s)}" class="wood" data-tip="Entablado 1&quot;"/>')
+    L = P.landing
+    o.append(f'<rect x="{f(X(L["u0"]))}" y="{f(Y(lv["joist_top"]))}" width="{f((L["beam_u"]-L["u0"])*s)}" height="{f(plat.JOIST_H*s)}" class="wood"/>')
+    o.append(f'<rect x="{f(X(L["u0"]))}" y="{f(Y(0))}" width="{f((L["u1"]-L["u0"])*s)}" height="{f(plat.DECK_T*s)}" class="wood"/>')
+    o.append(f'<rect x="{f(X(L["beam_u"]-plat.BEAM_B/2))}" y="{f(Y(lv["beam_top"]))}" width="{f(plat.BEAM_B*s)}" height="{f(plat.BEAM_H*s)}" class="beam"/>')
+    for st in P.steps:
+        o.append(f'<rect x="{f(X(st["u0"]))}" y="{f(Y(st["z"]+plat.STEP_RISE))}" width="{f((st["u1"]-st["u0"])*s)}" height="{f((st["z"]+plat.STEP_RISE-lv["ground"])*s)}" class="stepsec"/>')
+    # domo sobre la plataforma: perfil por v = 0 hasta el nodo sobre el vestibulo, techo, poste
+    R = D.R; z0 = -D.center[2]
+    top = D.door["top"]; ut = D.uv(D.verts[top])[0]; zt = D.verts[top][2]
+    ub = min(P.ring, key=lambda q: abs(q[1]) + (0 if q[0] < 0 else 99))[0]
+    arc = " ".join(f"{f(X(u))},{f(Y(math.sqrt(R*R-u*u)-z0))}" for u in [ub + i*(ut-ub)/60 for i in range(61)])
+    o.append(f'<polyline points="{arc}" class="dome-outline"/>')
+    ua = P.ring[[r["node"] for r in P.rows].index(D.door["a"])][0]
+    o.append(f'<line x1="{f(X(ut))}" y1="{f(Y(zt))}" x2="{f(X(ua))}" y2="{f(Y(D.door["head_z"]))}" class="door-member"/>')
+    o.append(f'<rect x="{f(X(ua-door.FRAME_B/2))}" y="{f(Y(D.door["head_z"]))}" width="{f(door.FRAME_B*s)}" height="{f(D.door["head_z"]*s)}" class="frame"/>')
+    for z, lab in ((0.0, "±0.00 piso"), (lv["beam_bottom"], f"{lv['beam_bottom']:+.2f} fondo de vigas"),
+                   (lv["ground"], f"{lv['ground']:+.2f} terreno"), (lv["footing_top"], f"{lv['footing_top']:+.2f} tope de zapata"),
+                   (lv["footing_bottom"], f"{lv['footing_bottom']:+.2f} fondo de zapata")):
+        o.append(f'<line x1="{f(X(umax)-4)}" y1="{f(Y(z))}" x2="{f(X(umax)+6)}" y2="{f(Y(z))}" class="dim"/>')
+        o.append(f'<text x="{f(X(umax)+9)}" y="{f(Y(z)+4)}" class="t-lev">{lab}</text>')
+    o.append(f'<text x="{f(X(0))}" y="{f(Y(1.4))}" text-anchor="middle" class="t-muted">interior del domo</text>')
+    o.append(f'<text x="{f(X((L["u0"]+P.steps[-1]["u1"])/2))}" y="{f(Y(0.35))}" text-anchor="middle" class="t-muted">descanso</text>')
+    o.append("</svg>")
+    return "".join(o)
+
+
+def platform_lines3d(P):
+    """Segmentos de la plataforma para la vista 3D, en coordenadas del visor (X, Z, -Y)."""
+    lv = P.levels
+    segs = []
+    def pt(u, v, z):
+        x, y = P.to_xy(u, v)
+        return [round(x, 3), round(z, 3), round(-y, 3)]
+    def seg(a, b, k): segs.append(a + b + [k])
+    for poly in (P.outer, P.inner):
+        for z in (0.0, lv["ring_bottom"]):
+            for i in range(len(poly)):
+                seg(pt(*poly[i], z), pt(*poly[(i+1) % len(poly)], z), "ring")
+    for p in P.piles:
+        top = lv["ring_bottom"] if p["kind"] == "perimetral" else lv["beam_bottom"]
+        for dv, du in ((-1, -1), (-1, 1), (1, 1), (1, -1)):
+            seg(pt(p["u"]+du*plat.PED/2, p["v"]+dv*plat.PED/2, top), pt(p["u"]+du*plat.PED/2, p["v"]+dv*plat.PED/2, lv["footing_top"]), "pile")
+        c = [(-1, -1), (-1, 1), (1, 1), (1, -1)]
+        for i in range(4):
+            (a1, b1), (a2, b2) = c[i], c[(i+1) % 4]
+            seg(pt(p["u"]+a1*plat.FOOT/2, p["v"]+b1*plat.FOOT/2, lv["footing_top"]), pt(p["u"]+a2*plat.FOOT/2, p["v"]+b2*plat.FOOT/2, lv["footing_top"]), "zap")
+    zb = (lv["beam_top"] + lv["beam_bottom"])/2
+    for bm in P.beams:
+        seg(pt(bm["u0"], bm["v"], zb), pt(bm["u1"], bm["v"], zb), "beam")
+    L = P.landing
+    seg(pt(L["beam_u"], L["v0"], zb), pt(L["beam_u"], L["v1"], zb), "beam")
+    zj = (lv["joist_top"] + lv["beam_top"])/2
+    for j in P.joists:
+        seg(pt(j["u"], j["v0"], zj), pt(j["u"], j["v1"], zj), "joist")
+    for lj in P.landing_joists:
+        seg(pt(lj["u0"], lj["v"], zj), pt(lj["u1"], lj["v"], zj), "joist")
+    rect = [(L["u0"], L["v0"]), (L["u1"], L["v0"]), (L["u1"], L["v1"]), (L["u0"], L["v1"])]
+    for i in range(4):
+        seg(pt(*rect[i], 0.0), pt(*rect[(i+1) % 4], 0.0), "land")
+    for st in P.steps:
+        r = [(st["u0"], st["v0"]), (st["u1"], st["v0"]), (st["u1"], st["v1"]), (st["u0"], st["v1"])]
+        for i in range(4):
+            seg(pt(*r[i], st["z"]), pt(*r[(i+1) % 4], st["z"]), "step")
+    for i in range(48):
+        a0, a1 = 2*math.pi*i/48, 2*math.pi*(i+1)/48
+        seg([round(4.6*math.cos(a0), 3), lv["ground"], round(4.6*math.sin(a0), 3)],
+            [round(4.6*math.cos(a1), 3), lv["ground"], round(4.6*math.sin(a1), 3)], "ground")
+    return segs
+
+
+def platform_html(P, R, Q, checks):
+    lv = P.levels
+    pile_rows = "".join(
+        f"<tr><td class='mono'>{r['id']}</td><td>{r['kind']}{(' · anclaje #' + str(r['anchor'])) if r['anchor'] is not None else ''}</td>"
+        f"<td class='num'>{r['x']:+.3f}</td><td class='num'>{r['y']:+.3f}</td><td class='num'>{r['u']:+.3f}</td><td class='num'>{r['v']:+.3f}</td>"
+        f"<td class='num'>{(lv['ring_bottom'] if r['kind'] == 'perimetral' else lv['beam_bottom']):+.3f}</td>"
+        f"<td class='num'>{r['service']:.0f}</td><td class='num'>{r['pressure']/1e4:.2f}</td></tr>" for r in R["piles"])
+    conc = Q["concrete"]; rebar = Q["rebar"]
+    conc_rows = "".join(f"<tr><td>{k}</td><td class='num'>{v:.2f} m³</td></tr>" for k, v in conc.items())
+    rebar_rows = "".join(f"<tr><td>{k}</td><td class='num'>{v:.0f} kg</td></tr>" for k, v in rebar.items())
+    st = Q["steel"]; wd = Q["wood"]
+    beams = st["tubo rectangular 100×50×3 (vigas)"]
+    joists = wd["vigueta 2×4\" pino tratado"]
+    deck = wd["entablado machihembrado 1\""]
+    chk = "".join(f"<li class='{'okli' if c['ok'] else 'badli'}'>{'✓' if c['ok'] else '✕'} {esc(c['name'])}<span class='muted'> — {esc(c['detail'])}</span></li>" for c in checks)
+    m = R["metrics"]
+    n_per = sum(1 for p in P.piles if p["kind"] == "perimetral"); n_int = sum(1 for p in P.piles if p["kind"] == "interior")
+    n_des = sum(1 for p in P.piles if p["kind"] == "descanso")
+    return f"""<section id="plataforma">
+  <div class="sec-head"><h2>Plataforma del piso y pilotes</h2></div>
+  <p class="sec-sub">Piso elevado {plat.FREEBOARD*100:.0f} cm sobre el terreno, por las crecidas y para ventilar la madera. <b>{len(P.piles)} pilotes</b>: {n_per} bajo los anclajes del domo (cada perno baja directo a su pilote), {n_int} interiores y {n_des} del descanso de entrada. El jacuzzi no va aquí: va en la terraza, con fundación propia.</p>
+  <div class="twocol">
+    <div class="panel"><h3>Planta (eje de la puerta hacia arriba)</h3>{platform_plan_svg(P)}
+      <div class="legend"><span><i class="swb" style="background:var(--conc)"></i>concreto</span><span><i class="swb" style="background:var(--steel)"></i>acero</span><span><i class="swb" style="background:var(--wood)"></i>madera</span></div></div>
+    <div>
+      <div class="tbl" style="margin-top:0"><table><thead><tr><th>Elemento</th><th>Especificación</th></tr></thead><tbody>
+        <tr><td>Pilote</td><td>Pedestal de concreto 25×25 cm (4 Ø12, estribos Ø8 c/15) sobre zapata 50×50×20 cm (parrilla Ø10 c/15), fondo a {plat.FOOTING_DEPTH:.2f} m bajo el terreno <b>a confirmar con estudio de suelo</b></td></tr>
+        <tr><td>Viga de anillo</td><td>Concreto armado 25×30 cm, 2 Ø12 por cara, estribos Ø8 c/15, cara superior = piso ±0.00. Lleva los 15 pernos del domo</td></tr>
+        <tr><td>Vigas principales</td><td>Tubo rectangular 100×50×3, a v = −1.50 / 0 / +1.50 m, apoyadas en el anillo y en pilotes a u = ±1.00 m</td></tr>
+        <tr><td>Viguetas</td><td>Pino tratado 2×4" cada 40 cm, apoyadas en las vigas y en un angular 50×50×5 fijado al anillo</td></tr>
+        <tr><td>Entablado</td><td>Machihembrado de 1" (o contrachapado marino de 18 mm)</td></tr>
+        <tr><td>Descanso</td><td>{plat.LANDING_W:.2f} × {plat.LANDING_D:.2f} m al nivel del piso, 3 escalones de {plat.STEP_RISE*100:.1f} cm</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:14px"><h3>Corte por el eje de la puerta</h3>{platform_section_svg(P)}</div>
+  <h3 class="sub">Replanteo de los pilotes</h3>
+  <p class="small muted">X/Y en el mismo sistema que los anclajes (origen en el centro, 0° en el primer nodo alto). u/v a lo largo del eje de la puerta y perpendicular. Carga en servicio incluye el peso del pilote; presión bajo la zapata de 50×50.</p>
+  <div class="tbl"><table><thead><tr><th>Pilote</th><th>Tipo</th><th class="num">X (m)</th><th class="num">Y (m)</th><th class="num">u (m)</th><th class="num">v (m)</th><th class="num">Cara sup.</th><th class="num">Carga kgf</th><th class="num">kgf/cm²</th></tr></thead><tbody>{pile_rows}</tbody></table></div>
+  <div class="twocol">
+    <div>
+      <h3>Materiales</h3>
+      <div class="tbl"><table><tbody>
+        {conc_rows}<tr class="total"><td>Concreto total (sin desperdicio)</td><td class="num">{sum(conc.values()):.2f} m³</td></tr>
+        {rebar_rows}<tr class="total"><td>Acero de refuerzo (estimado)</td><td class="num">{sum(rebar.values()):.0f} kg</td></tr>
+        <tr><td>Tubo rectangular 100×50×3 (vigas)</td><td class="num">{beams['barras6m']} barras de 6 m</td></tr>
+        <tr><td>Angular 50×50×5 (apoyo de viguetas)</td><td class="num">{st['angular L 50×50×5 (apoyo de viguetas en la viga de anillo)']['barras6m']} barras de 6 m</td></tr>
+        <tr><td>Placas 150×150×8 con 2 pernos (cabeza de pilotes)</td><td class="num">8</td></tr>
+        <tr><td>Asientos L 75×75×6 (extremos de vigas)</td><td class="num">{2*len(P.beams)}</td></tr>
+        <tr><td>Viguetas 2×4" pino tratado</td><td class="num">{joists['tablas_10pies']} piezas de 10 pies</td></tr>
+        <tr><td>Entablado 1" (+15%)</td><td class="num">{deck['m2_con_desperdicio']:.1f} m²</td></tr>
+      </tbody></table></div>
+    </div>
+    <div>
+      <h3>Verificación (<span class="mono">python3 dome_platform.py</span>)</h3>
+      <ul class="checks">{chk}</ul>
+      <p class="small muted">Cargas: {plat.LIVE_ROOM:.0f} kgf/m² en la habitación, {plat.LIVE_LANDING:.0f} en el descanso, {plat.DEAD_FLOOR:.0f} de peso propio del piso. El arranque del viento sale de las reacciones del domo con puerta. Sismo con Ao 0.30 y la meseta del espectro, sin reducción. La capacidad del suelo ({plat.Q_ADM/1e4:.1f} kgf/cm²) es un supuesto: la confirma el estudio de suelo.</p>
+    </div>
+  </div>
+</section>
+"""
+
+
 # ------------------------------------------------------------------ pagina
 
 def build_page():
     D, A, steps = collect()
+    PL, PR, PQ, PCHK = plat.evaluate(verbose=False)
     dd = D.door
     P = D.verts
     rows = seq.setting_out(D)
@@ -327,7 +538,8 @@ def build_page():
               "deg": {str(v): sum(1 for e in D.edges if v in e) for v in D.active},
               "door": [dd["a"], dd["b"], dd["Tb"], dd["Ta"]],
               # direccion de la puerta en coordenadas del visor (x, z) = (X, -Y)
-              "dir": [round(dd["u"][0], 4), round(-dd["u"][1], 4)]}
+              "dir": [round(dd["u"][0], 4), round(-dd["u"][1], 4)],
+              "pl": platform_lines3d(PL)}
 
     # ---- piezas y corte por retiro
     cut_blocks = []
@@ -435,7 +647,7 @@ def build_page():
 <div class="wrap">
 <header class="top"><div class="top-inner">
   <div class="brand">DOMO 3V <span class="dim">/ CUCUCHICA · PLANO DE TALLER</span></div>
-  <nav class="jump"><a href="#vista">Vista 3D</a><a href="#piezas">Piezas y corte</a><a href="#nodos">Nodos</a><a href="#puerta">Puerta</a><a href="#base">Base</a><a href="#armado">Armado</a><a href="#cubierta">Cubierta</a><a href="#cargas">Cargas</a><a href="#notas">Notas</a></nav>
+  <nav class="jump"><a href="#vista">Vista 3D</a><a href="#piezas">Piezas y corte</a><a href="#nodos">Nodos</a><a href="#puerta">Puerta</a><a href="#base">Base</a><a href="#plataforma">Plataforma</a><a href="#armado">Armado</a><a href="#cubierta">Cubierta</a><a href="#cargas">Cargas</a><a href="#notas">Notas</a></nav>
 </div></header>
 
 <section class="hero" id="resumen">
@@ -446,7 +658,7 @@ def build_page():
     <div class="stat"><div class="v">6.00<span class="u">m</span></div><div class="l">Diámetro de base (anclajes bajos)</div></div>
     <div class="stat"><div class="v">2.52<span class="u">m</span></div><div class="l">Altura al ápice</div></div>
     <div class="stat"><div class="v">{int(ms_clear['clear_w']*100)}×{int(ms_clear['clear_h']*100)}<span class="u">cm</span></div><div class="l">Vano libre de la puerta</div></div>
-    <div class="stat"><div class="v">28.3<span class="u">m²</span></div><div class="l">Área de piso</div></div>
+    <div class="stat"><div class="v">{len(PL.piles)}</div><div class="l">Pilotes (piso de 28.3 m² a {plat.FREEBOARD*100:.0f} cm del suelo)</div></div>
     <div class="stat"><div class="v">{dome_bars}+{door_bars}</div><div class="l">Barras del domo + piezas de la puerta</div></div>
     <div class="stat"><div class="v">{len(D.active)}</div><div class="l">Nodos ({len(D.boundary_verts)} anclados)</div></div>
     <div class="stat"><div class="v">{round_m:.1f}<span class="u">m</span></div><div class="l">Tubo 32×2 (centro a centro)</div></div>
@@ -460,8 +672,8 @@ def build_page():
   <p class="sec-sub">Arrastre para girar; rueda o pellizco para acercar. Pase el cursor sobre un nodo para ver su número y tipo, iguales a los de la secuencia de armado.</p>
   <div class="viewer"><div class="viewer-rel"><canvas id="c3d" aria-label="Vista 3D del domo con la puerta"></canvas><div id="hubTip" hidden></div></div>
     <div class="viewer-foot">
-      <div class="legend"><span><i class="sw" style="background:var(--sA)"></i>A 125.59</span><span><i class="sw" style="background:var(--sB)"></i>B 122.89</span><span><i class="sw" style="background:var(--sC)"></i>C 106.16</span><span><i class="sw" style="background:var(--door)"></i>puerta (P D V K)</span></div>
-      <div class="ctrls"><label class="toggle"><input type="checkbox" id="mem"> membrana</label><button class="ghost" id="reset" type="button">Vista inicial</button></div>
+      <div class="legend"><span><i class="sw" style="background:var(--sA)"></i>A 125.59</span><span><i class="sw" style="background:var(--sB)"></i>B 122.89</span><span><i class="sw" style="background:var(--sC)"></i>C 106.16</span><span><i class="sw" style="background:var(--door)"></i>puerta (P D V K)</span><span><i class="sw" style="background:var(--conc)"></i>concreto</span><span><i class="sw" style="background:var(--wood)"></i>madera</span></div>
+      <div class="ctrls"><label class="toggle"><input type="checkbox" id="plt" checked> plataforma</label><label class="toggle"><input type="checkbox" id="mem"> membrana</label><button class="ghost" id="reset" type="button">Vista inicial</button></div>
     </div>
   </div>
 </section>
@@ -531,6 +743,7 @@ def build_page():
   <p class="small muted">Arranque y corte: máximos por anclaje con el viento ilustrativo de 100 km/h, sin factor de seguridad. Para la fundación los tiene que usar el ingeniero con los datos oficiales del sitio.</p>
 </section>
 
+{platform_html(PL, PR, PQ, PCHK)}
 <section id="armado">
   <div class="sec-head"><h2>Orden de armado</h2></div>
   <p class="sec-sub">De la base al ápice, anillo por anillo. Alturas desde el piso. El detalle barra por barra está en <span class="mono">secuencia_de_armado.md</span>.</p>
@@ -565,7 +778,7 @@ def build_page():
     <div class="card note"><h3>Galvanizado</h3><p>No soldar tubo ya galvanizado: el zinc se quema en la unión. Si el domo se suelda en obra, reparar cada unión con galvanizado en frío (pintura rica en zinc), o hacer uniones empernadas y galvanizar en caliente las piezas ya soldadas en taller. Tubos cerrados: agujeros de venteo antes del baño en caliente.</p></div>
     <div class="card note"><h3>Tubo</h3><p>Redondo 32×2 (o 1¼" = 31.75 mm) y cuadrado 50×50×2, acero estructural. Confirmar con el proveedor el grado del acero y el espesor real de pared.</p></div>
     <div class="card note"><h3>Jacuzzi afuera</h3><p>El jacuzzi va en la terraza, fuera del domo, con su propia fundación: 1–2 t de agua no deben cargar la viga de anillo ni los pilotes del domo. Desaguar lejos de los pilotes.</p></div>
-    <div class="card note warn"><h3>Pendiente antes de construir</h3><p>Diseño de la unión en el nodo y nodo de prueba · plataforma del piso (personas, cama y muebles, unos 200 kgf/m² → cerca de 6 t sobre 28 m², con apoyos interiores) · pilotes y arranque con estudio de suelo · viento y sismo oficiales para Tovar · firma de un ingeniero estructural matriculado.</p></div>
+    <div class="card note warn"><h3>Pendiente antes de construir</h3><p>Diseño de la unión en el nodo y nodo de prueba · estudio de suelo: confirmar la capacidad supuesta de 1.0 kgf/cm² y la profundidad de zapata · resistencia real del concreto · viento y sismo oficiales para Tovar · firma de un ingeniero estructural matriculado.</p></div>
   </div>
 </section>
 
@@ -582,18 +795,21 @@ CSS = """
   --grid:#dfe2de; --line:#c1c6c2; --accent:#2b5a78; --door:#3b3f44;
   --sA:#2a78d6; --sB:#eb6834; --sC:#1baf7a; --warn:#b3302f; --warn-wash:rgba(208,59,59,.10); --warn2-wash:rgba(236,131,90,.16);
   --passage:rgba(42,120,214,.12); --open:rgba(124,131,136,.12);
+  --conc:#8e9599; --conc-wash:rgba(142,149,153,.20); --steel:#4a5a6a; --wood:#b0804a; --soil:rgba(150,120,80,.14);
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   color-scheme:dark; --page:#0f1112; --surface:#1b1d1f; --surface-2:#25282a; --ink:#f1f2f0; --ink-2:#c1c6c3; --muted:#8b9296;
   --grid:#2b2f31; --line:#3b4043; --accent:#86b5d6; --door:#d6d9d6;
   --sA:#3987e5; --sB:#d95926; --sC:#199e70; --warn:#ec7070; --warn-wash:rgba(208,59,59,.18); --warn2-wash:rgba(236,131,90,.20);
   --passage:rgba(57,135,229,.18); --open:rgba(193,198,195,.10);
+  --conc:#8a9195; --conc-wash:rgba(138,145,149,.22); --steel:#9fb2c4; --wood:#c89a62; --soil:rgba(170,140,95,.14);
 }}
 :root[data-theme="dark"]{
   color-scheme:dark; --page:#0f1112; --surface:#1b1d1f; --surface-2:#25282a; --ink:#f1f2f0; --ink-2:#c1c6c3; --muted:#8b9296;
   --grid:#2b2f31; --line:#3b4043; --accent:#86b5d6; --door:#d6d9d6;
   --sA:#3987e5; --sB:#d95926; --sC:#199e70; --warn:#ec7070; --warn-wash:rgba(208,59,59,.18); --warn2-wash:rgba(236,131,90,.20);
   --passage:rgba(57,135,229,.18); --open:rgba(193,198,195,.10);
+  --conc:#8a9195; --conc-wash:rgba(138,145,149,.22); --steel:#9fb2c4; --wood:#c89a62; --soil:rgba(170,140,95,.14);
 }
 *{box-sizing:border-box}
 body{background:var(--page); color:var(--ink); font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; padding-inline:16px; padding-block:0 40px}
@@ -694,6 +910,17 @@ ul.plain{margin:0; padding-left:18px; display:grid; gap:6px; font-size:14px}
 .warn{color:var(--warn); font-size:13px} .warn2{color:var(--ink-2); font-size:13px}
 .notegrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:12px; margin-top:12px}
 .notegrid .note{margin-top:0}
+.zap{fill:var(--conc-wash); stroke:var(--conc); stroke-width:1}
+.ped{fill:var(--conc)} .conc{fill:var(--conc)} .conc.proj{fill:var(--conc-wash); stroke:var(--conc)}
+.ringband{fill:var(--conc-wash); stroke:var(--conc); stroke-width:1.2}
+.beam{fill:var(--steel)} .joist{stroke:var(--wood); stroke-width:1.4} .wood{fill:var(--wood)}
+.landing{fill:color-mix(in srgb,var(--wood) 18%,transparent); stroke:var(--wood); stroke-width:1.2}
+.step{fill:var(--conc-wash); stroke:var(--conc)} .stepsec{fill:var(--conc-wash); stroke:var(--conc)}
+.soil{fill:var(--soil)} .ground{stroke:var(--ink-2); stroke-width:1.5}
+.halo{paint-order:stroke; stroke:var(--surface); stroke-width:4px}
+.t-pile{fill:var(--ink); font:600 10.5px "IBM Plex Mono",monospace} .t-lev{fill:var(--ink-2); font:11px "IBM Plex Mono",monospace}
+ul.checks{list-style:none; padding:0; margin:0; display:grid; gap:6px; font-size:13.5px}
+.okli{color:var(--ink)} .okli::first-letter{color:var(--sC)} .badli{color:var(--warn)}
 footer{padding-block:26px; color:var(--muted); font-size:12.5px; border-top:1px solid var(--grid)}
 [data-tip]{cursor:default}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
@@ -722,10 +949,11 @@ document.addEventListener('pointermove',showTip); document.addEventListener('poi
 document.addEventListener('scroll',function(){tip.hidden=true;},{passive:true});
 /* ---- vista 3D ---- */
 var cv=document.getElementById('c3d'), ctx=cv.getContext('2d');
-var V=DATA.v, E=DATA.e, T=DATA.t, act=[];
+var V=DATA.v, E=DATA.e, T=DATA.t, PL=DATA.pl||[], act=[], showPl=true;
 V.forEach(function(p,i){if(p)act.push(i);});
 var mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
 act.forEach(function(i){for(var k=0;k<3;k++){mn[k]=Math.min(mn[k],V[i][k]);mx[k]=Math.max(mx[k],V[i][k]);}});
+PL.forEach(function(s){for(var k=0;k<3;k++){mn[k]=Math.min(mn[k],s[k],s[k+3]);mx[k]=Math.max(mx[k],s[k],s[k+3]);}});
 var ctr=[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2];
 var st={th:TH0,ph:0.32,zoom:1}, dpr=Math.min(window.devicePixelRatio||1,2), showMem=false, proj=[];
 function cam(p){var x=p[0]-ctr[0],y=p[1]-ctr[1],z=p[2]-ctr[2];var c=Math.cos(st.th),s=Math.sin(st.th);
@@ -733,8 +961,11 @@ function cam(p){var x=p[0]-ctr[0],y=p[1]-ctr[1],z=p[2]-ctr[2];var c=Math.cos(st.
 function colorOf(l){return {A:cssv('--sA'),B:cssv('--sB'),C:cssv('--sC')}[l]||cssv('--door');}
 function draw(){var W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
   var cs={};act.forEach(function(i){cs[i]=cam(V[i]);});
-  var sc=Math.min(W,H)/5.6*st.zoom;
+  var sc=Math.min(W,H)/7.4*st.zoom;
   act.forEach(function(i){var c=cs[i];proj[i]=[W/2+c[0]*sc,H/2-c[1]*sc+H*0.02,c[2]];});
+  if(showPl){var sty={ring:['--conc',2.2],pile:['--conc',1.6],zap:['--conc',1],beam:['--steel',2],joist:['--wood',0.9],land:['--wood',1.6],step:['--conc',1],ground:['--line',1]};
+    PL.forEach(function(s){var a=cam([s[0],s[1],s[2]]),b=cam([s[3],s[4],s[5]]),y=sty[s[6]];ctx.beginPath();
+      ctx.moveTo(W/2+a[0]*sc,H/2-a[1]*sc+H*0.02);ctx.lineTo(W/2+b[0]*sc,H/2-b[1]*sc+H*0.02);ctx.strokeStyle=cssv(y[0]);ctx.globalAlpha=0.75;ctx.lineWidth=y[1]*dpr;ctx.stroke();ctx.globalAlpha=1;});}
   if(showMem){T.map(function(t){return {t:t,d:(proj[t[0]][2]+proj[t[1]][2]+proj[t[2]][2])/3};}).sort(function(a,b){return a.d-b.d;}).forEach(function(o){
     var t=o.t;ctx.beginPath();ctx.moveTo(proj[t[0]][0],proj[t[0]][1]);ctx.lineTo(proj[t[1]][0],proj[t[1]][1]);ctx.lineTo(proj[t[2]][0],proj[t[2]][1]);ctx.closePath();
     ctx.fillStyle='color-mix(in srgb, '+cssv('--ink-2')+' 9%, transparent)';ctx.fill();});
@@ -761,6 +992,7 @@ cv.addEventListener('pointermove',function(e){if(drag){st.th+=(e.clientX-lx)*0.0
 cv.addEventListener('pointerleave',function(){ht.hidden=true;});
 cv.addEventListener('wheel',function(e){e.preventDefault();st.zoom=Math.max(0.5,Math.min(3,st.zoom*(1-e.deltaY*0.001)));draw();},{passive:false});
 document.getElementById('mem').addEventListener('change',function(e){showMem=e.target.checked;draw();});
+document.getElementById('plt').addEventListener('change',function(e){showPl=e.target.checked;draw();});
 document.getElementById('reset').addEventListener('click',function(){st.th=TH0;st.ph=0.32;st.zoom=1;draw();});
 var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(resize,120);});
 if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);

@@ -325,15 +325,15 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
    sobrando. **Altura útil:** sin cambios. Solo 9.1 m² (32% del piso) tienen 2.0 m o más.
    Si hiciera falta más espacio de pie, las opciones siguen siendo 5/8, 4V o un muro de
    arranque.
-2. **Plataforma y pilotes.** §9 dimensiona los pilotes solo con el peso del domo
-   (0.28 t). La plataforma carga huéspedes, cama y muebles: unos 200 kgf/m², cerca de
-   **6 t** sobre 28 m², unas 20 veces el domo. Con pilotes solo en el perímetro, las
-   vigas del piso salvarían unos 6 m: casi seguro hacen falta pilotes interiores. El
-   **jacuzzi va afuera**, en la terraza, con fundación propia (1–2 t con agua), sin
-   cargar la viga de anillo ni los pilotes del domo.
-3. **Arranque de pilotes.** Hay que verificar el levantamiento neto de viento con
-   presión interna (1.3–1.5 t, E7) contra el peso de pilotes y viga más la fricción del
-   suelo.
+2. **Plataforma y pilotes** — ✅ **resuelto después de la auditoría** (`../dome_platform.py`,
+   §9.6 del documento). Son 23 pilotes con zapata: uno bajo cada anclaje, 6 interiores y 2
+   del descanso de entrada. Llevan viga de anillo de concreto 25×30, vigas de tubo
+   100×50×3 y viguetas 2×4" cada 40 cm, con 200 kgf/m² en la habitación. El jacuzzi va
+   afuera, con fundación propia. Queda pendiente el estudio de suelo: la capacidad de 1.0
+   kgf/cm² y la profundidad de zapata son supuestos.
+3. **Arranque de pilotes** — ✅ **resuelto con el mismo diseño.** El peso que sujeta cada
+   anclaje (viga de anillo, pilote, zapata y relleno) es ≈5.9 veces el arranque del viento
+   con puerta.
 4. **Diseño del conector (hub).** De él dependen el retiro de corte (E2), la lista de
    corte (E8), el galvanizado (E9) y la resistencia de las uniones. Es probable que la
    unión sea el eslabón débil, no el tubo, y **no está calculada.**
@@ -368,6 +368,7 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
 | `domo-3v-cucuchica.html` | **Rehecho como plano de taller** y generado por `dome_viewer.py`: vista 3D con puerta, piezas y plan de corte para 3 retiros, plantillas de todos los discos de nodo (estándar y de puerta), dibujos de la puerta, replanteo, armado, cubierta, cargas y notas. |
 | `dome_door.py` | **Nuevo.** Diseño y verificación de la puerta (portal de acceso). |
 | `dome_viewer.py` | **Nuevo.** Generador del plano de taller. |
+| `dome_platform.py` | **Nuevo.** Diseño y verificación de la plataforma y los 23 pilotes, con replanteo y materiales. |
 | `dome_build_sequence.py` (2ª pasada) | Arma el domo con puerta por defecto (`--sin-puerta` para el cerrado). Distingue si un nodo bisagra se sujeta hasta el paso siguiente o solo hasta soldar las barras del mismo paso. |
 
 No se tocó `dome_model.py`: su geometría es correcta. `dome_verify.py` y
