@@ -281,15 +281,44 @@ sustituye la verificación de un ingeniero estructural con el dato real del siti
   ≈73 kgf — este segundo número es el que debería usarse para dimensionar el perno de
   anclaje, con el factor de seguridad que indique el ingeniero.
 
-## 6.3 Sismo — sigue pendiente
+## 6.3 Sismo — estimación ilustrativa (⚠ NO reemplaza COVENIN 1756)
 
-Mérida está en una región de actividad sísmica real (proximidad a la falla de
-Boconó). Un domo geodésico es estructuralmente favorable para sismo (poca masa, muy
-triangulado, múltiples trayectorias de carga), pero el anclaje a la fundación sí debe
-revisarse. Para este cálculo hace falta el factor de zona sísmica de la norma
-venezolana (COVENIN 1756) correspondiente a Tovar — no se estimó todavía porque no se
-pidió un valor ilustrativo para este caso. Se puede hacer con el mismo enfoque que el
-viento en cuanto se tenga (o se acepte) un valor de referencia.
+**Nota sobre el dato de entrada:** el promotor reportó que el último sismo sentido en
+la zona fue hace varios años y no superó magnitud 6. Ese dato describe sismicidad
+*sentida reciente*, no el peligro sísmico de diseño — en una zona de falla activa como
+la de Boconó, que atraviesa el estado Mérida, un sismo grande tiene un período de
+retorno de décadas a siglos, así que "no ha pasado nada fuerte en memoria reciente" no
+implica que la zona sea de bajo peligro sísmico según el mapa de zonificación. Por eso
+este cálculo **no usa un factor bajo** solo porque no se ha sentido un sismo fuerte
+recientemente — usa un valor ilustrativo típico de la clasificación real de la región
+andina venezolana (zona de peligro alto por la falla de Boconó), no del reporte
+subjetivo.
+
+**Supuesto:** coeficiente sísmico ilustrativo Ao = 0.30 (30% de g), representativo de
+una zona sísmica alta en Venezuela — valor de referencia, no tomado del mapa oficial
+vigente de COVENIN 1756 para Tovar específicamente.
+
+Cálculo estático equivalente simplificado (fuerza horizontal ≈ Ao × peso, sin factores
+de reducción por ductilidad ni de amplificación de suelo — ambos requieren la norma
+completa):
+
+| Paso | Cálculo | Resultado |
+|---|---|---|
+| Peso total del domo | de §6.1 | 278.4 kg (2 731 N) |
+| Coeficiente sísmico ilustrativo | Ao | 0.30 |
+| **Fuerza sísmica horizontal** | Ao × W | **≈819 N (83.5 kgf)** |
+| Promedio por nodo de fundación (15 nodos) | | **≈55 N (5.6 kgf)** |
+
+**Lectura del resultado:** la fuerza sísmica ilustrativa (83.5 kgf) es **unas 4 veces
+menor que el empuje lateral de viento** ya calculado en §6.2 (330 kgf). Esto es
+consistente con lo esperado para una estructura tan liviana: la fuerza sísmica escala
+con la masa (y este domo pesa muy poco), mientras que la fuerza de viento escala con
+el área expuesta. **El viento gobierna el diseño lateral de este domo, no el sismo.**
+Donde el sismo sí importa es en el **anclaje** — el ingeniero debe revisar la
+combinación de cargas (viento + sismo + peso propio no actúan por separado) y, sobre
+todo, que la conexión a la fundación tenga ductilidad suficiente para no fallar frágil
+ante un movimiento del suelo, incluso si la fuerza sísmica absoluta es menor que la de
+viento.
 
 ---
 
@@ -331,11 +360,14 @@ ellos.
 - [x] Peso total de la estructura y carga por nodo de fundación (§6.1)
 - [x] Patronaje de los paneles de membrana — solo 2 formas distintas (§5.1)
 - [x] Empuje y succión de viento — **estimación ilustrativa** con V=100 km/h supuesta, no con el dato oficial de sitio (§6.2)
+- [x] Fuerza sísmica horizontal — **estimación ilustrativa** con Ao=0.30 supuesto, no con el mapa oficial de zonificación (§6.3)
 
-**Cálculo pendiente — bloqueado por un dato de sitio, no por falta de trabajo:**
-- [ ] Viento: repetir §6.2 con la velocidad básica de diseño real de COVENIN-MINDUR 2003 para Tovar (o un registro histórico confiable) en vez del valor ilustrativo
-- [ ] Fuerza sísmica sobre el anclaje (necesita factor de zona, COVENIN 1756 — §6.3)
-- [ ] Verificación estructural final por ingeniero matriculado, una vez resueltos los dos puntos anteriores
+**Con esto, todos los cálculos puramente geométricos y de carga que identificamos
+como posibles con la información disponible están resueltos.** Lo que queda ya no es
+"cálculo pendiente" sino datos de sitio oficiales + decisiones de diseño + verificación profesional:
+
+- [ ] Reemplazar los valores ilustrativos de viento (§6.2) y sismo (§6.3) por los datos oficiales de COVENIN-MINDUR 2003 y COVENIN 1756 para Tovar en cuanto estén disponibles
+- [ ] Verificación estructural final por ingeniero matriculado (incluye combinación de cargas viento+sismo+peso propio, y diseño del anclaje a tensión)
 
 **Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
 - [ ] Diseño físico del hub plate (diámetro de disco, patrón de pernos o muñones, espesor final — los ángulos ya están en §3)

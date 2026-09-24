@@ -222,6 +222,7 @@
         <a href="#nodos">Nodos</a>
         <a href="#base">Base</a>
         <a href="#cubierta">Cubierta</a>
+        <a href="#cargas">Cargas</a>
         <a href="#notas">Notas</a>
       </nav>
     </div>
@@ -351,10 +352,49 @@
       <div class="stat"><div class="v tab">75</div><div class="l">Paneles triangulares</div></div>
       <div class="stat"><div class="v tab">44.1<span class="u">m³</span></div><div class="l">Volumen interior</div></div>
     </div>
+
+    <div class="card tbl-wrap" style="margin-top:16px;">
+      <table>
+        <thead><tr><th>Panel</th><th>Lados</th><th class="num">Ángulos</th><th class="num">Área c/u</th><th class="num">Cantidad</th><th class="num">Área total</th></tr></thead>
+        <tbody>
+          <tr><td><b>P1</b></td><td class="mono">A·A·B — 125.59·125.59·122.89 cm</td><td class="num mono">60.7°·60.7°·58.6°</td><td class="num tab">0.673 m²</td><td class="num tab">45</td><td class="num tab">30.29 m²</td></tr>
+          <tr><td><b>P2</b></td><td class="mono">B·C·C — 122.89·106.16·106.16 cm</td><td class="num mono">70.7°·54.6°·54.6°</td><td class="num tab">0.532 m²</td><td class="num tab">30</td><td class="num tab">15.96 m²</td></tr>
+          <tr class="total"><td colspan="4">Solo 2 formas de panel para todo el domo</td><td class="num tab">75</td><td class="num tab">46.24 m²</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="cargas">
+    <div class="sec-head"><span class="sec-no mono">06</span><h2>Cargas — peso, viento y sismo</h2></div>
+    <p class="sec-sub">Peso propio calculado directo de la geometría. Viento y sismo son <strong>estimaciones ilustrativas</strong> (marcadas con *) — no sustituyen el cálculo con los datos oficiales de sitio, ver notas abajo.</p>
+
+    <div class="statgrid" style="margin-top:4px;">
+      <div class="stat"><div class="v tab">278<span class="u">kg</span></div><div class="l">Peso total del domo</div></div>
+      <div class="stat"><div class="v tab">18.6<span class="u">kg</span></div><div class="l">Carga prom./nodo (peso propio)</div></div>
+      <div class="stat"><div class="v tab">330<span class="u">kgf</span></div><div class="l">Empuje lateral de viento *</div></div>
+      <div class="stat"><div class="v tab">1091<span class="u">kgf</span></div><div class="l">Succión en cresta, referencia *</div></div>
+      <div class="stat"><div class="v tab">83.5<span class="u">kgf</span></div><div class="l">Fuerza sísmica horizontal **</div></div>
+      <div class="stat"><div class="v tab">73<span class="u">kgf</span></div><div class="l">Succión prom./nodo (ilustrativa)</div></div>
+      <div class="stat"><div class="v tab">1.18×</div><div class="l">Viento / peso propio</div></div>
+      <div class="stat"><div class="v tab">0.25×</div><div class="l">Sismo / viento</div></div>
+    </div>
+    <p class="sec-sub" style="margin-top:10px; font-size:11.5px; max-width:none;">* Viento: V=100 km/h ilustrativo (ráfaga capaz de arrancar árboles, según referencia local). ** Sismo: Ao=0.30g ilustrativo, elegido por la proximidad de Tovar a la falla de Boconó — un sismo fuerte sin registro reciente no significa zona de bajo peligro, así que este valor no se bajó por la ausencia de sismos recientes. Ninguno de los dos reemplaza COVENIN-MINDUR 2003 / COVENIN 1756.</p>
+
+    <div class="notegrid" style="margin-top:18px;">
+      <div class="card note panel">
+        <h3>El viento gobierna, no el sismo</h3>
+        <p>Para una estructura tan liviana, la fuerza sísmica ilustrativa (83.5 kgf) es ~4× menor que el empuje de viento (330 kgf). El sismo escala con la masa del domo —que pesa poco—, mientras el viento escala con el área expuesta. El viento manda el dimensionamiento lateral; el sismo importa sobre todo por la ductilidad del anclaje.</p>
+      </div>
+      <div class="card note panel warn">
+        <h3>⚠ El anclaje debe resistir tensión, no solo peso</h3>
+        <p>La succión de viento en la cresta llega a varias veces el peso propio del domo. Los 15 nodos de fundación —sobre todo los 5 "altos" (H5)— necesitan pernos de anclaje mecánicos diseñados a tracción/arranque, no solo apoyo por gravedad.</p>
+      </div>
+    </div>
   </section>
 
   <section id="notas">
-    <div class="sec-head"><span class="sec-no mono">06</span><h2>Notas de construcción</h2></div>
+    <div class="sec-head"><span class="sec-no mono">07</span><h2>Notas de construcción</h2></div>
     <div class="notegrid">
       <div class="card note panel">
         <h3>Tubo recomendado</h3>
@@ -370,7 +410,7 @@
       </div>
       <div class="card note panel warn">
         <h3>⚠ Verificación estructural pendiente</h3>
-        <p>Este cálculo confirma que la sección no falla por pandeo bajo cargas típicas, pero no reemplaza un chequeo de viento específico para Tovar/Mérida (COVENIN-MINDUR 2003). Recomendado antes de construir la unidad final, dado que va a alojar personas.</p>
+        <p>Ya se estimó peso propio, viento y sismo (§06) con valores ilustrativos. Falta reemplazarlos por los datos oficiales de sitio (COVENIN-MINDUR 2003 / COVENIN 1756 para Tovar) y la revisión final de un ingeniero estructural matriculado, dado que la unidad va a alojar personas.</p>
       </div>
     </div>
   </section>
