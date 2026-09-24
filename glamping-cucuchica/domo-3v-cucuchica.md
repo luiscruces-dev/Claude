@@ -284,6 +284,26 @@ glamping se compran aparte.
   longitudes de barra — la diferencia de 2.7–19.4 cm entre tipos *(corregido: decía
   "12–19 cm")* no justifica variar el calibre y simplifica el trabajo de taller.
 
+### Alternativa: tubo estructural cuadrado 1×1
+
+Se resolvió el domo con puerta con los mismos 39 casos de carga cambiando todas las
+barras redondas por tubo cuadrado de 1" (25.4 mm) (`python3 comparar_tubos.py`). El
+marco de la puerta sigue en 50×50×2. Acero supuesto: Fy 228 MPa, conservador.
+
+| Tubo | kg/m | Peso de las barras | Capacidad de una barra A a compresión | Barra más cargada (uso) | 100 kg a media barra |
+|---|---|---|---|---|---|
+| redondo 32×2 (diseño) | 1.48 | 210 kg | 2008 kgf | 184 kgf (9%) | 101% de fluencia |
+| cuadrado 1×1 × 0.9 mm | 0.69 | 98 kg | 862 kgf | 187 kgf (21%) | 194% de fluencia |
+| cuadrado 1×1 × 1.1 mm | 0.84 | 119 kg | 1032 kgf | 187 kgf (17%) | 163% de fluencia |
+| cuadrado 1×1 × 1.5 mm | 1.13 | 160 kg | 1351 kgf | 185 kgf (13%) | 125% de fluencia |
+| cuadrado 1×1 × 2.0 mm | 1.47 | 208 kg | 1708 kgf | 184 kgf (10%) | 100% de fluencia |
+
+Con las cargas de este domo, el 1×1 alcanza con cualquier espesor: la barra más cargada
+lleva unos 184 kgf. Lo que cambia es la robustez. La pared de 0.9–1.1 mm se abolla,
+se perfora al soldar con electrodo y el óxido la atraviesa antes, y una persona parada a
+media barra la dobla. **Mínimo 1×1 de 1.5 mm; con 2.0 mm queda igual que el redondo
+32×2**, con el mismo peso. Los largos de centro a centro no cambian.
+
 ### Galvanizado
 **Galvanizar después de cortar, taladrar y soldar** — nunca antes. Si se suelda tubo
 ya galvanizado, el zinc se quema justo en la unión, que es exactamente donde más
@@ -558,6 +578,7 @@ python3 dome_door.py                 # verifica la puerta (§11)
 python3 dome_platform.py             # verifica la plataforma y los pilotes (§9.6)
 python3 dome_build_sequence.py       # regenera secuencia_de_armado.md (con puerta; --sin-puerta para el domo cerrado)
 python3 dome_viewer.py               # regenera el plano de taller domo-3v-cucuchica.html
+python3 comparar_tubos.py            # redondo 32x2 contra cuadrado 1x1 (§6)
 cd maqueta && python3 maqueta.py     # maqueta 1:10: vista 3D, calculadora y plantillas (§12)
 ```
 
@@ -926,8 +947,12 @@ Las alturas de la maqueta se miden desde el tablero, al centro del punto de pega
 eso suman medio palito, 2.5 mm, a la altura real a escala). Los 5 nodos altos del
 anillo de base llevan un taco de 4.9 mm, que es el riser de 4.86 cm del domo real.
 
-**Por qué 1:10:** el domo queda de 60 cm de diámetro y 25 cm de alto, y cada barra sale
-de un palo chino. Un palo de 5 mm equivale al tubo cuadrado de 50 mm del marco. Las
+**Palitos a comprar:** con palos chinos de 30 cm se descartan unos 3 cm de cada punta y
+quedan 24 cm parejos, donde caben 2 piezas. Salen 63 palos; comprar 80 para tener
+repuesto. La calculadora de la página recalcula la cuenta con el largo y el grosor reales.
+
+**Por qué 1:10:** el domo queda de 60 cm de diámetro y 25 cm de alto, y cada barra cabe
+en un palo chino. Un palo de 5 mm equivale al tubo cuadrado de 50 mm del marco. Las
 barras del domo (32 mm) se ven 1.6 veces más gruesas; con palitos de brocheta de 3 mm
 el grosor también queda exacto.
 

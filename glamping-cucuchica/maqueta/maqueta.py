@@ -42,7 +42,8 @@ from dome_model import v_sub, v_norm, v_dot  # noqa: E402
 
 SCALE = 10              # escala recomendada 1:10 (plantillas impresas)
 STICK_D = 5.0           # mm, palo chino tipico en la parte recta
-STICK_USABLE = 220.0    # mm, parte recta aprovechable de un palo chino de 24 cm (sin la punta)
+STICK_LEN = 300.0       # mm, palo chino de 30 cm
+STICK_USABLE = 240.0    # mm, parte pareja aprovechable: se descartan ~3 cm de cada punta
 KERF = 1.0              # mm que se pierden por corte
 
 
@@ -290,7 +291,7 @@ def build_page(D, PL, members, data):
   <h2>Qué necesita</h2>
   <div class="cards">
     <div class="card"><h3>Material</h3><ul class="plain">
-      <li><b id="m-sticks">—</b> palos chinos de 24 cm, derechos y del mismo grosor (compre un paquete de 150)</li>
+      <li><b id="m-sticks">—</b> palos chinos de {STICK_LEN/10:.0f} cm, derechos y del mismo grosor (compre <b id="m-buy">—</b>, con repuesto para repetir cortes)</li>
       <li>Pega loca (cianoacrilato) y bicarbonato de sodio</li>
       <li>Tablero plano de 70 × 70 cm (cartón piedra, MDF o anime)</li>
       <li>Plastilina y cinta de papel para sostener</li>
@@ -307,7 +308,7 @@ def build_page(D, PL, members, data):
 
 <section id="corte">
   <h2>Largo de cada palito</h2>
-  <p class="sub">Mida el grosor de sus palitos en la parte recta y póngalo aquí; todo se recalcula, incluido el checklist. "Retiro" es lo que se descuenta en cada punta para que los palitos no choquen en el nodo; así el eje de cada palito sigue apuntando al centro exacto del nodo.</p>
+  <p class="sub">Mida el grosor de sus palitos en la parte del medio, que es de donde se corta, y póngalo aquí; todo se recalcula, incluido el checklist. "Largo aprovechable" es la parte pareja del palito: en uno de {STICK_LEN/10:.0f} cm, descarte unos 3 cm de cada punta. "Retiro" es lo que se descuenta en cada punta para que los palitos no choquen en el nodo; así el eje de cada palito sigue apuntando al centro exacto del nodo.</p>
   <div class="calc">
     <label>Escala 1:<select id="c-n"><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></label>
     <label>Grosor del palito <input id="c-d" type="number" min="2" max="8" step="0.5" value="{STICK_D}"> mm</label>
@@ -480,8 +481,8 @@ function recalc(){
   pieces.sort(function(a,b){return b-a;});var sticks=[],tooLong=0;
   pieces.forEach(function(x){if(x+1>p.L){tooLong++;return;}for(var i=0;i<sticks.length;i++){if(sticks[i]+x+1<=p.L){sticks[i]+=x+1;return;}}sticks.push(x+1);});
   var total=pieces.reduce(function(a,b){return a+b;},0);
-  $('cutsum').innerHTML='<b>'+pieces.length+' palitos cortados</b> ('+fmt(total/1000,2)+' m en total). Con palos de '+p.L+' mm aprovechables salen de <b>'+sticks.length+' palos chinos</b>'+(tooLong?(' <span style="color:var(--warn)">· '+tooLong+' piezas no caben en un solo palo: empalme esas piezas o use palos más largos</span>'):'')+'. Compre un paquete de 150 para tener repuesto.';
-  $('m-sticks').textContent=sticks.length+tooLong;
+  $('cutsum').innerHTML='<b>'+pieces.length+' palitos cortados</b> ('+fmt(total/1000,2)+' m en total). Con palos de '+p.L+' mm aprovechables salen de <b>'+sticks.length+' palos chinos</b>'+(tooLong?(' <span style="color:var(--warn)">· '+tooLong+' piezas no caben en un solo palo: empalme esas piezas o use palos más largos</span>'):'')+'. Compre '+buyOf(sticks.length+tooLong)+' para tener repuesto.';
+  $('m-sticks').textContent=sticks.length+tooLong;$('m-buy').textContent=buyOf(sticks.length+tooLong);
   document.querySelectorAll('[data-pc]').forEach(function(td){var pc=MQ.pieces[+td.getAttribute('data-pc')];td.textContent=fmt(Math.round(cutOf(pc,p.N,p.d)*2)/2)+' mm';});
   document.querySelectorAll('[data-ck]').forEach(function(td){var c=MQ.checks[+td.getAttribute('data-ck')],v;
     if(c.kind==='dist')v=c.m*1000/p.N;else if(c.kind==='height')v=c.m*1000/p.N+p.d/2;else if(c.kind==='doorw')v=c.m*1000/p.N-p.d;else if(c.kind==='doorh')v=c.m*1000/p.N;else v=null;
@@ -489,8 +490,9 @@ function recalc(){
   sizes(p,pieces.length,sticks.length+tooLong);
   if(window.__setModel)window.__setModel(p);
 }
+function buyOf(n){return Math.ceil(n*1.25/10)*10;}   // 25% de repuesto, redondeado a la decena
 function sizes(p,np,ns){var R=MQ.real,N=p.N;
-  $('sizes').innerHTML=[['Palitos cortados',np,'',''],['Palos chinos de '+p.L+' mm',ns,'','a comprar: 150'],['Diámetro de la base',fmt(R.diam*1000/N,0),'mm','a escala 1:'+N],['Alto hasta el ápice',fmt(R.apex*1000/N,0),'mm','sobre la base']]
+  $('sizes').innerHTML=[['Palitos cortados',np,'',''],['Palos chinos',ns,'','con '+p.L+' mm aprovechables · comprar '+buyOf(ns)],['Diámetro de la base',fmt(R.diam*1000/N,0),'mm','a escala 1:'+N],['Alto hasta el ápice',fmt(R.apex*1000/N,0),'mm','sobre la base']]
   .map(function(s){return '<div class="stat"><div class="v">'+s[1]+'<span class="u">'+s[2]+'</span></div><div class="l">'+s[0]+(s[3]?' · '+s[3]:'')+'</div></div>';}).join('');}
 /* ---------------- marcas de avance (se guardan en este navegador) ---------------- */
 var STORE='mq-cucuchica-marcas',marks={};
