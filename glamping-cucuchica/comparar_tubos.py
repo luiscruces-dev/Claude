@@ -1,7 +1,7 @@
 """
-Compara el tubo de las barras del domo: el redondo 32x2 del diseno contra el
-tubo estructural cuadrado de 1" x 1" (25.4 mm) en los espesores de pared que
-se consiguen.
+Compara el tubo de las barras del domo: el redondo 32x2 del diseno (1 1/4")
+contra otros tubos estructurales que se consiguen: redondo de 1 1/4" y de 2"
+con pared de 1.8 mm, y cuadrado de 1" x 1" (25.4 mm) de 0.9 a 2.0 mm.
 
 Corre: `python3 comparar_tubos.py`
 
@@ -42,7 +42,9 @@ def square_tube(b_mm, t_mm):
 
 
 CANDIDATES = [
-    ("redondo 32×2 (diseño)", 2.0, round_tube(32.0, 2.0)),
+    ("redondo 32×2 (diseño, 1¼\")", 2.0, round_tube(32.0, 2.0)),
+    ("redondo 1¼\" × 1.8 mm", 1.8, round_tube(31.75, 1.8)),
+    ("redondo 2\" × 1.8 mm", 1.8, round_tube(50.8, 1.8)),
     ("cuadrado 1×1 × 0.9 mm", 0.9, square_tube(25.4, 0.9)),
     ("cuadrado 1×1 × 1.1 mm", 1.1, square_tube(25.4, 1.1)),
     ("cuadrado 1×1 × 1.5 mm", 1.5, square_tube(25.4, 1.5)),
@@ -87,14 +89,14 @@ def compare():
 def main():
     rows = compare()
     ref = rows[0]
-    print("Barras del domo con puerta: redondo 32x2 contra cuadrado 1x1 (25.4 mm)")
+    print("Barras del domo con puerta: redondo 32x2 del diseno contra otros tubos estructurales")
     print(f"Acero Fy {FY/1e6:.0f} MPa (conservador), 39 casos de carga de dome_door.py\n")
-    print(f"{'tubo':26s} {'kg/m':>5s} {'kg barras':>9s} {'KL/r A':>6s} {'cap. A':>8s} {'mas cargada':>12s} {'uso':>5s} "
+    print(f"{'tubo':28s} {'kg/m':>5s} {'kg barras':>9s} {'KL/r A':>6s} {'cap. A':>8s} {'mas cargada':>12s} {'uso':>5s} "
           f"{'100 kg a media barra':>21s} {'pared':>7s}")
     for r in rows:
         w = r["worst"]
         person = f"{r['sigma_person']:.0f} MPa ({r['sigma_person']/(FY/1e6)*100:.0f}% Fy)"
-        print(f"{r['name']:26s} {r['kg_m']:5.2f} {r['kg']:9.0f} {r['kl_r_A']:6.0f} {r['cap_A_kgf']:6.0f} kgf "
+        print(f"{r['name']:28s} {r['kg_m']:5.2f} {r['kg']:9.0f} {r['kl_r_A']:6.0f} {r['cap_A_kgf']:6.0f} kgf "
               f"{w['comp']/G:7.0f} kgf {w['ut']*100:4.0f}% {person:>21s} {'ok' if r['wall_ok'] else 'delgada':>7s}")
     print("\nLectura:")
     for r in rows[1:]:

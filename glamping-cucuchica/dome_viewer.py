@@ -620,8 +620,9 @@ def build_page():
     tube_rows = "".join(
         f"<tr><td class='nw'>{'<b>' + esc(t['name']) + '</b>' if i == 0 else esc(t['name'])}</td><td class='num'>{t['kg_m']:.2f}</td><td class='num'>{t['kg']:.0f} kg</td>"
         f"<td class='num'>{t['cap_A_kgf']:.0f} kgf</td><td class='num'>{t['worst']['comp']/G:.0f} kgf ({t['worst']['ut']*100:.0f}%)</td>"
-        f"<td class='num'>{t['sigma_person']/fy*100:.0f}% de fluencia</td></tr>" for i, t in enumerate(tubes))
-    thin = min(tubes[1:], key=lambda t: t["t"])
+        f"<td class='num'>{t['sigma_person']/fy*100:.0f}% de fluencia</td><td class='num'>{t['kg_m']*6:.1f} kg</td></tr>" for i, t in enumerate(tubes))
+    thin = min((t for t in tubes if "1×1" in t["name"]), key=lambda t: t["t"])
+    big = next(t for t in tubes if t["name"].startswith("redondo 2"))
 
     css = CSS
     js = JS.replace("__DATA__", json.dumps(data3d, separators=(",", ":")))
@@ -791,10 +792,10 @@ def build_page():
     <tr><td>Perno M12 por anclaje: capacidad del acero / demanda con FS 2.5 (tracción) y 2.0 (corte)</td><td class="num">{bolt_t:.1f}× · {bolt_v:.1f}×</td><td class="num">{bolt_t0:.1f}× · {bolt_v0:.1f}×</td></tr>
   </tbody></table></div>
   <p class="small muted">La puerta sube el corte en los anclajes de los postes de unos {sh0/G:.0f} a {sh/G:.0f} kgf. El perno alcanza; el embebido en el concreto y el peso de los pilotes los define el ingeniero.</p>
-  <h3 class="sub">¿Y con tubo cuadrado 1×1?</h3>
-  <p class="small">El mismo cálculo, con los 39 casos de carga, cambiando todas las barras redondas por tubo estructural cuadrado de 1" (25.4 mm). "Capacidad" es la carga de diseño a compresión de la barra más larga (A); "persona a media barra" es un adulto de 100 kg parado en el medio de una barra A. El marco de la puerta sigue en 50×50×2. Se corre con <span class="mono">python3 comparar_tubos.py</span>.</p>
-  <div class="tbl"><table><thead><tr><th>Tubo</th><th class="num">kg/m</th><th class="num">Peso barras</th><th class="num">Capacidad barra A</th><th class="num">Más cargada (uso)</th><th class="num">Persona a media barra</th></tr></thead><tbody>{tube_rows}</tbody></table></div>
-  <div class="card note"><h3>Qué dicen los números</h3><p>Con las cargas de este domo, el 1×1 alcanza con cualquier espesor. La barra más cargada lleva unos {tubes[0]['worst']['comp']/G:.0f} kgf, y hasta el 1×1 de {thin['t']:.1f} mm tiene una capacidad de {thin['cap_A_kgf']:.0f} kgf. Lo que cambia es la robustez: la pared de 0.9–1.1 mm se abolla con un golpe, se perfora al soldar con electrodo y el óxido la atraviesa antes, y una persona parada a media barra la dobla. <b>Mínimo 1×1 de 1.5 mm; con 2.0 mm queda igual que el redondo 32×2</b>, con el mismo peso. Si se cambia, los largos de centro a centro no cambian; hay que regenerar este plano para los pesos y los dibujos de los nodos. Acero supuesto: Fy {fy:.0f} MPa, conservador.</p></div>
+  <h3 class="sub">¿Y con otro tubo?</h3>
+  <p class="small">El mismo cálculo, con los 39 casos de carga, cambiando todas las barras redondas por otros tubos estructurales que se consiguen: redondo de 1¼" y de 2", y cuadrado de 1" (25.4 mm). "Capacidad" es la carga de diseño a compresión de la barra más larga (A); "persona a media barra" es un adulto de 100 kg parado en el medio de una barra A. El marco de la puerta sigue en 50×50×2. Se corre con <span class="mono">python3 comparar_tubos.py</span>.</p>
+  <div class="tbl"><table><thead><tr><th>Tubo</th><th class="num">kg/m</th><th class="num">Peso barras</th><th class="num">Capacidad barra A</th><th class="num">Más cargada (uso)</th><th class="num">Persona a media barra</th><th class="num">Barra de 6 m pesa</th></tr></thead><tbody>{tube_rows}</tbody></table></div>
+  <div class="card note"><h3>Qué dicen los números</h3><p>Con las cargas de este domo, el 1×1 alcanza con cualquier espesor. La barra más cargada lleva unos {tubes[0]['worst']['comp']/G:.0f} kgf, y hasta el 1×1 de {thin['t']:.1f} mm tiene una capacidad de {thin['cap_A_kgf']:.0f} kgf. Lo que cambia es la robustez: la pared de 0.9–1.1 mm se abolla con un golpe, se perfora al soldar con electrodo y el óxido la atraviesa antes, y una persona parada a media barra la dobla. <b>Mínimo 1×1 de 1.5 mm; con 2.0 mm queda igual que el redondo 32×2</b>, con el mismo peso. El redondo de 1¼" con 1.8 mm también sirve. El de 2" es mucho más fuerte (una persona a media barra llega al {big['sigma_person']/fy*100:.0f}% de la fluencia), pero lleva {(big['kg']/tubes[0]['kg']-1)*100:.0f}% más acero y los nodos salen más grandes: no hace falta. Para comparar publicaciones, la última columna sirve de control: si la barra pesa bastante menos, la pared es más delgada de lo que dice. Si se cambia, los largos de centro a centro no cambian; hay que regenerar este plano para los pesos y los dibujos de los nodos. Acero supuesto: Fy {fy:.0f} MPa, conservador.</p></div>
 </section>
 
 <section id="notas">

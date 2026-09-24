@@ -368,7 +368,7 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
 | `domo-3v-cucuchica.html` | **Rehecho como plano de taller** y generado por `dome_viewer.py`: vista 3D realista del domo completo con puerta y plataforma (filtros por tipo de barra, armado paso a paso, zoom, datos de cada barra y nodo), piezas y plan de corte para 3 retiros, plantillas de todos los discos de nodo (estándar y de puerta), dibujos de la puerta, replanteo, armado, cubierta, cargas y notas. |
 | `dome_door.py` | **Nuevo.** Diseño y verificación de la puerta (portal de acceso). |
 | `dome_viewer.py` | **Nuevo.** Generador del plano de taller. |
-| `comparar_tubos.py` | **Nuevo.** Resuelve el domo con los 39 casos de carga para el redondo 32×2 y el cuadrado 1×1 de 0.9 a 2.0 mm (compresión, persona a media barra, peso). |
+| `comparar_tubos.py` | **Nuevo.** Resuelve el domo con los 39 casos de carga para el redondo 32×2, el redondo de 1¼" y 2" con 1.8 mm, y el cuadrado 1×1 de 0.9 a 2.0 mm (compresión, persona a media barra, peso). |
 | `escena3d.py` | **Nuevo.** Datos de la escena 3D y códigos de pieza (paso.número), compartidos por el plano de taller y la maqueta para que las dos vistas dibujen la misma geometría. |
 | `dome_platform.py` | **Nuevo.** Diseño y verificación de la plataforma y los 23 pilotes, con replanteo y materiales. |
 | `maqueta/` | **Nuevo.** Maqueta 1:10 de la estructura con palos chinos, como prueba de las medidas: checklist de las 119 piezas con los códigos de la secuencia real, calculadora de corte, 20 medidas de control independientes de los cortes, y plantillas a tamaño real (planta con plomadas, etiquetas por palito, reglas, discos de ángulo, hoja de control). |

@@ -284,25 +284,31 @@ glamping se compran aparte.
   longitudes de barra — la diferencia de 2.7–19.4 cm entre tipos *(corregido: decía
   "12–19 cm")* no justifica variar el calibre y simplifica el trabajo de taller.
 
-### Alternativa: tubo estructural cuadrado 1×1
+### Alternativas de tubo
 
 Se resolvió el domo con puerta con los mismos 39 casos de carga cambiando todas las
-barras redondas por tubo cuadrado de 1" (25.4 mm) (`python3 comparar_tubos.py`). El
-marco de la puerta sigue en 50×50×2. Acero supuesto: Fy 228 MPa, conservador.
+barras redondas por otros tubos estructurales que se consiguen: redondo de 1¼" y de 2",
+y cuadrado de 1" (25.4 mm) (`python3 comparar_tubos.py`). El marco de la puerta sigue
+en 50×50×2. Acero supuesto: Fy 228 MPa, conservador.
 
-| Tubo | kg/m | Peso de las barras | Capacidad de una barra A a compresión | Barra más cargada (uso) | 100 kg a media barra |
-|---|---|---|---|---|---|
-| redondo 32×2 (diseño) | 1.48 | 210 kg | 2008 kgf | 184 kgf (9%) | 101% de fluencia |
-| cuadrado 1×1 × 0.9 mm | 0.69 | 98 kg | 862 kgf | 187 kgf (21%) | 194% de fluencia |
-| cuadrado 1×1 × 1.1 mm | 0.84 | 119 kg | 1032 kgf | 187 kgf (17%) | 163% de fluencia |
-| cuadrado 1×1 × 1.5 mm | 1.13 | 160 kg | 1351 kgf | 185 kgf (13%) | 125% de fluencia |
-| cuadrado 1×1 × 2.0 mm | 1.47 | 208 kg | 1708 kgf | 184 kgf (10%) | 100% de fluencia |
+| Tubo | kg/m | Peso de las barras | Capacidad de una barra A a compresión | Barra más cargada (uso) | 100 kg a media barra | Barra de 6 m pesa |
+|---|---|---|---|---|---|---|
+| redondo 32×2 (diseño, 1¼") | 1.48 | 210 kg | 2008 kgf | 184 kgf (9%) | 101% de fluencia | 8.9 kg |
+| redondo 1¼" × 1.8 mm | 1.33 | 189 kg | 1799 kgf | 184 kgf (10%) | 113% de fluencia | 8.0 kg |
+| redondo 2" × 1.8 mm | 2.18 | 308 kg | 4497 kgf | 181 kgf (4%) | 41% de fluencia | 13.1 kg |
+| cuadrado 1×1 × 0.9 mm | 0.69 | 98 kg | 862 kgf | 187 kgf (21%) | 194% de fluencia | 4.2 kg |
+| cuadrado 1×1 × 1.1 mm | 0.84 | 119 kg | 1032 kgf | 187 kgf (17%) | 163% de fluencia | 5.0 kg |
+| cuadrado 1×1 × 1.5 mm | 1.13 | 160 kg | 1351 kgf | 185 kgf (13%) | 125% de fluencia | 6.8 kg |
+| cuadrado 1×1 × 2.0 mm | 1.47 | 208 kg | 1708 kgf | 184 kgf (10%) | 100% de fluencia | 8.8 kg |
 
-Con las cargas de este domo, el 1×1 alcanza con cualquier espesor: la barra más cargada
-lleva unos 184 kgf. Lo que cambia es la robustez. La pared de 0.9–1.1 mm se abolla,
+Con las cargas de este domo, todos alcanzan: la barra más cargada lleva unos
+184 kgf. Lo que cambia es la robustez. La pared de 0.9–1.1 mm se abolla,
 se perfora al soldar con electrodo y el óxido la atraviesa antes, y una persona parada a
 media barra la dobla. **Mínimo 1×1 de 1.5 mm; con 2.0 mm queda igual que el redondo
-32×2**, con el mismo peso. Los largos de centro a centro no cambian.
+32×2**, con el mismo peso. El redondo de 1¼" con 1.8 mm también sirve. El de 2" es
+mucho más fuerte, pero lleva 47% más acero y los nodos salen más grandes: no hace
+falta. Los largos de centro a centro no cambian con el tubo. Al comparar precios, el peso
+de la barra de 6 m sirve de control: si pesa bastante menos, la pared es más delgada.
 
 ### Galvanizado
 **Galvanizar después de cortar, taladrar y soldar** — nunca antes. Si se suelda tubo
@@ -578,7 +584,7 @@ python3 dome_door.py                 # verifica la puerta (§11)
 python3 dome_platform.py             # verifica la plataforma y los pilotes (§9.6)
 python3 dome_build_sequence.py       # regenera secuencia_de_armado.md (con puerta; --sin-puerta para el domo cerrado)
 python3 dome_viewer.py               # regenera el plano de taller domo-3v-cucuchica.html
-python3 comparar_tubos.py            # redondo 32x2 contra cuadrado 1x1 (§6)
+python3 comparar_tubos.py            # redondo 32x2 contra otros tubos: 1¼", 2" y 1x1 (§6)
 cd maqueta && python3 maqueta.py     # maqueta 1:10: vista 3D, calculadora y plantillas (§12)
 ```
 
