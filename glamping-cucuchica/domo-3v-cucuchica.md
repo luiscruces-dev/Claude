@@ -5,8 +5,10 @@ de Cucuchica (municipio Tovar, estado Mérida, Venezuela). Este documento reúne
 las medidas, ángulos y cálculos derivados de la geometría real del domo — no de tablas
 genéricas de fabricantes.
 
-**Plano de taller** con vista 3D, piezas y plan de corte, plantillas de nodo, puerta,
-replanteo y armado: [`domo-3v-cucuchica.html`](./domo-3v-cucuchica.html), generado con
+**Plano de taller** con vista 3D (domo armado completo con la plataforma; se puede
+filtrar por tipo de barra, ver el armado paso a paso, acercar y alejar, y tocar cada
+barra o nodo para ver su código, largo y corte), piezas y plan de corte, plantillas de
+nodo, puerta, replanteo y armado: [`domo-3v-cucuchica.html`](./domo-3v-cucuchica.html), generado con
 `python3 dome_viewer.py` a partir de los mismos módulos que este documento.
 
 > **⚠ Auditoría independiente (2026-09-24) — leer antes de cortar, soldar o comprar.**

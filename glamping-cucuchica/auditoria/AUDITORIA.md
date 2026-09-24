@@ -365,9 +365,10 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
 | `dome_build_sequence.py` | Alturas desde el piso; estabilidad 3D (3 barras no coplanares); ordinal correcto ("1ª de 2"); tabla de replanteo en el Paso 0; aviso de no pisar barras. |
 | `secuencia_de_armado.md` | Regenerado con lo anterior. |
 | `domo-3v-cucuchica.md` | Recuadro de auditoría al inicio y correcciones marcadas en el texto (§2, §2.1, §3, §4, §5, §6, §6.2, §8, §8.3, §9.2, §9.3, §9.4, §10). |
-| `domo-3v-cucuchica.html` | **Rehecho como plano de taller** y generado por `dome_viewer.py`: vista 3D con puerta, piezas y plan de corte para 3 retiros, plantillas de todos los discos de nodo (estándar y de puerta), dibujos de la puerta, replanteo, armado, cubierta, cargas y notas. |
+| `domo-3v-cucuchica.html` | **Rehecho como plano de taller** y generado por `dome_viewer.py`: vista 3D realista del domo completo con puerta y plataforma (filtros por tipo de barra, armado paso a paso, zoom, datos de cada barra y nodo), piezas y plan de corte para 3 retiros, plantillas de todos los discos de nodo (estándar y de puerta), dibujos de la puerta, replanteo, armado, cubierta, cargas y notas. |
 | `dome_door.py` | **Nuevo.** Diseño y verificación de la puerta (portal de acceso). |
 | `dome_viewer.py` | **Nuevo.** Generador del plano de taller. |
+| `escena3d.py` | **Nuevo.** Datos de la escena 3D y códigos de pieza (paso.número), compartidos por el plano de taller y la maqueta para que las dos vistas dibujen la misma geometría. |
 | `dome_platform.py` | **Nuevo.** Diseño y verificación de la plataforma y los 23 pilotes, con replanteo y materiales. |
 | `maqueta/` | **Nuevo.** Maqueta 1:10 de la estructura con palos chinos, como prueba de las medidas: checklist de las 119 piezas con los códigos de la secuencia real, calculadora de corte, 20 medidas de control independientes de los cortes, y plantillas a tamaño real (planta con plomadas, etiquetas por palito, reglas, discos de ángulo, hoja de control). |
 | `dome_build_sequence.py` (2ª pasada) | Arma el domo con puerta por defecto (`--sin-puerta` para el cerrado). Distingue si un nodo bisagra se sujeta hasta el paso siguiente o solo hasta soldar las barras del mismo paso. |

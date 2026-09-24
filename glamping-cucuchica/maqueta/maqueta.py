@@ -37,6 +37,7 @@ sys.path.insert(0, os.path.join(HERE, ".."))
 
 import dome_door as door            # noqa: E402
 import dome_platform as plat        # noqa: E402
+import escena3d                     # noqa: E402
 from dome_model import v_sub, v_norm, v_dot  # noqa: E402
 
 SCALE = 10              # escala recomendada 1:10 (plantillas impresas)
@@ -111,24 +112,16 @@ def build_pieces(D, members):
     mem_by_edge = {tuple(sorted(m["e"])): m for m in members}
     pieces, notes = [], []
     for s in steps:
-        new = set(s["new_hubs"]) if s["kind"] != "fundacion" else set()
         frame = bool(D.door) and set(s["new_hubs"]) == {D.door["Ta"], D.door["Tb"]}
         later = [v for v in s.get("needs_bracing", []) if v in s.get("unfixed_at_end", [])]
         within = [v for v in s.get("needs_bracing", []) if v not in s.get("unfixed_at_end", [])]
         notes.append({"step": s["ring"], "kind": s["kind"], "height": s.get("height_m", 0.0), "nodes": list(s["new_hubs"]),
                       "frame": frame, "later": later, "within": within, "n": len(s["edges"])})
-        for i, e in enumerate(s["edges"], start=1):
-            a, b = e["a"], e["b"]
-            if b in new and a not in new:
-                x, y = a, b
-            elif a in new and b not in new:
-                x, y = b, a
-            else:
-                x, y = a, b
-            m = mem_by_edge[tuple(sorted((a, b)))]
-            pieces.append({"id": f"{s['ring']}.{i:02d}", "step": s["ring"], "from": x, "to": y, "code": m["code"],
-                           "L": round(m["L"], 5), "ta": None if m["ta"] is None else round(m["ta"], 3),
-                           "tb": None if m["tb"] is None else round(m["tb"], 3)})
+    for sp in escena3d.sequence_pieces(D, steps):
+        m = mem_by_edge[tuple(sorted((sp["from"], sp["to"])))]
+        pieces.append(dict(sp, code=m["code"], L=round(m["L"], 5),
+                           ta=None if m["ta"] is None else round(m["ta"], 3),
+                           tb=None if m["tb"] is None else round(m["tb"], 3)))
     return pieces, notes
 
 
@@ -193,53 +186,17 @@ def collect():
     PL, PR, PQ, _ = plat.evaluate(verbose=False)
     P = D.verts
     members = build_members(D)
-    sec = {e: door.MEMBER_INFO[D.edge_label[e]][0] for e in D.edges}
-    struts = [{"a": [round(c, 4) for c in P[a]], "b": [round(c, 4) for c in P[b]], "code": D.edge_label[(a, b)],
-               "sq": sec[(a, b)] == "cuad50x2"} for a, b in D.edges]
-    hubs = []
-    for v in D.active:
-        if D.type_of[v] == "PE":
-            continue
-        n = [P[v][k] - D.center[k] for k in range(3)]
-        L = math.sqrt(sum(x*x for x in n))
-        hubs.append({"p": [round(c, 4) for c in P[v]], "n": [round(x/L, 4) for x in n]})
-    tris = [[[round(c, 4) for c in P[i]] for i in t] for t in D.triangles]
+    scene = escena3d.scene_data(D, PL)
     dd = D.door
-    quad = [[round(c, 4) for c in P[i]] for i in (dd["a"], dd["b"], dd["Tb"], dd["Ta"])]
-
-    def xy(u, v): return [round(c, 4) for c in PL.to_xy(u, v)]
-    lv = PL.levels
-    platd = {
-        "outer": [xy(*q) for q in PL.outer], "inner": [xy(*q) for q in PL.inner],
-        "piles": [{"x": round(p["x"], 4), "y": round(p["y"], 4), "kind": p["kind"], "id": p["id"],
-                   "top": lv["ring_bottom"] if p["kind"] == "perimetral" else lv["beam_bottom"]} for p in PL.piles],
-        "beams": [{"a": xy(b["u0"], b["v"]), "b": xy(b["u1"], b["v"])} for b in PL.beams] +
-                 [{"a": xy(PL.landing["beam_u"], PL.landing["v0"]), "b": xy(PL.landing["beam_u"], PL.landing["v1"])}],
-        "joists": [{"a": xy(j["u"], j["v0"]), "b": xy(j["u"], j["v1"])} for j in PL.joists] +
-                  [{"a": xy(j["u0"], j["v"]), "b": xy(j["u1"], j["v"])} for j in PL.landing_joists],
-        "landing": [xy(PL.landing["u0"], PL.landing["v0"]), xy(PL.landing["u1"], PL.landing["v0"]),
-                    xy(PL.landing["u1"], PL.landing["v1"]), xy(PL.landing["u0"], PL.landing["v1"])],
-        "steps": [{"c": [xy(s["u0"], s["v0"]), xy(s["u1"], s["v0"]), xy(s["u1"], s["v1"]), xy(s["u0"], s["v1"])],
-                   "top": s["z"] + plat.STEP_RISE} for s in PL.steps],
-        "levels": lv, "ped": plat.PED, "foot": plat.FOOT, "footT": plat.FOOT_T, "ringH": plat.RING_H,
-        "beamH": plat.BEAM_H, "beamB": plat.BEAM_B, "joistB": plat.JOIST_B, "joistH": plat.JOIST_H, "deckT": plat.DECK_T,
-    }
     pieces, notes = build_pieces(D, members)
-    nodes = []
-    for v in D.active:
-        n = [P[v][k] - D.center[k] for k in range(3)]
-        L = math.sqrt(sum(x*x for x in n))
-        nodes.append({"id": v, "p": [round(c, 4) for c in P[v]], "n": [round(x/L, 4) for x in n], "t": D.type_of[v]})
-    data = {"struts": struts, "hubs": hubs, "tris": tris, "door": quad, "center": [round(c, 4) for c in D.center],
-            "pieces": pieces, "notes": notes, "checks": control_checks(D), "nodes": nodes,
-            "u": [round(dd["u"][0], 5), round(dd["u"][1], 5)], "v": [round(dd["v"][0], 5), round(dd["v"][1], 5)],
-            "plat": platd,
-            "members": [{"code": m["code"], "L": round(m["L"], 5), "ta": None if m["ta"] is None else round(m["ta"], 3),
-                         "tb": None if m["tb"] is None else round(m["tb"], 3)} for m in members],
-            "real": {"diam": 6.0, "apex": round(max(p[2] for p in P), 4), "clear_w": round(door.bending_door_frame(D, 1)["clear_w"], 4),
-                     "clear_h": round(door.bending_door_frame(D, 1)["clear_h"], 4), "freeboard": plat.FREEBOARD,
-                     "extent_u": round(PL.steps[-1]["u1"], 3), "ring_len": round(PQ["ring_len"], 3),
-                     "head_z": dd["head_z"], "zig": 0.0486}}
+    data = dict(scene, pieces=pieces, notes=notes, checks=control_checks(D))
+    data.update({
+        "members": [{"code": m["code"], "L": round(m["L"], 5), "ta": None if m["ta"] is None else round(m["ta"], 3),
+                     "tb": None if m["tb"] is None else round(m["tb"], 3)} for m in members],
+        "real": {"diam": 6.0, "apex": round(max(p[2] for p in P), 4), "clear_w": round(door.bending_door_frame(D, 1)["clear_w"], 4),
+                 "clear_h": round(door.bending_door_frame(D, 1)["clear_h"], 4), "freeboard": plat.FREEBOARD,
+                 "extent_u": round(PL.steps[-1]["u1"], 3), "ring_len": round(PQ["ring_len"], 3),
+                 "head_z": dd["head_z"], "zig": 0.0486}})
     return D, PL, members, data
 
 
