@@ -369,6 +369,7 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
 | `dome_door.py` | **Nuevo.** Diseño y verificación de la puerta (portal de acceso). |
 | `dome_viewer.py` | **Nuevo.** Generador del plano de taller. |
 | `dome_platform.py` | **Nuevo.** Diseño y verificación de la plataforma y los 23 pilotes, con replanteo y materiales. |
+| `maqueta/` | **Nuevo.** Maqueta 1:10: vista 3D realista, calculadora de corte de palitos y plantillas imprimibles a tamaño real (PDF). |
 | `dome_build_sequence.py` (2ª pasada) | Arma el domo con puerta por defecto (`--sin-puerta` para el cerrado). Distingue si un nodo bisagra se sujeta hasta el paso siguiente o solo hasta soldar las barras del mismo paso. |
 
 No se tocó `dome_model.py`: su geometría es correcta. `dome_verify.py` y

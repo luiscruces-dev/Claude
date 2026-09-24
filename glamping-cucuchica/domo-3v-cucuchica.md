@@ -556,6 +556,7 @@ python3 dome_door.py                 # verifica la puerta (§11)
 python3 dome_platform.py             # verifica la plataforma y los pilotes (§9.6)
 python3 dome_build_sequence.py       # regenera secuencia_de_armado.md (con puerta; --sin-puerta para el domo cerrado)
 python3 dome_viewer.py               # regenera el plano de taller domo-3v-cucuchica.html
+cd maqueta && python3 maqueta.py     # maqueta 1:10: vista 3D, calculadora y plantillas (§12)
 ```
 
 Sin instalar nada — los 3 scripts son Python estándar. Si en algún momento cambia
@@ -884,6 +885,50 @@ La secuencia (`secuencia_de_armado.md`) ya incluye la puerta. En el paso 5, a
 Las vigas V entran en el paso 6. Con la puerta, los nodos #2 y #16 del paso 2 aparecen como
 bisagra hasta que se suelda la barra hacia su vecino del mismo anillo: hay que sujetarlos
 mientras tanto.
+
+## 12. Maqueta a escala 1:10 (palos chinos y pega loca)
+
+La carpeta `maqueta/` tiene todo para armar una maqueta a escala exacta, sacada del
+mismo modelo verificado:
+
+- **`maqueta.html`:** vista 3D realista de la unidad completa, con domo, puerta,
+  plataforma, pilotes, descanso, una persona de 1.75 m y una cama para dar escala. Trae
+  un modo "maqueta" que dibuja los tubos del grueso de los palitos. Tiene también una
+  calculadora de corte para cualquier escala y grosor de palito, las medidas de la
+  plataforma a escala y el paso a paso.
+- **`maqueta_plantillas.pdf`:** plantillas a tamaño real en hoja carta horizontal. Trae
+  la planta base en 12 hojas, el descanso y los escalones, los triángulos y las reglas
+  de corte. Hay que imprimirla al 100% y medir la barra de control de 10 cm.
+- **Regenerar:** `python3 maqueta.py`, y para el PDF, `node imprimir_pdf.js`.
+
+**Por qué 1:10:** el domo queda de 60 cm de diámetro y 25 cm de alto, y cada barra sale
+de un palo chino. Un palo de 5 mm equivale al tubo cuadrado de 50 mm del marco. Las
+barras del domo (32 mm) se ven 1.6 veces más gruesas; con palitos de brocheta de 3 mm
+el grosor también queda exacto.
+
+**Regla de corte:** el largo de centro a centro a escala, menos un retiro en cada punta,
+calculado con el grosor del palito y el ángulo más cerrado del nodo: retiro = (d/2) /
+tan(ángulo/2). Así el eje de cada palito apunta al centro exacto del nodo. Los postes de
+la puerta van enteros, de la placa al tope del marco, y las barras que llegan a su pie
+se recortan contra ellos.
+
+Cortes con palitos de 5 mm:
+
+| Pieza | Qué es | Cantidad | Cortar a (mm) |
+|---|---|---|---|
+| A | barra A | 44 | 117.0 |
+| A | barra A | 2 | 116.0 |
+| A | barra A | 2 | 115.5 |
+| B | barra B | 25 | 113.0 |
+| B | barra B | 9 | 114.5 |
+| B | barra B | 2 | 110.0 |
+| B | barra B | 1 | 118.0 |
+| C | barra C | 25 | 98.0 |
+| P | poste del marco | 2 | 215.0 |
+| D | dintel | 1 | 118.0 |
+| V | viga del techo | 2 | 185.5 |
+| K1 | amarre bajo | 2 | 111.5 |
+| K2 | amarre alto | 2 | 140.5 |
 
 ---
 
