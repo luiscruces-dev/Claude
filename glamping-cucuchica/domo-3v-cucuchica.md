@@ -8,6 +8,26 @@ genéricas de fabricantes.
 Visor 3D interactivo (mismo contenido, en formato navegable con vista 3D rotable y
 diagramas de nodo): [`domo-3v-cucuchica.html`](./domo-3v-cucuchica.html)
 
+> **⚠ Auditoría independiente (2026-09-24) — leer antes de cortar, soldar o comprar.**
+> La geometría (R, barras, nodos, paneles, áreas, perímetro, zigzag) se reprodujo con un
+> cálculo independiente y **es correcta**. Estos puntos estaban mal y ya se corrigieron en
+> este documento, en el visor HTML y en `secuencia_de_armado.md`:
+> 1. **Ángulos a marcar en el disco del nodo (§3):** los ángulos 3D entre barras no son los
+>    que se marcan en un disco plano. Se agregó la tabla de azimuts (55.69° / 62.15° /
+>    60.00° / 72.00°), que sí suman 360°.
+> 2. **Retiro de corte (§2):** "1 a 3 cm por extremo" es imposible con tubo de 32 mm; el
+>    mínimo geométrico es 3.1 cm y con disco de ⌀13 cm ronda 6.5 cm.
+> 3. **Alturas de armado:** la secuencia medía desde el centro de la esfera (+52.3 cm de
+>    error). Ahora mide desde el piso.
+> 4. **Estabilidad en el armado (§8.3):** decía "0 nodos necesitan sujeción temporal". En
+>    3D, los 5 nodos del paso 1 quedan como bisagra y necesitan puntal.
+> 5. **Replanteo de anclajes (§9.2):** decía que las posiciones angulares estaban en la
+>    secuencia y no estaban. Ya están (azimut, radio, X, Y).
+>
+> Riesgos de dinero o de seguridad que **no estaban calculados** (membrana con costuras,
+> reparto real del viento por anclaje, presión interna, puerta, plataforma y pilotes, lista
+> de corte óptima): ver [`auditoria/AUDITORIA.md`](./auditoria/AUDITORIA.md).
+
 ---
 
 ## 0. Contexto del proyecto
@@ -74,12 +94,22 @@ simetría icosaédrica del domo:
 
 **Nota de fabricación:** estas longitudes son de centro de nodo a centro de nodo. La
 longitud real de corte del tubo = esta medida **menos** lo que ocupe el diseño del
-conector en cada extremo (ver §4). Ajustar según el diseño final del hub — típicamente
-entre 1 y 3 cm por extremo.
+conector en cada extremo (ver §3). *(Corregido en la auditoría: decía "típicamente entre 1
+y 3 cm por extremo", lo que es imposible con este tubo.)* Con tubo de 32 mm, en los nodos
+donde dos barras forman 54.63° los tubos se tocan hasta **3.1 cm** del centro del nodo,
+así que ese es el retiro mínimo absoluto. Con el disco de ⌀13 cm de §3 el tubo arranca en
+el borde del disco: del orden de **6.5 cm por extremo**. Definir el conector **antes** de
+cortar y recalcular la lista de corte con el largo real (ver `auditoria/AUDITORIA.md`).
 
 ### 2.1 Lista de corte (optimización de barras comerciales)
 
 Cálculo de corte tipo *cutting-stock* (nesting) con 3 mm de pérdida por corte de sierra:
+
+*(Auditoría: con largos de centro a centro el óptimo exacto son 25 barras de 6 m, pero
+exige 10 barras con solo 7.9 mm de sobra. Exigiendo 20 mm de holgura, 27 es correcto. Con
+el largo real de corte, restando el conector, bastan **23 barras de 6 m**. El patrón
+9×[B,B,B,B,C] de abajo deja solo 7.9 mm de sobra por barra: cualquier barra de 5.99 m o
+un extremo dañado arruina la quinta pieza.)*
 
 **Barras de 6 m:**
 - **27 barras** necesarias → 162.00 m comprados, 143.80 m usados → **11.2% de desperdicio**
@@ -131,11 +161,34 @@ Barras concurrentes: A, A, A, A (las 4 son tipo A).
 
 **Método de fabricación recomendado:** placa/disco de acero por nodo (hub plate) con
 muñones o pestañas soldadas en el ángulo exacto de cada barra, en vez del sistema
-comercial de "tubo aplastado + pernos" (que requiere prensa hidráulica). Los ángulos de
-arriba son directamente los ángulos a marcar alrededor del disco.
+comercial de "tubo aplastado + pernos" (que requiere prensa hidráulica).
+
+**⚠ Corregido en la auditoría:** aquí decía que los ángulos de arriba "son directamente
+los ángulos a marcar alrededor del disco". **No lo son.** Los ángulos de arriba son el
+ángulo 3D entre dos tubos, medido en el plano que forman los dos tubos. Suman menos de
+360°, así que en un disco plano no cierran. Marcándolos así, cada pestaña queda desviada
+entre 1.06° y 1.45°, unos 3 cm en el otro extremo de una barra A, y el domo no cierra sin
+forzar. En el disco se marca el **azimut** (el ángulo proyectado sobre el plano del disco)
+y después cada pestaña se inclina hacia abajo lo que indica la tabla de inclinación de
+arriba:
+
+| Nodo | Barras en orden alrededor del disco | Azimut entre pestañas consecutivas (a marcar) | Suma |
+|---|---|---|---|
+| H1 (20) | C · B · A · B · A · B | 55.69° · 62.15° · 62.15° · 62.15° · 62.15° · 55.69° | 360° |
+| H2 (5) | A × 6 | 60.00° × 6 | 360° |
+| H3 (6) | C × 5 | 72.00° × 5 | 360° |
+| H4 (10, borde) | B · C · B · A | 55.69° · 55.69° · 62.15° (+ 186.46° abierto hacia el borde) | 360° |
+| H5 (5, borde) | A · A · A · A | 60.00° · 60.00° · 60.00° (+ 180.00° abierto hacia el borde) | 360° |
+
+Los ángulos 3D de arriba siguen siendo útiles para **verificar** con transportador una
+pieza ya armada, midiendo entre los dos tubos. Los azimuts están calculados en
+`auditoria/auditoria_independiente.py` y son iguales en todos los nodos de cada tipo.
 
 Material aproximado de plancha para los 46 discos (si se usan discos de ⌀13 cm × 5 mm):
-**~0.6 m² de plancha de acero** (sin merma de corte).
+**~0.6 m² de plancha de acero** (sin merma de corte). *(Auditoría: esto no incluye las 240
+pestañas, 2 por barra. Con pestañas de 40×80 mm son ~0.77 m² más, o sea más que los
+discos. Tampoco están en la lista la soldadura, los pernos si las uniones son empernadas,
+ni los 15 pernos de anclaje con sus placas y tuercas.)*
 
 ---
 
@@ -157,6 +210,9 @@ geodésico real — es la manera en que la triangulación cierra el casquete esf
 - **Perímetro total del borde (zigzag):** 18.70 m — compuesto por 10 barras tipo A y
   5 barras tipo B, **ya incluidas** en el conteo de la sección 2 (no se necesita barra
   adicional para cerrar la base).
+- *(Auditoría: con el piso plano, el borde de la membrana queda 4.86 cm por encima del piso
+  entre cada nodo alto y sus vecinos. Hace falta un faldón o sello perimetral para que no
+  entren agua ni bichos.)*
 - **Solución constructiva recomendada:** soldar un taco/riser de **4.86 cm** bajo cada
   uno de los 5 nodos altos (tipo H5). Los 10 nodos bajos (tipo H4) apoyan directo, al
   ras, sobre el anillo de fundación / plataforma. No hace falta un muro de arranque
@@ -171,7 +227,7 @@ geodésico real — es la manera en que la triangulación cierra el casquete esf
 | | Valor |
 |---|---|
 | Área de superficie (75 paneles triangulares) | 46.24 m² |
-| Con 12% de merma de corte/costura | **51.79 m²** a comprar |
+| Con 12% de merma de corte/costura | **51.79 m²** a comprar — **⚠ insuficiente si se cortan 75 paneles con solape (ver nota)** |
 | Material de referencia | poliéster de alta resistencia recubierto en PVC, ~850–950 GSM, resistente a UV, desgarro y moho |
 
 ### 5.1 Patronaje de los paneles
@@ -189,6 +245,13 @@ Ambos paneles son triángulos isósceles. Con solo 2 plantillas de corte (más e
 de costura/pegado en cada borde) se cubren los 75 paneles del domo — no hace falta
 un patrón distinto para cada uno.
 
+**⚠ Auditoría — cantidad de membrana:** el 12% de merma no alcanza para cortar 75 paneles
+con margen de costura. Solo las piezas cortadas, sin contar el desperdicio del rollo,
+suman 54.7 m² con 3 cm de solape por lado y 60.7 m² con 5 cm. Presupuestar **~60–67 m²**
+o pedir al fabricante la cotización con su propio patronaje. Tampoco están en la lista
+de materiales el aislante, el forro interior, las ventanas ni la puerta, que en un domo de
+glamping se compran aparte.
+
 ---
 
 ## 6. Especificación de tubo y notas de construcción
@@ -201,15 +264,29 @@ un patrón distinto para cada uno.
 125.59 cm):
 - Momento de inercia I ≈ 2.13×10⁻⁸ m⁴
 - Carga crítica de pandeo Pcr ≈ 26.6 kN (**~2.7 toneladas** de compresión axial)
+  *(Auditoría: esa es la carga elástica teórica de Euler. Con esbeltez KL/r ≈ 118 la barra
+  pandea en rango inelástico, y la capacidad de diseño según AISC 360 es ≈1.3–2.1 t,
+  según el método y el acero. La auditoría resolvió además el domo como armadura espacial
+  con las cargas de §6.1–6.2, cosa que este documento no hacía. La barra más comprimida
+  llega a ≈0.12 t, un 5% de su capacidad, así que la sección sí alcanza como barra axial.)*
+- *(Auditoría: lo que sí es crítico es la **flexión**. Una persona de 100 kg parada a
+  media barra A la lleva a ≈231 MPa, en el límite de fluencia del tubo. Ni el armado ni
+  la instalación de la membrana pueden hacerse caminando sobre las barras.)*
 - Esto da un margen amplio frente a las cargas típicas de una estructura de este
   tamaño (peso propio + viento moderado). Se puede usar la misma sección en las 3
-  longitudes de barra — la diferencia de 12–19 cm entre tipos no justifica variar el
-  calibre y simplifica el trabajo de taller.
+  longitudes de barra — la diferencia de 2.7–19.4 cm entre tipos *(corregido: decía
+  "12–19 cm")* no justifica variar el calibre y simplifica el trabajo de taller.
 
 ### Galvanizado
 **Galvanizar después de cortar, taladrar y soldar** — nunca antes. Si se suelda tubo
 ya galvanizado, el zinc se quema justo en la unión, que es exactamente donde más
 protección contra corrosión se necesita en un clima húmedo como el de Cucuchica.
+
+*(Auditoría: esto choca con §8.3, donde el domo se arma **soldando en sitio**. Esas
+uniones se sueldan después del galvanizado y hay que repararlas con galvanizado en frío
+(pintura rica en zinc), o bien diseñar uniones empernadas. Además, los tubos cerrados
+necesitan agujeros de venteo y drenaje para el baño en caliente: un tubo sellado puede
+reventar dentro de la cuba.)*
 
 ### ⚠ Verificación estructural pendiente
 Este cálculo confirma que la sección elegida no falla por pandeo bajo cargas típicas,
@@ -280,6 +357,21 @@ sustituye la verificación de un ingeniero estructural con el dato real del siti
 - Fuerza lateral promedio por nodo: ≈22 kgf. Succión ilustrativa promedio por nodo:
   ≈73 kgf — este segundo número es el que debería usarse para dimensionar el perno de
   anclaje, con el factor de seguridad que indique el ingeniero.
+
+**⚠ Auditoría — reparto real por anclaje y presión interna.** La auditoría resolvió el
+domo como armadura espacial con el mismo V = 100 km/h, usando un patrón de presiones
+típico de cúpulas (barlovento +0.6, cresta −1.1, sotavento −0.4). Ese patrón da el mismo
+empuje lateral total de 330 kgf que la tabla de arriba, pero el reparto entre anclajes no
+es parejo:
+- **Corte horizontal por anclaje:** hasta **56 kgf** en los nodos de los flancos, 2.6 veces
+  el promedio de 22 kgf.
+- **Arranque por anclaje:** hasta **81 kgf** sin presión interna, y hasta **129 kgf** si una
+  puerta o ventana abierta a barlovento presuriza el interior (Cpi = +0.55). Todas las
+  normas exigen sumar la presión interna, y este documento no la consideraba.
+- **Cp de cresta:** −0.8 es menos exigente que los valores habituales para cúpulas
+  rebajadas (−1.0 a −1.2).
+El perno M12 sigue sobrando por acero. Lo que cambia es la base de diseño de §9.4, ver
+`auditoria/AUDITORIA.md`.
 
 ## 6.3 Sismo — estimación ilustrativa (⚠ NO reemplaza COVENIN 1756)
 
@@ -361,6 +453,13 @@ mismo directorio del repositorio. La idea: no confiar en los números de este
 documento porque "salieron de un cálculo" — poder **reproducirlos, verificarlos y
 simular el armado pieza por pieza** de forma independiente.
 
+*(Auditoría: `dome_verify.py` y `dome_build_sequence.py` importan el mismo
+`dome_model.py`, así que no son independientes entre sí. La verificación realmente
+independiente, que construye el icosaedro por otro camino, está en
+`auditoria/auditoria_independiente.py`. También es falso que el chequeo de regresión
+detecte cambios hechos a mano en este `.md`: compara contra números copiados dentro del
+script y no lee este archivo.)*
+
 ### 8.1 `dome_model.py` — motor geométrico (fuente única de verdad)
 
 Reimplementación completa, desde cero, del método descrito en §7 (icosaedro →
@@ -428,6 +527,16 @@ barra lo triangule.
   el domo se puede armar anillo por anillo sin andamiaje de soporte temporal para
   los nodos, más allá de lo normal para sostener al soldador.
 
+**⚠ Corregido en la auditoría:** el punto anterior es falso en 3D. El programa original
+consideraba fijo un nodo con 2 barras, pero en el espacio un nodo con 2 barras queda
+como una bisagra y gira alrededor de la línea entre sus 2 apoyos. Hacen falta 3 barras no
+coplanares. Con el criterio correcto, **los 5 nodos H3 del paso 1 (#0, #3, #7, #13, #20)
+necesitan puntal o cuerda** hasta que el paso 2 los amarre. El resto de los nodos sí queda
+fijo al aparecer, aunque de forma muy plana (entre 9° y 17° fuera del plano de sus
+apoyos), así que conviene apuntalar hasta cerrar el anillo. Además, las alturas de la
+secuencia estaban medidas desde el centro de la esfera, no desde el piso: todas tenían
+52.3 cm de más. Ambas cosas ya están corregidas en `dome_build_sequence.py`.
+
 El checklist completo, barra por barra, con qué nodo va a qué nodo y con qué queda
 fijado cada uno, está en **`secuencia_de_armado.md`** (generado automáticamente,
 120 barras + 15 anclajes de fundación, listo para imprimir y llevar al taller).
@@ -479,13 +588,22 @@ Ya calculada en §4 — se reutiliza directo, sin volver a derivarla:
 | Perímetro del anillo | 18.70 m |
 | Desnivel bajo→alto | 4.86 cm |
 
-Las posiciones angulares exactas de los 15 nodos están en `dome_model.py` /
-`secuencia_de_armado.md` (Paso 0) — son las mismas coordenadas que usa la
+Las posiciones angulares exactas de los 15 nodos están en `secuencia_de_armado.md`
+(Paso 0: azimut, radio y coordenadas X/Y). *(Corregido en la auditoría: antes la tabla
+no traía posiciones, solo la altura relativa.)* — son las mismas coordenadas que usa la
 estructura de acero, así que el anclaje queda garantizado a coincidir con el domo
 sin tener que volver a medir en campo desde cero (se replantea desde el centro con
 los ángulos ya calculados).
 
 ### 9.3 Pilotes
+
+*(Auditoría: este dimensionamiento considera solo el domo, ≈0.28 t. Pero los pilotes y
+las vigas también cargan el piso: huéspedes, muebles, cama y, en la unidad "signature",
+un jacuzzi con agua de 1–2 t. Esa carga es varias veces mayor que la del domo y no está
+calculada. Con pilotes solo en el perímetro, las vigas del piso tendrían que salvar unos
+6 m. Casi seguro hacen falta pilotes interiores. Además, el arranque neto de viento (hasta
+≈1.3–1.5 t con presión interna) tiene que resistirse con el peso de pilotes y viga más la
+fricción del suelo, y eso tampoco está verificado.)*
 
 **10 pilotes de concreto**, no los 15 — un pilote en cada uno de los 5 nodos "altos"
 (H5, obligatorio: son los más expuestos a succión de viento según §6.2) más 5
@@ -511,8 +629,8 @@ para no diseñar todos los nodos por el caso promedio):
 
 | | Valor |
 |---|---|
-| Succión de diseño por perno (nodo crítico) | ≈274 kgf (2 685 N) |
-| Corte lateral de diseño por perno (nodo crítico) | ≈66 kgf (647 N) |
+| Succión de diseño por perno (nodo crítico) | ≈274 kgf (2 685 N) — *auditoría: con presión interna, 129 kgf × 2.5 ≈ **322 kgf*** |
+| Corte lateral de diseño por perno (nodo crítico) | ≈66 kgf (647 N) — *auditoría: con el reparto real, 56 kgf × 2.0 ≈ **113 kgf*** |
 | Perno recomendado | M12 galvanizado, con gancho en L o placa/tuerca de anclaje en el extremo embebido (**no** un perno recto liso — la resistencia a arranque de un perno liso depende solo de fricción, mucho menos confiable) |
 | Capacidad a fluencia del acero del perno (verificación) | ≈2 078 kgf — **7.6× el uplift de diseño** |
 
@@ -566,6 +684,17 @@ sitio oficiales + decisiones de diseño + verificación profesional:
 - [ ] Estudio de suelo y estudio hidrológico puntual del sitio (§9.6) — definen profundidad de pilotes, freeboard real y `f'c` del concreto
 - [ ] Verificación estructural final por ingeniero matriculado (incluye combinación de cargas viento+sismo+peso propio, y el anclaje a tensión de §9.4)
 
+**Detectado en la auditoría — no estaba en ninguna lista (ver `auditoria/AUDITORIA.md`):**
+- [ ] **Puerta.** El domo mide 2.52 m en el centro y el techo baja a 1.22 m a 50 cm de la
+      pared. Una puerta de 2.0 m no cabe en la superficie del domo: hace falta un portal,
+      vestíbulo o muro de arranque, y eso interrumpe la triangulación. Hay que diseñarlo y
+      calcularlo.
+- [ ] **Altura útil.** Solo el 32% del piso (9.1 m²) tiene 2.0 m o más de altura libre.
+      Los domos comerciales de glamping de 6 m suelen ser más altos (5/8 de esfera o
+      montados sobre un muro).
+- [ ] **Carga de la plataforma** (piso, personas, muebles, jacuzzi) y pilotes interiores.
+- [ ] **Arranque de pilotes** frente al levantamiento neto de viento con presión interna.
+
 **Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
 - [ ] Diseño físico del hub plate (diámetro de disco, patrón de pernos o muñones, espesor final — los ángulos ya están en §3)
 - [ ] Altura del riser/taco en los 5 nodos altos (H5) — el desnivel exacto (4.86 cm) ya está calculado en §4 y el concepto de pilote+taco en §9.4, falta solo la decisión final de detalle de fijación
@@ -576,6 +705,7 @@ sitio oficiales + decisiones de diseño + verificación profesional:
 ---
 
 *Documento generado a partir de cálculo geométrico numérico verificado (icosaedro →
-subdivisión 3V → proyección esférica → corte y clasificación de aristas/nodos). Todas
-las cifras de este documento son consistentes entre sí y con el visor HTML adjunto,
-que usa exactamente los mismos datos.*
+subdivisión 3V → proyección esférica → corte y clasificación de aristas/nodos). La
+geometría se reprodujo de forma independiente en la auditoría del 2026-09-24. Las
+correcciones de esa auditoría están marcadas en el texto y resumidas en
+`auditoria/AUDITORIA.md`.*

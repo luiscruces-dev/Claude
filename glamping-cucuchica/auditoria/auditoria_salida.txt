@@ -1,0 +1,210 @@
+========================================================================
+AUDITORIA INDEPENDIENTE — DOMO 3V CUCUCHICA
+========================================================================
+
+[1] GEOMETRIA (construccion independiente, sin dome_model.py)
+  esfera completa: V=92 E=270 F=180  (Euler V-E+F=2)
+  casquete: nodos=46 barras=120 paneles=75  (disco: V-E+F=1, debe ser 1)
+  OK  R esfera (m)           calculado=    3.0452  publicado=3.0452
+  OK  altura apice (m)       calculado=    2.5225  publicado=2.5225
+  OK  area de piso (m2)      calculado=   28.2743  publicado=28.274
+  OK  area membrana (m2)     calculado=   46.2427  publicado=46.24
+  OK  tubo total (m)         calculado=  143.7969  publicado=143.8
+  OK  barra A (cm)           calculado=  125.5872  publicado=125.59
+  OK  barra B (cm)           calculado=  122.8881  publicado=122.89
+  OK  barra C (cm)           calculado=  106.1601  publicado=106.16
+  OK  cantidad barra A         calculado=    50      publicado=50  (dispersion interna 0.000 mm)
+  OK  cantidad barra B         calculado=    40      publicado=40  (dispersion interna 0.000 mm)
+  OK  cantidad barra C         calculado=    30      publicado=30  (dispersion interna 0.000 mm)
+  OK  nodos H1               calculado=    20      publicado=20
+  OK  nodos H2               calculado=     5      publicado=5
+  OK  nodos H3               calculado=     6      publicado=6
+  OK  nodos H4               calculado=    10      publicado=10
+  OK  nodos H5               calculado=     5      publicado=5
+  OK  desnivel zigzag (cm)   calculado=    4.8581  publicado=4.86
+  OK  radio nodos altos (m)  calculado=    2.9911  publicado=2.9911
+  OK  perimetro borde (m)    calculado=   18.7031  publicado=18.7
+  NOTA volumen: publicado 44.07 m3 es el del casquete ESFERICO (44.07 m3);
+       el poliedro real (caras planas) encierra 41.22 m3 (-6.5%). Diferencia menor.
+  ERR texto §6: dice que los tipos difieren '12–19 cm'; real: 2.70 / 16.73 / 19.43 cm (A-B / B-C / A-C)
+
+[2] ANGULOS DE NODO — lo que se marca en el disco vs. lo publicado
+  El .md (§3) y el HTML dicen que los angulos 3D entre barras 'son directamente los
+  angulos a marcar alrededor del disco'. En un disco plano tangente a la esfera lo que
+  se marca es el AZIMUT (angulo proyectado en el plano del disco, suma 360°); luego cada
+  pestana se inclina hacia abajo su 'tilt'. Los angulos 3D suman <360° y NO cierran.
+  H1 (20 nodos, barras en orden: B-A-B-A-B-C)
+     angulo 3D publicado :  60.71 ·  60.71 ·  60.71 ·  60.71 ·  54.63 ·  54.63   suma  352.10°
+     AZIMUT a marcar     :  62.15 ·  62.15 ·  62.15 ·  62.15 ·  55.69 ·  55.69   suma  360.00°
+     error si se marca el 3D:  +1.45 ·  +1.45 ·  +1.45 ·  +1.45 ·  +1.06 ·  +1.06   (acumulado +7.90°)
+     inclinacion de cada pestana bajo el plano tangente: 11.64 · 11.90 · 11.64 · 11.90 · 11.64 · 10.04°  (igual en los 20 nodos)
+  H2 (5 nodos, barras en orden: A-A-A-A-A-A)
+     angulo 3D publicado :  58.58 ·  58.58 ·  58.58 ·  58.58 ·  58.58 ·  58.58   suma  351.50°
+     AZIMUT a marcar     :  60.00 ·  60.00 ·  60.00 ·  60.00 ·  60.00 ·  60.00   suma  360.00°
+     error si se marca el 3D:  +1.42 ·  +1.42 ·  +1.42 ·  +1.42 ·  +1.42 ·  +1.42   (acumulado +8.50°)
+     inclinacion de cada pestana bajo el plano tangente: 11.90 · 11.90 · 11.90 · 11.90 · 11.90 · 11.90°  (igual en los 5 nodos)
+  H3 (6 nodos, barras en orden: C-C-C-C-C)
+     angulo 3D publicado :  70.73 ·  70.73 ·  70.73 ·  70.73 ·  70.73   suma  353.65°
+     AZIMUT a marcar     :  72.00 ·  72.00 ·  72.00 ·  72.00 ·  72.00   suma  360.00°
+     error si se marca el 3D:  +1.27 ·  +1.27 ·  +1.27 ·  +1.27 ·  +1.27   (acumulado +6.35°)
+     inclinacion de cada pestana bajo el plano tangente: 10.04 · 10.04 · 10.04 · 10.04 · 10.04°  (igual en los 6 nodos)
+  H4 (10 nodos, barras en orden: A-B-C-B | abierto hacia el borde)
+     angulo 3D publicado :  60.71 ·  54.63 ·  54.63   suma  169.98°
+     AZIMUT a marcar     :  62.15 ·  55.69 ·  55.69   suma  173.54°
+     error si se marca el 3D:  +1.45 ·  +1.06 ·  +1.06   (acumulado +3.56°)
+     inclinacion de cada pestana bajo el plano tangente: 11.90 · 11.64 · 10.04 · 11.64°  (igual en los 10 nodos)
+  H5 (5 nodos, barras en orden: A-A-A-A | abierto hacia el borde)
+     angulo 3D publicado :  58.58 ·  58.58 ·  58.58   suma  175.75°
+     AZIMUT a marcar     :  60.00 ·  60.00 ·  60.00   suma  180.00°
+     error si se marca el 3D:  +1.42 ·  +1.42 ·  +1.42   (acumulado +4.25°)
+     inclinacion de cada pestana bajo el plano tangente: 11.90 · 11.90 · 11.90 · 11.90°  (igual en los 5 nodos)
+  -> error maximo por angulo 1.45°: en el otro extremo de una barra A eso es ~3.2 cm de desvio lateral.
+  OK  inclinaciones publicadas A/B/C = asin(L/2R): 11.90° / 11.64° / 10.04°
+
+[3] RETIRO MINIMO EN CADA EXTREMO (choque de tubos de 32 mm en el nodo)
+  angulo minimo entre barras vecinas: 54.63°  -> los tubos se tocan hasta 3.1 cm del centro del nodo
+  El .md (§2) dice restar 'entre 1 y 3 cm por extremo'. Con tubo de 32 mm eso es FISICAMENTE
+  imposible en H1/H4 (54.63°): los tubos chocarian. Con disco de ⌀13 cm (§3) el tubo arranca
+  en el borde del disco: ~6.5 cm + holgura. El retiro real depende del diseno del conector.
+    retiro  3.0 cm/extremo -> corte A=119.59  B=116.89  C=100.16 cm
+    retiro  3.1 cm/extremo -> corte A=119.39  B=116.69  C= 99.96 cm
+    retiro  5.0 cm/extremo -> corte A=115.59  B=112.89  C= 96.16 cm
+    retiro  6.5 cm/extremo -> corte A=112.59  B=109.89  C= 93.16 cm
+    retiro  8.0 cm/extremo -> corte A=109.59  B=106.89  C= 90.16 cm
+
+[4] LISTA DE CORTE — optimo exacto (3 mm de sierra por pieza)
+  barras de 6 m: optimo = 25 barras (150 m, desperdicio 4.1%)
+      10 x {'A': 0, 'B': 4, 'C': 1}
+      10 x {'A': 3, 'B': 0, 'C': 2}
+       5 x {'A': 4, 'B': 0, 'C': 0}
+  barras de 12 m: optimo = 13 barras (156 m, desperdicio 7.8%)
+       4 x {'A': 9, 'B': 0, 'C': 0}
+       4 x {'A': 1, 'B': 8, 'C': 0}
+       3 x {'A': 1, 'B': 0, 'C': 10}
+       1 x {'A': 6, 'B': 3, 'C': 0}
+       1 x {'A': 1, 'B': 5, 'C': 4}
+  Publicado 6 m: 27 barras. Patron 9x[B,B,B,B,C] deja solo 7.9 mm de sobra por barra:
+  cualquier barra comercial de 5.99 m, un extremo danado o un disco de corte mas grueso
+  arruina la quinta pieza. (Con el largo de corte real, restando conectores, sobra mas.)
+  Optimo 6 m exigiendo >=20 mm de sobra en cada barra: 27 barras (holgura minima 148 mm)
+       9 x {'A': 1, 'B': 2, 'C': 2}
+       7 x {'A': 4, 'B': 0, 'C': 0}
+       7 x {'A': 1, 'B': 3, 'C': 0}
+       3 x {'A': 1, 'B': 0, 'C': 4}
+       1 x {'A': 3, 'B': 1, 'C': 0}
+  Con el largo REAL de corte (restando el conector en cada extremo), exigiendo >=20 mm de sobra:
+    retiro 3.5 cm/extremo: tubo neto 135.40 m -> 23 barras de 6 m  10x{'A': 1, 'B': 4, 'C': 0}  8x{'A': 5, 'B': 0, 'C': 0}  5x{'A': 0, 'B': 0, 'C': 6}
+    retiro 5.0 cm/extremo: tubo neto 131.80 m -> 23 barras de 6 m  8x{'A': 5, 'B': 0, 'C': 0}  8x{'A': 1, 'B': 4, 'C': 0}  5x{'A': 0, 'B': 1, 'C': 5}  1x{'A': 1, 'B': 3, 'C': 1}  1x{'A': 1, 'B': 0, 'C': 4}
+    retiro 6.5 cm/extremo: tubo neto 128.20 m -> 23 barras de 6 m  9x{'A': 1, 'B': 4, 'C': 0}  6x{'A': 5, 'B': 0, 'C': 0}  6x{'A': 1, 'B': 0, 'C': 5}  1x{'A': 4, 'B': 1, 'C': 0}  1x{'A': 1, 'B': 3, 'C': 1}
+  Publicado 12 m: 13 barras -> coincide con el optimo.
+
+[5] ALTURAS DE ARMADO — secuencia_de_armado.md mide desde el CENTRO DE LA ESFERA
+  El piso (nodos bajos) esta 0.5227 m por encima del centro de la esfera.
+  Paso 1: el .md dice 1.362 m  ->  altura REAL sobre el piso 0.839 m  (error 52.3 cm)
+  Paso 2: el .md dice 1.568 m  ->  altura REAL sobre el piso 1.045 m  (error 52.3 cm)
+  Paso 3: el .md dice 2.214 m  ->  altura REAL sobre el piso 1.691 m  (error 52.3 cm)
+  Paso 4: el .md dice 2.420 m  ->  altura REAL sobre el piso 1.897 m  (error 52.3 cm)
+  Paso 5: el .md dice 2.860 m  ->  altura REAL sobre el piso 2.337 m  (error 52.3 cm)
+  Paso 6: el .md dice 3.045 m  ->  altura REAL sobre el piso 2.523 m  (error 52.3 cm)
+
+[7] ESTABILIDAD DE CADA NODO AL APARECER (3D necesita 3 barras no coplanares)
+  Paso 1: {2: 5} (apoyos: nodos)
+  Paso 2: {3: 10} (apoyos: nodos), tripode 8.7°-8.7° fuera de plano
+  Paso 3: {3: 5} (apoyos: nodos), tripode 17.0°-17.0° fuera de plano
+  Paso 4: {4: 5} (apoyos: nodos), tripode 11.9°-11.9° fuera de plano
+  Paso 5: {3: 5} (apoyos: nodos), tripode 12.4°-12.4° fuera de plano
+  Paso 6: {5: 1} (apoyos: nodos), tripode 10.0°-10.0° fuera de plano
+  -> 5 nodos quedan como BISAGRA (2 barras) al aparecer: #3(H3), #9(H3), #16(H3), #25(H3), #34(H3)
+     secuencia_de_armado.md y §8.3 afirman '0 nodos necesitan sujecion temporal'. En 3D es falso:
+     los 5 triangulos del paso 1 pueden girar sobre su base hasta que el paso 2 los amarre.
+
+[6] REPLANTEO DE LOS 15 ANCLAJES (no existe en el .md aunque §9.2 dice que si)
+  #11 H5  azimut   0.000°  radio 2.9911 m  X=+2.9911  Y=+0.0000  dz=+4.86 cm
+  #12 H4  azimut  24.181°  radio 3.0000 m  X=+2.7368  Y=+1.2289  dz=+0.00 cm
+  #13 H4  azimut  47.819°  radio 3.0000 m  X=+2.0144  Y=+2.2231  dz=+0.00 cm
+  #20 H5  azimut  72.000°  radio 2.9911 m  X=+0.9243  Y=+2.8447  dz=+4.86 cm
+  #21 H4  azimut  96.181°  radio 3.0000 m  X=-0.3230  Y=+2.9826  dz=+0.00 cm
+  #22 H4  azimut 119.819°  radio 3.0000 m  X=-1.4918  Y=+2.6028  dz=+0.00 cm
+  #29 H5  azimut 144.000°  radio 2.9911 m  X=-2.4199  Y=+1.7581  dz=+4.86 cm
+  #30 H4  azimut 168.181°  radio 3.0000 m  X=-2.9364  Y=+0.6144  dz=+0.00 cm
+  #31 H4  azimut 191.819°  radio 3.0000 m  X=-2.9364  Y=-0.6144  dz=+0.00 cm
+  #38 H5  azimut 216.000°  radio 2.9911 m  X=-2.4199  Y=-1.7581  dz=+4.86 cm
+  #39 H4  azimut 240.181°  radio 3.0000 m  X=-1.4918  Y=-2.6028  dz=+0.00 cm
+  #40 H4  azimut 263.819°  radio 3.0000 m  X=-0.3230  Y=-2.9826  dz=+0.00 cm
+  #44 H5  azimut 288.000°  radio 2.9911 m  X=+0.9243  Y=-2.8447  dz=+4.86 cm
+  #45 H4  azimut 312.181°  radio 3.0000 m  X=+2.0144  Y=-2.2231  dz=+0.00 cm
+  #10 H4  azimut 335.819°  radio 3.0000 m  X=+2.7368  Y=-1.2289  dz=+0.00 cm
+
+[8] PANDEO DE BARRAS — Euler (publicado) vs. capacidad de diseno AISC 360 cap. E
+  Fy 228 MPa (A500 Gr.A redondo):
+    A L=125.59 cm  KL/r=118.1  Euler=  2717 kgf  Pn=  2231 kgf  diseno LRFD phiPn=  2008 kgf  ASD Pn/Ω=  1336 kgf
+    B L=122.89 cm  KL/r=115.6  Euler=  2838 kgf  Pn=  2296 kgf  diseno LRFD phiPn=  2066 kgf  ASD Pn/Ω=  1375 kgf
+    C L=106.16 cm  KL/r= 99.9  Euler=  3803 kgf  Pn=  2705 kgf  diseno LRFD phiPn=  2434 kgf  ASD Pn/Ω=  1620 kgf
+  Fy 290 MPa (A500 Gr.B redondo):
+    A L=125.59 cm  KL/r=118.1  Euler=  2717 kgf  Pn=  2362 kgf  diseno LRFD phiPn=  2126 kgf  ASD Pn/Ω=  1414 kgf
+    B L=122.89 cm  KL/r=115.6  Euler=  2838 kgf  Pn=  2450 kgf  diseno LRFD phiPn=  2205 kgf  ASD Pn/Ω=  1467 kgf
+    C L=106.16 cm  KL/r= 99.9  Euler=  3803 kgf  Pn=  3018 kgf  diseno LRFD phiPn=  2716 kgf  ASD Pn/Ω=  1807 kgf
+  -> '2.7 toneladas' es la carga de pandeo ELASTICO teorica (Euler). Con KL/r≈118 la barra A pandea
+     en rango inelastico: la capacidad de diseno es ~1.3-2.1 t segun metodo y acero, no 2.7 t.
+     Sigue sobrando (ver [9]), pero el .md nunca calculo la fuerza real en las barras.
+
+[9] ANALISIS DE ARMADURA ESPACIAL (15 apoyos articulados, nodos articulados)
+  Peso propio:
+     barra mas comprimida   10.5 kgf (tipo C;  0.4% de phiPn con Fy 228)  traccion max    6.9 kgf  desplaz. max 0.02 mm
+     reaccion por anclaje: arranque max    0.0 kgf  apoyo max   18.7 kgf  horizontal max    6.1 kgf
+     totales (equilibrio verificado): vertical  +278.4 kgf (apoyo neto)  horizontal    0.0 kgf
+  Peso propio + 1 persona (100 kg) en el apice:
+     barra mas comprimida  120.8 kgf (tipo C;  5.0% de phiPn con Fy 228)  traccion max   67.5 kgf  desplaz. max 0.32 mm
+     reaccion por anclaje: arranque max    0.0 kgf  apoyo max   25.9 kgf  horizontal max    8.7 kgf
+     totales (equilibrio verificado): vertical  +378.4 kgf (apoyo neto)  horizontal    0.0 kgf
+  Viento .md: succion uniforme Cp=-0.8 (sin peso propio):
+     barra mas comprimida   -0.0 kgf (tipo A;  0.0% de phiPn con Fy 228)  traccion max   42.8 kgf  desplaz. max 0.04 mm
+     reaccion por anclaje: arranque max   70.5 kgf  apoyo max    0.0 kgf  horizontal max    6.8 kgf
+     totales (equilibrio verificado): vertical -1056.9 kgf (arranque neto)  horizontal    0.0 kgf
+  Viento: Cp barlovento +0.6 / cresta -1.1 / sotavento -0.4:
+     barra mas comprimida   72.3 kgf (tipo B;  3.5% de phiPn con Fy 228)  traccion max   92.9 kgf  desplaz. max 0.09 mm
+     reaccion por anclaje: arranque max   80.5 kgf  apoyo max    0.0 kgf  horizontal max   56.4 kgf
+     totales (equilibrio verificado): vertical  -790.7 kgf (arranque neto)  horizontal  330.8 kgf
+  Id. + presion interna +0.55 (puerta abierta a barlovento):
+     barra mas comprimida   42.8 kgf (tipo B;  2.1% de phiPn con Fy 228)  traccion max  119.6 kgf  desplaz. max 0.12 mm
+     reaccion por anclaje: arranque max  128.9 kgf  apoyo max    0.0 kgf  horizontal max   56.9 kgf
+     totales (equilibrio verificado): vertical -1517.3 kgf (arranque neto)  horizontal  330.8 kgf
+  0.9 Peso propio + 1.0 viento c/ presion interna (arranque):
+     barra mas comprimida   36.7 kgf (tipo B;  1.8% de phiPn con Fy 228)  traccion max  112.0 kgf  desplaz. max 0.10 mm
+     reaccion por anclaje: arranque max  112.1 kgf  apoyo max    0.0 kgf  horizontal max   56.1 kgf
+     totales (equilibrio verificado): vertical -1266.8 kgf (arranque neto)  horizontal  330.8 kgf
+  -> Barra mas exigida a compresion: 5% de su capacidad de diseno. Como armadura, la
+     seccion 32x2 SI alcanza con estos supuestos (el .md tenia razon en eso, sin haberlo calculado).
+  Flexion: 100 kg parados a mitad de una barra A -> M=308 N·m, esfuerzo 231 MPa
+     (fluencia 228-290 MPa). Una persona sobre una barra la lleva al limite elastico: el armado
+     y la instalacion de la membrana NO pueden hacerse caminando sobre las barras -> andamio.
+  -> El arranque por anclaje con Cp de cresta mas realista + presion interna es mayor que el
+     promedio de 73 kgf/nodo del .md; comparar con 274 kgf de diseno en §9.4 (ver reporte).
+
+[10] VIENTO — succion de referencia segun Cp y presion interna
+  .md (Cp -0.8, sin presion interna)                :    378 Pa  total ref.   1091 kgf  por nodo    73 kgf
+  cresta -1.1 (tipico de cupulas rebajadas)         :    520 Pa  total ref.   1500 kgf  por nodo   100 kgf
+  .md + interna cerrado +0.18                       :    464 Pa  total ref.   1336 kgf  por nodo    89 kgf
+  cresta -1.1 + interna parcialmente abierto +0.55  :    780 Pa  total ref.   2249 kgf  por nodo   150 kgf
+
+[11] MEMBRANA — el .md compra 46.24 m2 x 1.12 = 51.79 m2 y a la vez dice cortar 75 paneles
+  margen de costura   0 cm por lado ->  46.2 m2 de piezas cortadas (sin contar el desperdicio del rollo) =  89.3% de lo presupuestado
+  margen de costura   2 cm por lado ->  51.8 m2 de piezas cortadas (sin contar el desperdicio del rollo) = 100.0% de lo presupuestado
+  margen de costura   3 cm por lado ->  54.7 m2 de piezas cortadas (sin contar el desperdicio del rollo) = 105.5% de lo presupuestado
+  margen de costura   5 cm por lado ->  60.7 m2 de piezas cortadas (sin contar el desperdicio del rollo) = 117.1% de lo presupuestado
+  -> Con solape soldado/cosido de 3-5 cm, solo las piezas ya superan los 51.8 m2 presupuestados.
+
+[12] ALTURA LIBRE UTIL (el domo mide 2.52 m en el centro)
+  altura >= 1.0 m: dentro de un radio de 2.64 m ->  21.8 m2 (77.3% del piso)
+  altura >= 1.5 m: dentro de un radio de 2.28 m ->  16.3 m2 (57.6% del piso)
+  altura >= 1.8 m: dentro de un radio de 1.97 m ->  12.2 m2 (43.1% del piso)
+  altura >= 2.0 m: dentro de un radio de 1.71 m ->   9.1 m2 (32.3% del piso)
+  altura >= 2.1 m: dentro de un radio de 1.55 m ->   7.5 m2 (26.6% del piso)
+    a 1.00 m del centro el techo esta a 2.35 m
+    a 1.50 m del centro el techo esta a 2.13 m
+    a 2.00 m del centro el techo esta a 1.77 m
+    a 2.50 m del centro el techo esta a 1.22 m
+    a 2.80 m del centro el techo esta a 0.67 m
+    a 2.95 m del centro el techo esta a 0.23 m
+  -> Una puerta de 2.0 m no cabe en la superficie del domo: necesita portal/vestibulo o muro de
+     arranque, y eso corta barras de la triangulacion. No esta disenado ni calculado.

@@ -6,17 +6,24 @@ Corre: `python3 dome_build_sequence.py`
 Que hace: simula el armado del domo anillo por anillo, de la base hacia el
 apice (metodo realista para construir en sitio sin grua: cada pieza nueva se
 suelda apoyada en estructura ya fija, nunca al aire). En cada paso valida que
-cada nodo nuevo quede geometricamente fijo por al menos 2 barras no
-paralelas antes de continuar — si un nodo solo tiene 1 barra de apoyo, lo
-marca como que necesita sujecion temporal (un gato, una cuerda, un ayudante)
-hasta que la segunda barra lo triangule.
+cada nodo nuevo quede geometricamente fijo en 3D: hacen falta al menos 3
+barras no coplanares hacia estructura ya fija (con 2 barras el nodo queda
+como una bisagra y gira alrededor de la linea entre sus 2 apoyos). Si no
+llega a 3, lo marca como que necesita sujecion temporal (puntal, cuerda, un
+ayudante) hasta que el paso siguiente lo triangule.
+
+Alturas: se miden desde el nivel de los 10 nodos bajos (el piso), no desde
+el centro de la esfera.
 
 Escribe el checklist pieza por pieza en secuencia_de_armado.md, listo para
 imprimir y usar en taller.
 """
 
+import math
 from collections import defaultdict
-from dome_model import build_dome, v_sub, v_cross, v_norm
+from dome_model import build_dome, v_sub, v_cross, v_norm, v_dot, v_normalize, v_scale
+
+MIN_SUPPORTS_3D = 3
 
 WARNINGS = []
 
@@ -37,7 +44,8 @@ def build_sequence(dome):
     steps.append(step0)
 
     # anillos siguientes: por nivel de altura ascendente (excluyendo el borde)
-    heights_by_hub = {v: round(dome.heights[v], 4) for v in range(len(dome.verts)) if v not in boundary}
+    floor_h = min(dome.heights[b] for b in boundary)
+    heights_by_hub = {v: round(dome.heights[v] - floor_h, 4) for v in range(len(dome.verts)) if v not in boundary}
     levels = sorted(set(heights_by_hub.values()))
 
     adj = defaultdict(list)
@@ -47,15 +55,17 @@ def build_sequence(dome):
     for ring_i, lv in enumerate(levels, start=1):
         new_hubs = sorted(v for v, h in heights_by_hub.items() if h == lv)
 
-        # chequeo de rigidez: cuantas barras de cada nodo nuevo llegan a nodos YA fijos (antes de este paso)
+        # chequeo de rigidez 3D: cuantas barras de cada nodo nuevo llegan a nodos YA
+        # fijos (antes de este paso) y si hay 3 de ellas no coplanares
         rigidity = {}
         for v in new_hubs:
             support_nbrs = [u for u in adj[v] if u in placed]
             rigidity[v] = support_nbrs
             if len(support_nbrs) == 0:
                 WARNINGS.append(f"Nodo {v} (anillo {ring_i}) no tiene NINGUNA barra hacia estructura ya fija — error de secuencia.")
-            elif len(support_nbrs) == 1:
-                WARNINGS.append(f"Nodo {v} (anillo {ring_i}) solo queda fijo por 1 barra — necesita sujecion temporal hasta la siguiente barra.")
+            elif not _fixed_in_3d(dome, v, support_nbrs):
+                WARNINGS.append(f"Nodo {v} (anillo {ring_i}) solo tiene {len(support_nbrs)} barra(s) hacia estructura ya fija — "
+                                f"queda como bisagra, necesita sujecion temporal hasta el paso siguiente.")
 
         placed |= set(new_hubs)
 
@@ -75,10 +85,48 @@ def build_sequence(dome):
 
         steps.append({"ring": ring_i, "kind": "anillo", "new_hubs": new_hubs,
                       "edges": ring_edges, "height_m": lv,
-                      "needs_bracing": [v for v, s in rigidity.items() if len(s) < 2]})
+                      "needs_bracing": [v for v, s in rigidity.items() if not _fixed_in_3d(dome, v, s)]})
 
     missing = set(dome.edges) - installed
     return steps, missing
+
+
+def _fixed_in_3d(dome, v, support_nbrs, min_det=1e-3):
+    """Un nodo articulado queda fijo en 3D si al menos 3 de sus barras hacia
+    estructura ya fija son no coplanares (determinante de sus direcciones != 0)."""
+    if len(support_nbrs) < MIN_SUPPORTS_3D:
+        return False
+    dirs = [v_normalize(v_sub(dome.verts[u], dome.verts[v])) for u in support_nbrs]
+    for i in range(len(dirs)):
+        for j in range(i+1, len(dirs)):
+            for k in range(j+1, len(dirs)):
+                if abs(v_dot(dirs[i], v_cross(dirs[j], dirs[k]))) > min_det:
+                    return True
+    return False
+
+
+def setting_out(dome):
+    """Replanteo de los nodos de fundacion: azimut en planta (0° en el primer
+    nodo alto H5, sentido antihorario visto desde arriba), radio desde el eje
+    y coordenadas X/Y en metros, con origen en el centro del domo."""
+    boundary = dome.boundary_verts
+    axis = v_normalize(dome.verts[dome.apex_index_in_verts2])
+    floor_h = min(dome.heights[b] for b in boundary)
+
+    def planar(v):
+        p = dome.verts[v]
+        return v_sub(p, v_scale(axis, v_dot(p, axis)))
+
+    first_high = min((b for b in boundary if dome.heights[b] - floor_h > 1e-6), key=lambda b: b)
+    e1 = v_normalize(planar(first_high))
+    e2 = v_cross(axis, e1)
+    rows = []
+    for b in boundary:
+        q = planar(b)
+        az = math.degrees(math.atan2(v_dot(q, e2), v_dot(q, e1))) % 360
+        rows.append({"node": b, "az": az, "r": v_norm(q), "x": v_dot(q, e1), "y": v_dot(q, e2),
+                     "dz": dome.heights[b] - floor_h})
+    return sorted(rows, key=lambda r: r["az"])
 
 
 def _edge_record(dome, e, rigid_support):
@@ -101,38 +149,51 @@ def write_markdown(dome, steps, missing, path):
                   "para que cada pieza nueva siempre se apoye en estructura ya fija.\n")
     total_pieces = sum(len(s["edges"]) for s in steps)
     lines.append(f"**{len(steps)} anillos · {total_pieces} barras · {sum(len(s['new_hubs']) for s in steps)} nodos**\n")
+    lines.append("Todas las alturas se miden **desde el piso** (nivel de los 10 nodos bajos H4), no desde "
+                 "el centro de la esfera.\n")
     if WARNINGS:
-        lines.append(f"\n> ⚠ {len(WARNINGS)} nodo(s) quedan fijos por una sola barra en el momento en que "
-                      "aparecen — necesitan sujecion temporal (gato, cuerda, un ayudante) hasta que la "
-                      "barra siguiente del mismo paso los triangule. Son normales en un armado ring-by-ring, "
-                      "no un error, pero hay que preverlos en la logistica del dia de armado. Detalle abajo.\n")
+        lines.append(f"\n> ⚠ {len(WARNINGS)} nodo(s) quedan como **bisagra** en el momento en que aparecen: tienen "
+                      "menos de 3 barras no coplanares hacia estructura ya fija, así que pueden girar alrededor "
+                      "de la línea entre sus apoyos. Necesitan sujeción temporal (puntal, cuerda, un ayudante) "
+                      "hasta que el paso siguiente los triangule. Es normal en un armado anillo por anillo, "
+                      "pero hay que preverlo en la logística del día de armado. Detalle abajo.\n")
+    lines.append("\n> ⚠ No caminar ni pararse sobre las barras: una persona de 100 kg a media barra lleva el "
+                 "tubo de 32×2 mm al límite de fluencia. Armar y cubrir desde andamio o escalera.\n")
 
     for s in steps:
         if s["kind"] == "fundacion":
             lines.append(f"\n## Paso 0 — Fundación (15 nodos de anclaje)\n")
             lines.append(s["notes"] + "\n")
-            lines.append("| Nodo | Tipo | Altura relativa |\n|---|---|---|")
-            for v in s["new_hubs"]:
-                lines.append(f"| #{v} | {hub_type_of(dome,v)} | {dome.heights[v]-min(dome.heights[b] for b in s['new_hubs']):+.4f} m |")
+            lines.append("**Replanteo de los anclajes** (origen en el centro del domo; azimut 0° en el primer "
+                         "nodo alto, creciendo en sentido antihorario visto desde arriba; X/Y en metros):\n")
+            lines.append("| Nodo | Tipo | Azimut | Radio | X | Y | Altura sobre el piso |\n|---|---|---|---|---|---|---|")
+            for r in setting_out(dome):
+                v = r["node"]
+                lines.append(f"| #{v} | {hub_type_of(dome,v)} | {r['az']:.3f}° | {r['r']:.4f} m | {r['x']:+.4f} | "
+                             f"{r['y']:+.4f} | {r['dz']:+.4f} m |")
             lines.append("\n**Barras del anillo base a soldar en este paso:**\n")
             lines.append("| De | A | Tipo | Longitud |\n|---|---|---|---|")
             for e in s["edges"]:
                 lines.append(f"| #{e['a']} | #{e['b']} | {e['label']} | {e['length_cm']:.2f} cm |")
         else:
-            lines.append(f"\n## Paso {s['ring']} — Anillo a {s['height_m']:.3f} m de altura ({len(s['new_hubs'])} nodos nuevos)\n")
+            nn = len(s['new_hubs'])
+            lines.append(f"\n## Paso {s['ring']} — Anillo a {s['height_m']:.3f} m sobre el piso ({nn} nodo{'s' if nn != 1 else ''} nuevo{'s' if nn != 1 else ''})\n")
             if s["needs_bracing"]:
                 names = ", ".join(f"#{v} ({hub_type_of(dome,v)})" for v in s["needs_bracing"])
-                lines.append(f"⚠ Sujetar temporalmente hasta triangular: {names}\n")
+                lines.append(f"⚠ Sujetar temporalmente hasta el paso siguiente (quedan como bisagra): {names}\n")
             lines.append("| Barra | De | A | Tipo | Longitud | Fijación |\n|---|---|---|---|---|---|")
+            nth = defaultdict(int)
             for i, e in enumerate(s["edges"], start=1):
                 a, b = e["a"], e["b"]
                 a_new, b_new = a in s["new_hubs"], b in s["new_hubs"]
                 if b_new and not a_new:
                     end1, end2 = a, b
-                    fix = f"{e['rigid_support']}ª barra que fija #{b} (nuevo)"
+                    nth[b] += 1
+                    fix = f"{nth[b]}ª de {e['rigid_support']} barras que fijan #{b} (nuevo)"
                 elif a_new and not b_new:
                     end1, end2 = b, a
-                    fix = f"{e['rigid_support']}ª barra que fija #{a} (nuevo)"
+                    nth[a] += 1
+                    fix = f"{nth[a]}ª de {e['rigid_support']} barras que fijan #{a} (nuevo)"
                 elif a_new and b_new:
                     end1, end2 = a, b
                     fix = "arriostre entre 2 nodos nuevos de este mismo anillo"
@@ -159,7 +220,7 @@ if __name__ == "__main__":
     total_edges_in_seq = sum(len(s["edges"]) for s in steps)
     print(f"Anillos: {len(steps)}")
     print(f"Barras secuenciadas: {total_edges_in_seq} / {len(dome.edges)}")
-    print(f"Nodos que necesitan sujecion temporal (1 sola barra de apoyo al aparecer): "
+    print(f"Nodos que necesitan sujecion temporal (menos de 3 barras no coplanares al aparecer): "
           f"{sum(len(s.get('needs_bracing', [])) for s in steps)}")
     print(f"Barras sin asignar (debe ser 0): {len(missing)}")
 
@@ -171,7 +232,7 @@ if __name__ == "__main__":
     print(f"\nEscrito: {out_path}")
 
     if WARNINGS:
-        print(f"\n{len(WARNINGS)} avisos de sujecion temporal (normal en armado ring-by-ring, ver el .md):")
+        print(f"\n{len(WARNINGS)} avisos de sujecion temporal (normal en armado anillo por anillo, ver el .md):")
         for w in WARNINGS[:8]:
             print(f"  - {w}")
         if len(WARNINGS) > 8:
