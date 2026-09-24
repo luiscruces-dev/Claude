@@ -1,5 +1,12 @@
 """
-Maqueta a escala del domo Cucuchica: palos chinos y pega loca.
+Maqueta de la estructura del domo Cucuchica a escala: palos chinos y pega loca.
+
+Para que sirve: comprobar con las manos que las medidas estan bien. Cada
+palito se corta al largo que sale del modelo y lleva el mismo codigo de pieza
+que la secuencia de armado real. Si todos cierran en su nodo sin forzar, los
+largos estan bien; si ademas coinciden las mediciones de control (distancias
+que no se usaron para cortar nada) y los discos de angulo, la geometria esta
+comprobada.
 
 Corre (desde glamping-cucuchica/maqueta):
     python3 maqueta.py            # genera maqueta.html y maqueta_plantillas.html
@@ -95,6 +102,92 @@ def cut_groups(members, N, d):
     return sorted(g.items(), key=lambda kv: (order.find(kv[0][0][0]), kv[0][0], -kv[1]))
 
 
+def build_pieces(D, members):
+    """Las piezas en el orden de la secuencia de armado, con su codigo paso.numero."""
+    import dome_build_sequence as seq
+    seq.WARNINGS.clear()
+    steps, missing = seq.build_sequence(D)
+    assert not missing
+    mem_by_edge = {tuple(sorted(m["e"])): m for m in members}
+    pieces, notes = [], []
+    for s in steps:
+        new = set(s["new_hubs"]) if s["kind"] != "fundacion" else set()
+        frame = bool(D.door) and set(s["new_hubs"]) == {D.door["Ta"], D.door["Tb"]}
+        later = [v for v in s.get("needs_bracing", []) if v in s.get("unfixed_at_end", [])]
+        within = [v for v in s.get("needs_bracing", []) if v not in s.get("unfixed_at_end", [])]
+        notes.append({"step": s["ring"], "kind": s["kind"], "height": s.get("height_m", 0.0), "nodes": list(s["new_hubs"]),
+                      "frame": frame, "later": later, "within": within, "n": len(s["edges"])})
+        for i, e in enumerate(s["edges"], start=1):
+            a, b = e["a"], e["b"]
+            if b in new and a not in new:
+                x, y = a, b
+            elif a in new and b not in new:
+                x, y = b, a
+            else:
+                x, y = a, b
+            m = mem_by_edge[tuple(sorted((a, b)))]
+            pieces.append({"id": f"{s['ring']}.{i:02d}", "step": s["ring"], "from": x, "to": y, "code": m["code"],
+                           "L": round(m["L"], 5), "ta": None if m["ta"] is None else round(m["ta"], 3),
+                           "tb": None if m["tb"] is None else round(m["tb"], 3)})
+    return pieces, notes
+
+
+def control_checks(D):
+    """Medidas que se pueden comprobar sobre la maqueta armada y que NO se usaron
+    para cortar ningun palito. kind: dist (entre centros de nodo), height (desde el
+    tablero), doorw / doorh (vano de la puerta)."""
+    import itertools
+    P = D.verts
+    def dist(a, b): return v_norm(v_sub(P[a], P[b]))
+    edges = {(min(e), max(e)) for e in D.edges}
+    apex = max(D.active, key=lambda v: P[v][2])
+    low = sorted(v for v in D.boundary_verts if P[v][2] < 1e-6)
+    high = sorted(v for v in D.boundary_verts if P[v][2] > 1e-6)
+    out = [{"what": "Del ápice a cada nodo bajo: los 10 tienen que dar igual", "where": f"#{apex} a " + ", ".join(f"#{v}" for v in low),
+            "m": dist(apex, low[0]), "kind": "dist", "tol": 3},
+           {"what": "Del ápice a cada nodo alto: los 5 iguales", "where": f"#{apex} a " + ", ".join(f"#{v}" for v in high),
+            "m": dist(apex, high[0]), "kind": "dist", "tol": 3}]
+    by_h = defaultdict(list)
+    for v in D.active:
+        if v not in D.boundary_verts:
+            by_h[round(P[v][2], 4)].append(v)
+    names = {}
+    for k, h in enumerate(sorted(by_h), start=1):
+        names[h] = k
+    for h in sorted(by_h):
+        nodes = sorted(by_h[h])
+        if h == round(max(P[v][2] for v in D.active), 4):
+            what = "Altura del ápice"
+        elif D.door and set(nodes) == {D.door["Ta"], D.door["Tb"]}:
+            continue
+        else:
+            what = f"Altura de los {len(nodes)} nodos a {h:.3f} m: todos iguales"
+        out.append({"what": what, "where": ", ".join(f"#{v}" for v in nodes), "m": h, "kind": "height", "tol": 3})
+    # entre nodos del mismo nivel que no estan unidos por un palito
+    for h in sorted(by_h):
+        nodes = sorted(by_h[h])
+        pairs = [(dist(a, b), a, b) for a, b in itertools.combinations(nodes, 2) if (min(a, b), max(a, b)) not in edges]
+        if not pairs:
+            continue
+        dmin = min(p[0] for p in pairs)
+        near = [p for p in pairs if abs(p[0] - dmin) < 1e-3]
+        far = max(pairs)
+        if len(nodes) >= 4:
+            out.append({"what": f"Entre nodos vecinos a {h:.3f} m que no llevan palito", "where": ", ".join(f"#{a}–#{b}" for _, a, b in near[:4]),
+                        "m": dmin, "kind": "dist", "tol": 3})
+            if abs(far[0] - dmin) > 0.05:
+                out.append({"what": f"De lado a lado a {h:.3f} m", "where": f"#{far[1]}–#{far[2]}", "m": far[0], "kind": "dist", "tol": 3})
+    if D.door:
+        chord = D.edge_len[(min(D.door["a"], D.door["b"]), max(D.door["a"], D.door["b"]))]
+        out.append({"what": "Vano de la puerta: ancho entre caras de los postes", "where": f"postes sobre #{D.door['a']} y #{D.door['b']}",
+                    "m": chord, "kind": "doorw", "tol": 2})
+        out.append({"what": "Vano de la puerta: del tablero a la cara de abajo del dintel", "where": "centro del vano",
+                    "m": D.door["head_z"], "kind": "doorh", "tol": 2})
+    out.append({"what": "Plomada: un hilo con peso desde cada nodo cae en su cruz", "where": "cruces finas de la planta",
+                "m": 0.0, "kind": "plumb", "tol": 3})
+    return out
+
+
 def collect():
     D = door.build_dome_with_door()
     PL, PR, PQ, _ = plat.evaluate(verbose=False)
@@ -131,7 +224,14 @@ def collect():
         "levels": lv, "ped": plat.PED, "foot": plat.FOOT, "footT": plat.FOOT_T, "ringH": plat.RING_H,
         "beamH": plat.BEAM_H, "beamB": plat.BEAM_B, "joistB": plat.JOIST_B, "joistH": plat.JOIST_H, "deckT": plat.DECK_T,
     }
+    pieces, notes = build_pieces(D, members)
+    nodes = []
+    for v in D.active:
+        n = [P[v][k] - D.center[k] for k in range(3)]
+        L = math.sqrt(sum(x*x for x in n))
+        nodes.append({"id": v, "p": [round(c, 4) for c in P[v]], "n": [round(x/L, 4) for x in n], "t": D.type_of[v]})
     data = {"struts": struts, "hubs": hubs, "tris": tris, "door": quad, "center": [round(c, 4) for c in D.center],
+            "pieces": pieces, "notes": notes, "checks": control_checks(D), "nodes": nodes,
             "u": [round(dd["u"][0], 5), round(dd["u"][1], 5)], "v": [round(dd["v"][0], 5), round(dd["v"][1], 5)],
             "plat": platd,
             "members": [{"code": m["code"], "L": round(m["L"], 5), "ta": None if m["ta"] is None else round(m["ta"], 3),
@@ -146,55 +246,111 @@ def collect():
 # ---------------------------------------------------------------- pagina
 
 def build_page(D, PL, members, data):
-    groups = cut_groups(members, SCALE, STICK_D)
     js = JS.replace("__DATA__", json.dumps(data, separators=(",", ":")))
-    return f"""<title>Maqueta Domo Cucuchica</title>
+    # checklist pieza por pieza, agrupado por paso (los largos los llena el JS segun escala y grosor)
+    blocks = []
+    k = 0
+    for nt in data["notes"]:
+        rows = []
+        while k < len(data["pieces"]) and data["pieces"][k]["step"] == nt["step"]:
+            pc = data["pieces"][k]
+            rows.append(f'<tr><td><input type="checkbox" class="pk" data-k="p{esc(pc["id"])}" aria-label="Pieza {esc(pc["id"])} lista"></td>'
+                        f'<td class="mono strongc">{esc(pc["id"])}</td><td class="mono">#{pc["from"]} → #{pc["to"]}</td>'
+                        f'<td><span class="code" data-code="{esc(pc["code"])}">{esc(pc["code"])}</span></td>'
+                        f'<td class="num strongc" data-pc="{k}"></td></tr>')
+            k += 1
+        if nt["kind"] == "fundacion":
+            title = "Paso 0 · anillo de base sobre la planta"
+            hi = [v for v in D.boundary_verts if D.verts[v][2] > 1e-6]
+            note = (f"Los {len(D.boundary_verts)} palitos del borde van sobre la planta impresa, de marca a marca. "
+                    f"Bajo los {len(hi)} nodos altos ({', '.join('#' + str(v) for v in sorted(hi))}) va un taco de "
+                    f"{max(D.verts[v][2] for v in hi)*1000/SCALE:.1f} mm (es el taco de {max(D.verts[v][2] for v in hi)*100:.2f} cm del domo real).")
+        elif nt["frame"]:
+            title = f"Paso {nt['step']} · marco de la puerta (dintel a {nt['height']:.2f} m reales)"
+            note = "Pegue antes el marco (2 postes y el dintel) a escuadra sobre la mesa. Preséntelo sobre #%d y #%d y amárrelo con K1 y K2." % (D.door["a"], D.door["b"])
+        else:
+            title = (f"Paso {nt['step']} · cúspide (#{nt['nodes'][0]})" if len(nt['nodes']) == 1 else
+                     f"Paso {nt['step']} · anillo de {len(nt['nodes'])} nodos a {nt['height']:.3f} m reales")
+            note = ""
+        if nt["later"]:
+            note += (" " if note else "") + "▲ Sostenga con plastilina o cinta hasta el paso siguiente: " + ", ".join(f"#{v}" for v in nt["later"]) + " (quedan como bisagra)."
+        if nt["within"]:
+            note += (" " if note else "") + "◆ Sostenga hasta pegar todas las piezas de este paso: " + ", ".join(f"#{v}" for v in nt["within"]) + "."
+        blocks.append(f'<details class="stepblk"{" open" if nt["step"] in (0, 1) else ""}><summary><b>{esc(title)}</b>'
+                      f'<span class="muted"> · {nt["n"]} piezas</span><span class="prog" data-step="{nt["step"]}"></span></summary>'
+                      f'{"<p class=note2>" + esc(note) + "</p>" if note else ""}'
+                      f'<div class="tbl"><table><thead><tr><th></th><th>Código</th><th>De → a</th><th>Tipo</th><th class="num">Cortar a</th></tr></thead>'
+                      f'<tbody>{"".join(rows)}</tbody></table></div></details>')
+
+    check_rows = "".join(
+        f'<tr><td><input type="checkbox" class="pk" data-k="c{i}" aria-label="Medición {i+1} comprobada"></td><td>{esc(c["what"])}</td>'
+        f'<td class="mono small">{esc(c["where"])}</td><td class="num strongc" data-ck="{i}"></td><td class="num">±{c["tol"]} mm</td></tr>'
+        for i, c in enumerate(data["checks"]))
+
+    return f"""<title>Maqueta de la estructura</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>{CSS}</style>
 <div class="wrap">
 <header class="hero">
-  <div class="eyebrow">Glamping Cucuchica · maqueta a escala exacta · palos chinos y pega loca</div>
-  <h1>Maqueta 1:{SCALE} del domo con su puerta y su plataforma</h1>
-  <p class="lede">Primero, cómo se ve la unidad terminada, con los materiales reales. Después, todo para armarla en pequeño: la escala, qué material usar para cada parte, el largo exacto de cada palito según su grosor, las plantillas para imprimir a tamaño real y el orden de armado. Las medidas salen del mismo modelo verificado del plano de taller.</p>
+  <div class="eyebrow">Glamping Cucuchica · prueba a escala de la estructura · palos chinos y pega loca</div>
+  <h1>Maqueta de la estructura 1:{SCALE} con palos chinos</h1>
+  <p class="lede">Cada palito se corta al largo que sale de los cálculos y lleva el mismo código que la pieza real en la secuencia de armado. Si los 119 palitos cierran en su nodo sin forzar, y las mediciones de control coinciden, las medidas quedan comprobadas con las manos, no por confianza.</p>
   <div class="statgrid" id="sizes"></div>
 </header>
 
+<section id="idea">
+  <h2>Cómo prueba las medidas</h2>
+  <div class="cards">
+    <div class="card"><h3>Los largos cierran</h3><p>Cada triángulo tiene 3 palitos cortados por separado. Si un solo largo estuviera mal, al llegar al nodo el palito sobraría o faltaría. Que los 119 cierren sin forzar confirma los largos.</p></div>
+    <div class="card"><h3>Medidas que no se usaron para cortar</h3><p>La distancia del ápice a los 10 nodos bajos, la altura de cada anillo y la distancia entre nodos que no llevan palito salen solas de la geometría. Si dan lo que dice la tabla, la forma completa está bien.</p></div>
+    <div class="card"><h3>Los ángulos del nodo</h3><p>Los discos impresos se apoyan sobre un nodo terminado, mirando desde afuera: los palitos tienen que caer sobre las líneas. Es la prueba de los ángulos que se marcan en los discos de acero.</p></div>
+  </div>
+</section>
+
 <section id="vista">
-  <h2>Así se ve</h2>
-  <p class="sub">Arrastre para girar, pellizco o rueda para acercar. La persona mide 1.75 m y la cama es de 1.60 × 2.00 m, para dar la escala. Con "maqueta" activado, los tubos se dibujan del grueso de los palitos, para ver cómo va a quedar la maqueta.</p>
+  <h2>La estructura que va a armar</h2>
+  <p class="sub">Así queda con palitos a escala, con cada nodo numerado igual que en el checklist. Gire con el dedo o el mouse. Apague "palitos" para verla con los tubos reales.</p>
   <div class="scene-wrap">
-    <div id="scene" role="img" aria-label="Vista 3D del domo con puerta y plataforma"><div id="nogl" hidden>Este navegador no pudo abrir la vista 3D (WebGL). El resto de la página funciona igual.</div></div>
+    <div id="scene" role="img" aria-label="Vista 3D de la estructura con los nodos numerados"><div id="labels" aria-hidden="true"></div><div id="nogl" hidden>Este navegador no pudo abrir la vista 3D (WebGL). El resto de la página funciona igual.</div></div>
     <div class="scene-bar">
       <div class="views" role="group" aria-label="Vistas">
         <button type="button" class="vbtn" data-view="tres">3/4</button><button type="button" class="vbtn" data-view="frente">Frente</button><button type="button" class="vbtn" data-view="planta">Planta</button><button type="button" class="vbtn" data-view="adentro">Adentro</button>
       </div>
       <div class="toggles">
-        <label><input type="checkbox" id="t-mem" checked> membrana</label>
-        <label><input type="checkbox" id="t-door" checked> puerta</label>
-        <label><input type="checkbox" id="t-plat" checked> plataforma</label>
-        <label><input type="checkbox" id="t-people" checked> persona y cama</label>
-        <label><input type="checkbox" id="t-under"> bajo tierra</label>
-        <label class="strong"><input type="checkbox" id="t-model"> maqueta</label>
+        <label class="strong"><input type="checkbox" id="t-num" checked> números</label>
+        <label class="strong"><input type="checkbox" id="t-model" checked> palitos</label>
+        <label><input type="checkbox" id="t-mem"> membrana</label>
+        <label><input type="checkbox" id="t-door"> puerta</label>
+        <label><input type="checkbox" id="t-plat"> plataforma</label>
+        <label><input type="checkbox" id="t-people"> persona y cama</label>
       </div>
     </div>
   </div>
 </section>
 
-<section id="escala">
-  <h2>La escala</h2>
-  <div>
-    <div>
-      <p>Recomendado: <b>1:10</b>. El domo queda de 60 cm de diámetro y 25 cm de alto, cabe en una mesa y cada barra sale de un palo chino. A esa escala, un palo chino de 5 mm es exactamente el tubo cuadrado de 50 mm del marco de la puerta. Las barras del domo (tubo de 32 mm) quedan 1.6 veces más gruesas que las reales; si quiere el grosor exacto, use <b>palitos de brocheta de 3 mm</b> para el domo y palos chinos para el marco.</p>
-      <p>Los largos y los ángulos son exactos a cualquier escala. Lo que cambia es cuánto se nota el grosor del palito.</p>
-    </div>
-    <div class="tbl"><table><thead><tr><th>Escala</th><th class="num">Domo</th><th class="num">Barra A</th><th class="num">Palito de 5 mm equivale a</th><th>Comentario</th></tr></thead><tbody id="scaletab"></tbody></table></div>
+<section id="materiales">
+  <h2>Qué necesita</h2>
+  <div class="cards">
+    <div class="card"><h3>Material</h3><ul class="plain">
+      <li><b id="m-sticks">—</b> palos chinos de 24 cm, derechos y del mismo grosor (compre un paquete de 150)</li>
+      <li>Pega loca (cianoacrilato) y bicarbonato de sodio</li>
+      <li>Tablero plano de 70 × 70 cm (cartón piedra, MDF o anime)</li>
+      <li>Plastilina y cinta de papel para sostener</li>
+      <li>Marcadores de 3 colores: azul (A), naranja (B), verde (C)</li>
+      <li>Hilo y un peso pequeño (plomada)</li></ul></div>
+    <div class="card"><h3>Herramienta</h3><ul class="plain">
+      <li>Segueta fina o cortador de modelismo</li>
+      <li>Lija fina sobre un taco, para dejar las puntas planas</li>
+      <li>Regla metálica en milímetros y escuadra</li>
+      <li>Pinzas, guantes y lugar ventilado</li>
+      <li>Impresora para las plantillas (al 100%)</li></ul></div>
   </div>
 </section>
 
 <section id="corte">
   <h2>Largo de cada palito</h2>
-  <p class="sub">Cambie la escala, el grosor del palito y el largo aprovechable (sin la punta delgada): la tabla se recalcula. "Retiro" es lo que se descuenta en cada punta para que los palitos no choquen en el nodo; así el eje de cada palito sigue apuntando al centro exacto del nodo.</p>
+  <p class="sub">Mida el grosor de sus palitos en la parte recta y póngalo aquí; todo se recalcula, incluido el checklist. "Retiro" es lo que se descuenta en cada punta para que los palitos no choquen en el nodo; así el eje de cada palito sigue apuntando al centro exacto del nodo.</p>
   <div class="calc">
     <label>Escala 1:<select id="c-n"><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></label>
     <label>Grosor del palito <input id="c-d" type="number" min="2" max="8" step="0.5" value="{STICK_D}"> mm</label>
@@ -204,39 +360,45 @@ def build_page(D, PL, members, data):
   <p class="sum" id="cutsum"></p>
 </section>
 
-<section id="plataforma">
-  <h2>Plataforma y demás piezas a escala</h2>
-  <p class="sub">Medidas para la escala elegida arriba. La plataforma de la maqueta se simplifica en bloques y una placa: lo que se ve por fuera queda igual al real.</p>
-  <div class="tbl"><table><thead><tr><th>Parte</th><th>Real</th><th>En la maqueta</th><th>Material sugerido</th></tr></thead><tbody id="partstab"></tbody></table></div>
+<section id="piezas">
+  <h2>Pieza por pieza</h2>
+  <p class="sub">El mismo orden y los mismos códigos que <span class="mono">secuencia_de_armado.md</span>: armar la maqueta es ensayar el armado real. Marque cada pieza al pegarla; las marcas se guardan en este navegador. Las etiquetas impresas llevan el código de cada palito.</p>
+  <div class="progress"><span id="prog-all"></span><button type="button" class="ghost" id="reset-checks">Borrar marcas</button></div>
+  {"".join(blocks)}
+</section>
+
+<section id="control">
+  <h2>Mediciones de control</h2>
+  <p class="sub">Con la estructura terminada. Las distancias son entre centros de nodo, es decir, entre los centros de los puntos de pega. Las alturas se miden desde el tablero. Ninguna de estas medidas se usó para cortar: si coinciden, la geometría está bien. La hoja de control del PDF tiene una columna para anotar lo medido.</p>
+  <div class="tbl"><table><thead><tr><th></th><th>Qué medir</th><th>Entre</th><th class="num">Tiene que dar</th><th class="num">Tolerancia</th></tr></thead><tbody>{check_rows}</tbody></table></div>
 </section>
 
 <section id="plantillas">
   <h2>Plantillas para imprimir</h2>
-  <p>El archivo <span class="mono">maqueta_plantillas.pdf</span>, a escala 1:10 y con palitos de 5 mm, trae:</p>
-  <ol class="steps">
-    <li><b>Portada</b> con una barra de control de 10 cm. Hay que imprimir <b>al 100% (tamaño real)</b>, sin "ajustar a la página", y medir esa barra con una regla antes de seguir.</li>
-    <li><b>Planta base en 12 hojas</b> (3 × 4) que se unen con cinta, con 1 cm de solape y cruces de alineación. Trae la placa del piso, los 15 anclajes numerados, los 23 pilotes, la puerta y los ejes.</li>
-    <li><b>Descanso y escalones</b> por separado.</li>
-    <li><b>Triángulos</b> P1, P2 y V1–V4 a escala. Sirven para comprobar los triángulos armados y para cortar la cubierta en papel mantequilla, con una pestaña de 5 mm para pegar.</li>
-    <li><b>Reglas de corte</b>: una barra impresa del largo exacto de cada tipo de palito, para marcar sin medir.</li>
-  </ol>
+  <p>El archivo <span class="mono">maqueta_plantillas.pdf</span> está a escala 1:{SCALE} para palitos de {STICK_D:.0f} mm. Imprímalo <b>al 100% (tamaño real)</b> y mida la barra de 10 cm de la portada antes de seguir. Trae:</p>
+  <ul class="plain">
+    <li><b>Planta base en 12 hojas</b>, que se unen con cinta haciendo coincidir las cruces. Trae las 15 marcas de anclaje, los palitos del anillo de base con su código, los postes de la puerta y una marca con el número de cada nodo de arriba, para la prueba de la plomada.</li>
+    <li><b>Etiquetas</b>: una banderita por palito con su código, sus nodos y su largo.</li>
+    <li><b>Reglas de corte</b>: una barra impresa del largo exacto de cada tipo de palito.</li>
+    <li><b>Discos de ángulo</b> de cada tipo de nodo, para la prueba de los ángulos.</li>
+    <li><b>Hoja de control</b> para anotar las mediciones.</li>
+  </ul>
 </section>
 
 <section id="armado">
   <h2>Paso a paso</h2>
   <ol class="steps">
-    <li><b>Imprima y controle la escala</b>: la barra de 10 cm tiene que medir 10 cm.</li>
-    <li><b>Base.</b> Pegue la planta en un cartón o anime firme. Pegue los 23 bloques de pilote sobre sus cuadrados y la placa del piso encima. La tira del borde imita la viga de anillo.</li>
-    <li><b>Corte todos los palitos</b> con la tabla o con las reglas impresas. Lije las puntas planas. Separe los palitos por tipo y márquelos con color: A azul, B naranja, C verde.</li>
-    <li><b>Anillo de base.</b> Pegue los 15 palitos del borde sobre la placa, de anclaje en anclaje. Bajo los 5 nodos altos (H5) va un taco de 4.9 mm: sirve una rodaja de palito.</li>
-    <li><b>Arme anillo por anillo</b>, en el mismo orden que la secuencia real. En el paso 1 los 4 triángulos quedan sueltos como bisagra: sosténgalos con plastilina o cinta hasta el paso 2. Igual que en la obra real.</li>
-    <li><b>Marco de la puerta.</b> Pegue los 2 postes y el dintel sobre la plantilla, a escuadra, y colóquelo en el paso 5 sobre los anclajes #6 y #14. Después van los amarres K1 y K2 y las vigas V del techo. Los postes son las piezas más largas (21.5 cm a 1:10): si sus palos chinos no llegan, empalme dos pedazos con pega loca y un palito de refuerzo por detrás.</li>
-    <li><b>Cubierta (opcional).</b> Corte los triángulos en papel mantequilla con la pestaña de 5 mm y péguelos por fuera. El vano de la puerta queda abierto.</li>
+    <li><b>Prepare la base.</b> Una las 12 hojas de la planta y péguelas sobre el tablero.</li>
+    <li><b>Corte y etiquete.</b> Corte cada palito con la regla impresa o con la tabla, lije las puntas planas y péguele su banderita. Marque las puntas con su color: A azul, B naranja, C verde.</li>
+    <li><b>Arme en el orden del checklist.</b> Paso 0 sobre la planta; después anillo por anillo. Cada palito va del nodo "De" al nodo "a". Si un palito no llega o sobra más de 1 mm, no lo fuerce: revise el nodo anterior antes de seguir.</li>
+    <li><b>Sostenga los nodos bisagra</b> (▲ y ◆ en el checklist) con plastilina o cinta. Es exactamente lo que va a pasar en la obra real con los puntales.</li>
+    <li><b>Marco de la puerta.</b> Péguelo aparte a escuadra: 2 postes enteros y el dintel entre ellos. Colóquelo en su paso sobre #{D.door['a']} y #{D.door['b']}.</li>
+    <li><b>Compruebe.</b> Haga las mediciones de control y la prueba de la plomada, y apoye los discos de ángulo sobre varios nodos. Anote todo en la hoja de control.</li>
   </ol>
-  <div class="note"><h3>Con pega loca</h3><p>Una gota en el nodo y una pizca de bicarbonato encima: endurece al instante y rellena el hueco entre palitos. Use pinzas, trabaje ventilado y proteja la mesa. Si un palito queda corto o largo, no lo fuerce: significa que un nodo anterior quedó corrido, y conviene corregirlo antes de seguir.</p></div>
+  <div class="note"><h3>Con pega loca</h3><p>Una gota en el nodo y una pizca de bicarbonato encima: endurece al instante y rellena el hueco entre las puntas. Use pinzas, trabaje ventilado y proteja la mesa. Pegue primero con poca pega; cuando el anillo completo cierre, refuerce todos sus nodos.</p></div>
 </section>
 
-<footer>Plano de taller del domo real (cortes, nodos, puerta, plataforma, armado): <a href="https://claude.ai/artifact/79tfRK3Jq2uPU6B5nhH5p8">plano de taller</a> (en el repositorio: <span class="mono">domo-3v-cucuchica.html</span>).<br>Generado por <span class="mono">maqueta/maqueta.py</span> desde <span class="mono">dome_model.py</span>, <span class="mono">dome_door.py</span> y <span class="mono">dome_platform.py</span>. Vista 3D con three.js r128.</footer>
+<footer>Plano de taller del domo real (cortes, nodos, puerta, plataforma, armado): <a href="https://claude.ai/artifact/79tfRK3Jq2uPU6B5nhH5p8">plano de taller</a> (en el repositorio: <span class="mono">domo-3v-cucuchica.html</span>).<br>Generado por <span class="mono">maqueta/maqueta.py</span> desde <span class="mono">dome_model.py</span>, <span class="mono">dome_door.py</span> y <span class="mono">dome_build_sequence.py</span>. Vista 3D con three.js r128.</footer>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -279,6 +441,26 @@ section{padding-block:32px; border-top:1px solid var(--grid)}
 #scene canvas{display:block; width:100%; height:100%}
 #nogl{position:absolute; inset:0; display:grid; place-items:center; padding:20px; color:var(--ink-2); text-align:center}
 #nogl[hidden]{display:none}
+#scene canvas{position:relative; z-index:1}
+#labels{position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:2}
+#labels[hidden]{display:none}
+.nlab{position:absolute; left:0; top:0; font:600 10.5px "IBM Plex Mono",monospace; color:#fff; background:rgba(21,23,26,.78); padding:1px 4px; border-radius:3px; white-space:nowrap}
+.nlab-d{background:rgba(179,48,47,.88)}
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:12px; margin-top:12px}
+.card{background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:12px 16px} .card p{margin:0; font-size:14px; color:var(--ink-2)}
+ul.plain{margin:0; padding-left:18px; display:grid; gap:5px; font-size:14px; max-width:78ch}
+details.stepblk{border:1px solid var(--grid); border-radius:8px; background:var(--surface); margin-top:10px}
+details.stepblk summary{cursor:pointer; padding:10px 14px; list-style:none}
+details.stepblk summary::-webkit-details-marker{display:none}
+details.stepblk summary::before{content:"▸ "; color:var(--muted)} details.stepblk[open] summary::before{content:"▾ "}
+details.stepblk .tbl{margin:0 12px 12px}
+.note2{margin:0 14px 8px; font-size:13.5px; color:var(--ink-2)}
+.code[data-code="A"]{background:var(--sA)} .code[data-code="B"]{background:var(--sB)} .code[data-code="C"]{background:var(--sC)}
+.code[data-code="P"],.code[data-code="D"],.code[data-code="V"],.code[data-code="K1"],.code[data-code="K2"]{background:var(--door); color:var(--page)}
+.progress{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:8px; font:600 13px "IBM Plex Mono",monospace}
+button.ghost{font:inherit; font-size:12.5px; color:var(--ink-2); background:transparent; border:1px solid var(--line); border-radius:6px; padding:5px 10px; cursor:pointer}
+.small{font-size:12.5px} .muted{color:var(--muted)}
+input.pk{width:18px; height:18px; accent-color:var(--sC)}
 .scene-bar{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 12px; border-top:1px solid var(--grid)}
 .views{display:flex; gap:6px; flex-wrap:wrap}
 .vbtn{font:600 12.5px "IBM Plex Mono",monospace; color:var(--ink-2); background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:6px 10px; cursor:pointer}
@@ -341,28 +523,30 @@ function recalc(){
   pieces.sort(function(a,b){return b-a;});var sticks=[],tooLong=0;
   pieces.forEach(function(x){if(x+1>p.L){tooLong++;return;}for(var i=0;i<sticks.length;i++){if(sticks[i]+x+1<=p.L){sticks[i]+=x+1;return;}}sticks.push(x+1);});
   var total=pieces.reduce(function(a,b){return a+b;},0);
-  $('cutsum').innerHTML='<b>'+pieces.length+' palitos cortados</b> ('+fmt(total/1000,2)+' m en total). Con palos de '+p.L+' mm aprovechables salen de <b>'+sticks.length+' palos chinos</b>'+(tooLong?(' <span style="color:var(--warn)">· '+tooLong+' piezas no caben en un solo palo: use una escala más chica o palos más largos</span>'):'')+'. Compre un paquete de 150 para tener repuesto.';
-  sizes(p);parts(p);
+  $('cutsum').innerHTML='<b>'+pieces.length+' palitos cortados</b> ('+fmt(total/1000,2)+' m en total). Con palos de '+p.L+' mm aprovechables salen de <b>'+sticks.length+' palos chinos</b>'+(tooLong?(' <span style="color:var(--warn)">· '+tooLong+' piezas no caben en un solo palo: empalme esas piezas o use palos más largos</span>'):'')+'. Compre un paquete de 150 para tener repuesto.';
+  $('m-sticks').textContent=sticks.length+tooLong;
+  document.querySelectorAll('[data-pc]').forEach(function(td){var pc=MQ.pieces[+td.getAttribute('data-pc')];td.textContent=fmt(Math.round(cutOf(pc,p.N,p.d)*2)/2)+' mm';});
+  document.querySelectorAll('[data-ck]').forEach(function(td){var c=MQ.checks[+td.getAttribute('data-ck')],v;
+    if(c.kind==='dist')v=c.m*1000/p.N;else if(c.kind==='height')v=c.m*1000/p.N+p.d/2;else if(c.kind==='doorw')v=c.m*1000/p.N-p.d;else if(c.kind==='doorh')v=c.m*1000/p.N;else v=null;
+    td.textContent=v===null?'sobre su marca':fmt(v)+' mm';});
+  sizes(p,pieces.length,sticks.length+tooLong);
   if(window.__setModel)window.__setModel(p);
 }
-function sizes(p){var R=MQ.real,N=p.N;
-  $('sizes').innerHTML=[['Diámetro',R.diam*1000/N,'mm'],['Alto del domo',(R.apex+R.freeboard)*1000/N,'mm sobre la base'],['Vano de la puerta',Math.floor(R.clear_w*1000/N)+'×'+Math.floor(R.clear_h*1000/N),'mm'],['Largo total con escalones',(R.extent_u+3.125)*1000/N,'mm']]
-  .map(function(s){return '<div class="stat"><div class="v">'+(typeof s[1]==='number'?fmt(s[1],0):s[1])+'<span class="u">'+s[2]+'</span></div><div class="l">'+s[0]+' a escala 1:'+N+'</div></div>';}).join('');
-  var sc=[[10,'Recomendada: cada barra sale de un palo; cabe en una mesa'],[15,'Más chica; el palito se ve 2.3 veces más grueso que el tubo'],[20,'Muy chica; los nodos quedan apretados']];
-  $('scaletab').innerHTML=sc.map(function(r){var n=r[0];return '<tr'+(n===p.N?' style="font-weight:700"':'')+'><td>1:'+n+'</td><td class="num">'+fmt(6000/n,0)+' mm</td><td class="num">'+fmt(1255.9/n,1)+' mm</td><td class="num">'+fmt(5*n/10,1)+' cm</td><td>'+r[1]+'</td></tr>';}).join('');}
-function parts(p){var N=p.N,pl=MQ.plat,lv=pl.levels,d=p.d,plate=3;
-  function mm(x){return fmt(x*1000/N,1)+' mm';}
-  var rows=[
-    ['Terreno (base)','—','tablero de '+fmt(9000/N/10,0)+' × '+fmt(9000/N/10,0)+' cm o más','cartón piedra, anime o MDF'],
-    ['Pilotes (23)','25 × 25 cm, piso a '+fmt(MQ.real.freeboard*100,0)+' cm del suelo',mm(pl.ped)+' × '+mm(pl.ped)+', alto '+fmt(MQ.real.freeboard*1000/N-plate,1)+' mm (con placa de 3 mm)','listón cuadrado de madera o anime'],
-    ['Viga de anillo (canto)','25 × 30 cm, 15 tramos, '+fmt(MQ.real.ring_len,2)+' m','tira de '+mm(pl.ringH)+' de alto, '+fmt(MQ.real.ring_len*1000/N,0)+' mm de largo','cartulina gris pegada al borde de la placa'],
-    ['Placa del piso + descanso','entablado de 1"','placa de 3 mm cortada con la plantilla','cartón gris, MDF 3 mm o anime'],
-    ['Escalones (2)','contrahuella 16.7 cm, huella 28 cm, ancho 1.20 m',mm(1.2)+' × '+mm(0.28)+', altos '+mm(0.1667*2)+' y '+mm(0.1667),'bloques de anime o madera'],
-    ['Barras del domo','tubo redondo 32 mm',fmt(32/N,1)+' mm de grosor','palo chino ('+d+' mm) o brocheta de 3 mm para el grosor exacto'],
-    ['Marco de la puerta','tubo cuadrado 50 × 50',fmt(50/N,1)+' mm','palo chino'],
-    ['Tacos de los nodos altos (5)','4.86 cm',mm(MQ.real.zig),'rodaja de palito'],
-    ['Cubierta','PVC blanco','triángulos con pestaña de 5 mm','papel mantequilla o acetato']];
-  $('partstab').innerHTML=rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td class="mono">'+r[2]+'</td><td>'+r[3]+'</td></tr>';}).join('');}
+function sizes(p,np,ns){var R=MQ.real,N=p.N;
+  $('sizes').innerHTML=[['Palitos cortados',np,'',''],['Palos chinos de '+p.L+' mm',ns,'','a comprar: 150'],['Diámetro de la base',fmt(R.diam*1000/N,0),'mm','a escala 1:'+N],['Alto hasta el ápice',fmt(R.apex*1000/N,0),'mm','sobre la base']]
+  .map(function(s){return '<div class="stat"><div class="v">'+s[1]+'<span class="u">'+s[2]+'</span></div><div class="l">'+s[0]+(s[3]?' · '+s[3]:'')+'</div></div>';}).join('');}
+/* ---------------- marcas de avance (se guardan en este navegador) ---------------- */
+var STORE='mq-cucuchica-marcas',marks={};
+try{marks=JSON.parse(localStorage.getItem(STORE)||'{}')||{};}catch(e){marks={};}
+function saveMarks(){try{localStorage.setItem(STORE,JSON.stringify(marks));}catch(e){}}
+function progress(){var tot=0,done=0,by={};
+  MQ.pieces.forEach(function(pc){tot++;var ok=!!marks['p'+pc.id];if(ok)done++;by[pc.step]=by[pc.step]||[0,0];by[pc.step][1]++;if(ok)by[pc.step][0]++;});
+  $('prog-all').textContent=done+' de '+tot+' piezas pegadas';
+  document.querySelectorAll('.prog').forEach(function(el){var b=by[el.getAttribute('data-step')]||[0,0];el.textContent=' · '+b[0]+'/'+b[1]+(b[0]===b[1]&&b[1]?' ✓':'');});}
+document.querySelectorAll('input.pk').forEach(function(cb){var k=cb.getAttribute('data-k');cb.checked=!!marks[k];
+  cb.addEventListener('change',function(){if(cb.checked)marks[k]=1;else delete marks[k];saveMarks();progress();});});
+$('reset-checks').addEventListener('click',function(){marks={};saveMarks();document.querySelectorAll('input.pk').forEach(function(cb){cb.checked=false;});progress();});
+progress();
 ['c-n','c-d','c-l'].forEach(function(id){$(id).addEventListener('input',recalc);$(id).addEventListener('change',recalc);});
 
 /* ---------------- vista 3D ---------------- */
@@ -397,9 +581,18 @@ function start3d(){
   var UP=new THREE.Vector3(0,1,0), rods=[];
   function along(a,b,geo,m){var A=V3(a),B=V3(b),dir=B.clone().sub(A),len=dir.length();var mesh=new THREE.Mesh(geo(len),m);
     mesh.position.copy(A.clone().add(B).multiplyScalar(0.5));mesh.quaternion.setFromUnitVectors(UP,dir.normalize());mesh.castShadow=true;mesh.receiveShadow=true;return mesh;}
+  var squares=[];
   MQ.struts.forEach(function(s){
     var m=s.sq?along(s.a,s.b,function(L){return new THREE.BoxGeometry(0.05,L,0.05);},M.frame):along(s.a,s.b,function(L){return new THREE.CylinderGeometry(0.016,0.016,L,12);},M.steel);
-    if(!s.sq)rods.push(m);G.dome.add(m);});
+    if(!s.sq)rods.push(m);else squares.push(m);G.dome.add(m);});
+  // tablero de la maqueta (a escala real: 7 x 7 m = 70 x 70 cm a 1:10)
+  var board=new THREE.Mesh(new THREE.BoxGeometry(7,0.1,7),mat(0xd8c9ad,{roughness:0.9}));board.receiveShadow=true;scene.add(board);
+  // numeros de nodo
+  var labelsHost=$('labels'),labels=MQ.nodes.map(function(n){var el=document.createElement('span');el.className='nlab'+(n.t[0]==='P'?' nlab-d':'');el.textContent=n.id;labelsHost.appendChild(el);return {el:el,p:V3(n.p),n:V3(n.n).normalize()};});
+  function placeLabels(){var show=$('t-num').checked;labelsHost.hidden=!show;if(!show)return;var w=host.clientWidth,h=host.clientHeight;
+    labels.forEach(function(L){var toCam=camera.position.clone().sub(L.p);var front=toCam.dot(L.n)>-0.05*toCam.length();var v=L.p.clone().project(camera);
+      if(!front||v.z>1||v.x<-1.05||v.x>1.05||v.y<-1.05||v.y>1.05){L.el.style.display='none';return;}
+      L.el.style.display='';L.el.style.transform='translate('+((v.x+1)/2*w).toFixed(1)+'px,'+((1-v.y)/2*h).toFixed(1)+'px) translate(-50%,-130%)';});}
   MQ.hubs.forEach(function(h){var m=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,0.006,24),M.hub);
     m.position.copy(V3(h.p));m.quaternion.setFromUnitVectors(UP,V3(h.n).normalize());m.castShadow=true;G.hubs.add(m);});
   // membrana: un poco por fuera de los tubos
@@ -434,6 +627,7 @@ function start3d(){
   pl.steps.forEach(function(s){var c=s.c;var cx=(c[0][0]+c[2][0])/2,cy=(c[0][1]+c[2][1])/2;
     var su=Math.hypot(c[1][0]-c[0][0],c[1][1]-c[0][1]),sv=Math.hypot(c[3][0]-c[0][0],c[3][1]-c[0][1]);box(cx,cy,lv.ground,s.top,su,sv,M.conc);});
   var ground=new THREE.Mesh(new THREE.CircleGeometry(14,64),M.ground);ground.rotation.x=-Math.PI/2;ground.position.y=lv.ground;ground.receiveShadow=true;scene.add(ground);
+  window.__ground=ground;
   // persona 1.75 m y cama 1.60 x 2.00
   function uv(u,v){return [u*MQ.u[0]+v*MQ.v[0],u*MQ.u[1]+v*MQ.v[1]];}
   function person(u,v,face){var p=uv(u,v),g=new THREE.Group();
@@ -454,17 +648,19 @@ function start3d(){
     if(name==='frente'){camera.position.copy(d.clone().multiplyScalar(11).add(new THREE.Vector3(0,1.6,0)));controls.target.set(0,1.0,0);}
     else if(name==='planta'){camera.position.set(0.001,13,0);controls.target.set(0,0,0);}
     else if(name==='adentro'){var eye=d.clone().multiplyScalar(-0.4).add(side.clone().multiplyScalar(1.25));camera.position.set(eye.x,1.6,eye.z);controls.target.copy(d.clone().multiplyScalar(2.9)).setY(1.15);}
-    else{camera.position.copy(d.clone().multiplyScalar(8.2).add(side.clone().multiplyScalar(-5.2)).add(new THREE.Vector3(0,4.3,0)));controls.target.set(0,0.8,0);}
+    else{camera.position.copy(d.clone().multiplyScalar(7.0).add(side.clone().multiplyScalar(-4.4)).add(new THREE.Vector3(0,4.0,0)));controls.target.set(0,0.9,0);}
     controls.update();render();}
   document.querySelectorAll('.vbtn').forEach(function(b){b.addEventListener('click',function(){view(b.getAttribute('data-view'));});});
-  function vis(){G.mem.visible=$('t-mem').checked;G.door.visible=$('t-door').checked;G.plat.visible=$('t-plat').checked;
-    G.people.visible=$('t-people').checked;var und=$('t-under').checked;G.under.visible=und;M.ground.opacity=und?0.35:1;M.ground.depthWrite=!und;
-    var model=$('t-model').checked;G.hubs.visible=!model;var p=params();var f=model?(p.d*p.N/1000/2)/0.016:1;
-    rods.forEach(function(r){r.scale.x=f;r.scale.z=f;r.material=model?M.stick:M.steel;});render();}
-  ['t-mem','t-door','t-plat','t-people','t-under','t-model'].forEach(function(id){$(id).addEventListener('change',vis);});
+  function vis(){G.mem.visible=$('t-mem').checked;G.door.visible=$('t-door').checked;var plat=$('t-plat').checked;G.plat.visible=plat;
+    G.people.visible=$('t-people').checked;G.under.visible=false;
+    var model=$('t-model').checked;G.hubs.visible=!model;var p=params();var r=model?p.d*p.N/1000/2:0.016,f=r/0.016;
+    rods.forEach(function(m){m.scale.x=f;m.scale.z=f;m.material=model?M.stick:M.steel;});
+    squares.forEach(function(m){var g=model?(p.d*p.N/1000)/0.05:1;m.scale.x=g;m.scale.z=g;m.material=model?M.stick:M.frame;});
+    board.visible=model&&!plat;board.position.y=-r-0.05;ground.visible=!board.visible;render();}
+  ['t-mem','t-door','t-plat','t-people','t-model','t-num'].forEach(function(id){$(id).addEventListener('change',vis);});
   window.__setModel=function(){vis();};
   function resize(){var w=host.clientWidth,h=host.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();render();}
-  function render(){renderer.render(scene,camera);}
+  function render(){renderer.render(scene,camera);placeLabels();}
   controls.addEventListener('change',render);
   scene.background=new THREE.Color(cssv('--scene')||'#dfe6ea');
   window.addEventListener('resize',resize);
@@ -482,38 +678,53 @@ start3d();
 PAGE_W, PAGE_H, MARGIN = 279.4, 215.9, 8.0      # carta horizontal, mm
 
 
-def plan_content(PL, D, N):
-    """Planta de la maqueta en mm, eje de la puerta hacia arriba (x = v, y = -u)."""
-    def P(u, v): return (v*1000/N, -u*1000/N)
+def plan_content(PL, D, N, pieces):
+    """Planta de la estructura en mm (1:N), eje de la puerta hacia arriba (x = v, y = -u):
+    marcas de anclaje, palitos del anillo de base con su codigo, postes de la puerta y la
+    proyeccion de cada nodo de arriba (para la prueba de la plomada)."""
+    u3, v3 = D.door["u"], D.door["v"]
+    def P(x, y):   # coordenadas del piso (X, Y) -> hoja
+        u = x*u3[0] + y*u3[1]; v = x*v3[0] + y*v3[1]
+        return (v*1000/N, -u*1000/N)
+    Pv = D.verts
     o = []
-    for p in PL.piles:
-        x, y = P(p["u"], p["v"]); h = plat.PED*1000/N/2
-        o.append(f'<rect x="{f(x-h,2)}" y="{f(y-h,2)}" width="{f(2*h,2)}" height="{f(2*h,2)}" class="pile"/>')
-        o.append(f'<text x="{f(x,2)}" y="{f(y+1.2,2)}" class="pid">{p["id"]}</text>')
-    o.append('<polygon points="' + " ".join(f"{f(P(u, v)[0], 2)},{f(P(u, v)[1], 2)}" for u, v in PL.outer) + '" class="plate"/>')
-    o.append('<polygon points="' + " ".join(f"{f(P(u, v)[0], 2)},{f(P(u, v)[1], 2)}" for u, v in PL.inner) + '" class="inner"/>')
-    for k in range(-3, 4):
-        for axis in (0, 1):
-            if axis == 0:
-                x, y = P(0, k); o.append(f'<line x1="{f(x,2)}" y1="{f(y-1.5,2)}" x2="{f(x,2)}" y2="{f(y+1.5,2)}" class="tick"/>')
-            else:
-                x, y = P(k, 0); o.append(f'<line x1="{f(x-1.5,2)}" y1="{f(y,2)}" x2="{f(x+1.5,2)}" y2="{f(y,2)}" class="tick"/>')
-    x0, y0 = P(0, -3.2); x1, y1 = P(0, 3.2); o.append(f'<line x1="{f(x0,2)}" y1="{f(y0,2)}" x2="{f(x1,2)}" y2="{f(y1,2)}" class="axis"/>')
-    x0, y0 = P(-3.2, 0); x1, y1 = P(3.2, 0); o.append(f'<line x1="{f(x0,2)}" y1="{f(y0,2)}" x2="{f(x1,2)}" y2="{f(y1,2)}" class="axis"/>')
-    o.append('<circle cx="0" cy="0" r="2" class="center"/><text x="3" y="-3" class="lbl">centro</text>')
-    for r, (u, v) in zip(PL.rows, PL.ring):
-        x, y = P(u, v)
-        high = r["dz"] > 1e-6
-        o.append(f'<circle cx="{f(x,2)}" cy="{f(y,2)}" r="2.5" class="{"anc-h" if high else "anc"}"/>')
-        nx, ny = x*1.075, y*1.075
-        o.append(f'<text x="{f(nx,2)}" y="{f(ny+1.5,2)}" class="nodel">#{r["node"]}{" +4.9" if high else ""}</text>')
-    nodes = [r["node"] for r in PL.rows]
-    (ua, va), (ub, vb) = PL.ring[nodes.index(D.door["a"])], PL.ring[nodes.index(D.door["b"])]
-    xa, ya = P(ua, va); xb, yb = P(ub, vb)
-    o.append(f'<line x1="{f(xa,2)}" y1="{f(ya,2)}" x2="{f(xb,2)}" y2="{f(yb,2)}" class="doorl"/>')
-    o.append(f'<text x="0" y="{f(ya+9,2)}" class="doort">PUERTA (postes en #{D.door["a"]} y #{D.door["b"]})</text>')
-    x, y = P(-1.6, 0)
-    o.append(f'<text x="{f(x,2)}" y="{f(y,2)}" class="lbl" text-anchor="middle">u ↑ eje de la puerta</text>')
+    x0, y0 = P(-3.2*u3[0], -3.2*u3[1]); x1, y1 = P(3.2*u3[0], 3.2*u3[1])
+    o.append(f'<line x1="{f(x0,2)}" y1="{f(y0,2)}" x2="{f(x1,2)}" y2="{f(y1,2)}" class="axis"/>')
+    x0, y0 = P(-3.2*v3[0], -3.2*v3[1]); x1, y1 = P(3.2*v3[0], 3.2*v3[1])
+    o.append(f'<line x1="{f(x0,2)}" y1="{f(y0,2)}" x2="{f(x1,2)}" y2="{f(y1,2)}" class="axis"/>')
+    apex = [v for v in D.active if v not in D.boundary_verts and abs(Pv[v][0]) < 1e-6 and abs(Pv[v][1]) < 1e-6]
+    ctext = f"centro = plomada de #{apex[0]} (cúspide)" if apex else "centro"
+    o.append(f'<circle cx="0" cy="0" r="1.6" class="center"/><text x="3" y="-3" class="lbl">{ctext}</text>')
+    # proyeccion de los nodos de arriba (plomada)
+    for v in D.active:
+        if v in D.boundary_verts or v in apex:
+            continue
+        x, y = P(Pv[v][0], Pv[v][1])
+        o.append(f'<path d="M {f(x-2.2,2)} {f(y,2)} H {f(x+2.2,2)} M {f(x,2)} {f(y-2.2,2)} V {f(y+2.2,2)}" class="plumb"/>'
+                 f'<text x="{f(x+2.6,2)}" y="{f(y-1.2,2)}" class="plumbl">{v}</text>')
+    # palitos del anillo de base (paso 0) con su codigo
+    for pc in pieces:
+        if pc["step"] != 0:
+            continue
+        a, b = pc["from"], pc["to"]
+        xa, ya = P(Pv[a][0], Pv[a][1]); xb, yb = P(Pv[b][0], Pv[b][1])
+        o.append(f'<line x1="{f(xa,2)}" y1="{f(ya,2)}" x2="{f(xb,2)}" y2="{f(yb,2)}" class="basestick"/>')
+        mx, my = (xa+xb)/2, (ya+yb)/2
+        L = math.hypot(mx, my) or 1
+        o.append(f'<text x="{f(mx + mx/L*7,2)}" y="{f(my + my/L*7 + 1.2,2)}" class="sid">{pc["id"]} {pc["code"]}</text>')
+    for v in D.boundary_verts:
+        x, y = P(Pv[v][0], Pv[v][1])
+        high = Pv[v][2] > 1e-6
+        o.append(f'<circle cx="{f(x,2)}" cy="{f(y,2)}" r="3" class="{"anc-h" if high else "anc"}"/>')
+        L = math.hypot(x, y)
+        o.append(f'<text x="{f(x + x/L*13,2)}" y="{f(y + y/L*13 + 1.5,2)}" class="nodel">#{v}{f" taco {Pv[v][2]*1000/N:.1f}" if high else ""}</text>')
+    for v in (D.door["a"], D.door["b"]):
+        x, y = P(Pv[v][0], Pv[v][1])
+        o.append(f'<rect x="{f(x-2.5,2)}" y="{f(y-2.5,2)}" width="5" height="5" class="post"/>')
+    xa, ya = P(Pv[D.door["a"]][0], Pv[D.door["a"]][1]); xb, yb = P(Pv[D.door["b"]][0], Pv[D.door["b"]][1])
+    o.append(f'<text x="{f((xa+xb)/2,2)}" y="{f(ya-9,2)}" class="doort">PUERTA: postes sobre #{D.door["a"]} y #{D.door["b"]}</text>')
+    x, y = P(-1.4*u3[0], -1.4*u3[1])
+    o.append(f'<text x="{f(x,2)}" y="{f(y,2)}" class="lbl" text-anchor="middle">↑ eje de la puerta</text>')
     return "".join(o)
 
 
@@ -527,44 +738,47 @@ def scale_bar(x, y, L=100):
             f'<text x="{x+L/2}" y="{y-2}" class="bl" text-anchor="middle">{L/10:.0f} cm: mida esta barra</text>')
 
 
-def build_templates(D, PL, members):
+def build_templates(D, PL, members, data):
     N = SCALE
     pages = []
     W, H = PAGE_W - 2*MARGIN, PAGE_H - 2*MARGIN
     DRAW_H = H - 10
     OV = 10.0
     step_x, step_y = W - OV, DRAW_H - OV
-    ext = max(max(abs(p["u"]), abs(p["v"])) for p in PL.piles if p["kind"] != "descanso") + plat.PED/2 + 0.05
-    span = 2*ext*1000/N
+    span = 2*(3.0 + 0.30)*1000/N           # anillo de 3.00 m de radio + etiquetas
     cols = math.ceil((span - OV)/step_x); rows = math.ceil((span - OV)/step_y)
     x0 = -(cols*step_x + OV)/2; y0 = -(rows*step_y + OV)/2
-    content = plan_content(PL, D, N)
+    pieces = data["pieces"]
+    content = plan_content(PL, D, N, pieces)
     groups = cut_groups(members, N, STICK_D)
+    mem_by_edge = {tuple(sorted(m["e"])): m for m in members}
 
-    # portada
+    # ---- portada
     idx = "".join(f'<rect x="{150 + c*14}" y="{86 + r*11}" width="13" height="10" class="mini"/><text x="{156.5 + c*14}" y="{92.5 + r*11}" class="minil">{chr(65+c)}{r+1}</text>'
                   for r in range(rows) for c in range(cols))
     cover = f"""<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">
-<text x="0" y="12" class="h1">Maqueta 1:{N} · domo Cucuchica con puerta y plataforma</text>
-<text x="0" y="20" class="p">Plantillas a tamaño real. Palitos de {STICK_D:.0f} mm. Generado desde el modelo verificado (maqueta/maqueta.py).</text>
+<text x="0" y="12" class="h1">Maqueta de la estructura 1:{N} · domo Cucuchica con puerta</text>
+<text x="0" y="20" class="p">Plantillas a tamaño real para palitos de {STICK_D:.0f} mm. Generado desde el modelo verificado (maqueta/maqueta.py).</text>
 <text x="0" y="34" class="h2">1. Antes que nada: imprimir al 100% ("tamaño real"), sin "ajustar a la página"</text>
 {scale_bar(0, 48)}
 <line x1="240" y1="70" x2="240" y2="170" class="bar"/>{"".join(f'<line x1="240" y1="{70+i*10}" x2="{244 if i % 5 == 0 else 242.5}" y2="{70+i*10}" class="tb"/>' for i in range(11))}
 <text x="246" y="122" class="bl">10 cm</text>
 <text x="0" y="62" class="p">Si alguna barra no mide exactamente 10 cm, revise la opción de escala de la impresora.</text>
 <text x="0" y="76" class="h2">2. Contenido</text>
-<text x="0" y="84" class="p">· Planta base en {rows*cols} hojas ({chr(64+cols)}1 a {chr(64+cols)}{rows}), mapa a la derecha</text>
-<text x="0" y="91" class="p">· Descanso de entrada y escalones</text>
-<text x="0" y="98" class="p">· Triángulos P1, P2, V1–V4 (comprobar y cortar cubierta)</text>
-<text x="0" y="105" class="p">· Reglas de corte de los palitos ({len(groups)} largos)</text>
-<text x="0" y="119" class="h2">3. Unir la planta</text>
-<text x="0" y="127" class="p">Recorte cada hoja por su borde fino (arriba e izquierda). Apóyela sobre la franja</text>
-<text x="0" y="134" class="p">gris de la hoja vecina haciendo coincidir las cruces, y pegue con cinta.</text>
+<text x="0" y="84" class="p">· Planta base en {rows*cols} hojas (A1 a {chr(64+cols)}{rows}), mapa a la derecha</text>
+<text x="0" y="91" class="p">· Etiquetas de los {len(pieces)} palitos</text>
+<text x="0" y="98" class="p">· Reglas de corte ({len(groups)} largos)</text>
+<text x="0" y="105" class="p">· Discos de ángulo de cada tipo de nodo</text>
+<text x="0" y="112" class="p">· Hoja de control para anotar las mediciones</text>
+<text x="0" y="126" class="h2">3. Unir la planta</text>
+<text x="0" y="134" class="p">Recorte cada hoja por su borde fino (arriba e izquierda). Apóyela sobre la franja</text>
+<text x="0" y="141" class="p">gris de la hoja vecina haciendo coincidir las cruces, y pegue con cinta.</text>
 <text x="150" y="80" class="h2">Mapa de hojas</text>
 {idx}
 </svg>"""
     pages.append(page(cover))
 
+    # ---- planta en mosaico
     for r in range(rows):
         for c in range(cols):
             vx, vy = x0 + c*step_x, y0 + r*step_y
@@ -578,117 +792,110 @@ def build_templates(D, PL, members):
             svg = (f'<svg viewBox="{f(vx,2)} {f(vy,2)} {f(W,2)} {f(DRAW_H,2)}" width="{W}mm" height="{DRAW_H}mm" class="tile">'
                    f'{shade}{content}{marks}{border}</svg>'
                    f'<div class="foot"><b>Hoja {chr(65+c)}{r+1}</b> · planta base 1:{N} · columna {chr(65+c)} de {chr(64+cols)}, fila {r+1} de {rows} · '
-                   f'solape gris de 1 cm a la derecha y abajo · eje de la puerta hacia arriba</div>')
+                   f'círculos: anclajes · cruces finas: dónde cae la plomada de cada nodo de arriba · eje de la puerta hacia arriba</div>')
             pages.append(page(svg))
 
-    # descanso y escalones
-    L = PL.landing
-    s = 1000/N
-    lw, ld = (L["v1"]-L["v0"])*s, (L["u1"]-L["u0"])*s
-    X0 = 4
-    sx0 = X0 + lw + 10
-    st = ""
-    for k in range(len(PL.steps)):
-        xk = sx0 + k*(plat.STEP_RUN*s + 10)
-        st += (f'<rect x="{xk}" y="30" width="{plat.STEP_RUN*s}" height="{plat.STEP_W*s}" class="plate"/>'
-               f'<text transform="translate({xk + plat.STEP_RUN*s/2 + 1.2},{30 + plat.STEP_W*s/2}) rotate(-90)" class="lbl" text-anchor="middle">'
-               f'escalón {k+1}: {plat.STEP_W*s:.0f} × {plat.STEP_RUN*s:.0f} mm, alto {(plat.FREEBOARD - (k+1)*plat.STEP_RISE)*s:.1f} mm</text>')
-    st += (f'<text x="{sx0}" y="{30 + plat.STEP_W*s + 8}" class="lbl">el 1 va contra el descanso,</text>'
-           f'<text x="{sx0}" y="{30 + plat.STEP_W*s + 13}" class="lbl">el 2 delante del 1;</text>'
-           f'<text x="{sx0}" y="{30 + plat.STEP_W*s + 18}" class="lbl">el tercero es el terreno</text>')
-    land = f"""<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">
-<text x="0" y="10" class="h2">Descanso de entrada y escalones · 1:{N}</text>
-<rect x="{X0}" y="30" width="{lw}" height="{ld}" class="plate"/>
-<text x="{X0+lw/2}" y="{30+ld/2}" class="lbl" text-anchor="middle">descanso {lw:.0f} × {ld:.0f} mm (placa del piso)</text>
-<text x="{X0+lw/2}" y="26" class="lbl" text-anchor="middle">este borde va contra la viga de anillo, entre #{D.door['a']} y #{D.door['b']}</text>
-{"".join(f'<rect x="{X0 + lw/2 + sv*s - plat.PED*s/2}" y="{30 + (L["beam_u"]-L["u0"])*s - plat.PED*s/2}" width="{plat.PED*s}" height="{plat.PED*s}" class="pile"/>' for sv in (-plat.LANDING_PILE_V, plat.LANDING_PILE_V))}
-{st}
-{scale_bar(W-110, H-6)}
-</svg>"""
-    pages.append(page(land))
+    # ---- etiquetas (banderitas): se doblan alrededor del palito
+    fw, fh, gap, top = 36.0, 9.0, 1.2, 17.0
+    per_row = int((W + gap)//(fw + gap)); per_col = int((H - top + gap)//(fh + gap))
+    colors = {"A": "#2a78d6", "B": "#eb6834", "C": "#1baf7a"}
+    lab_pages, cur, n_on = [], "", 0
+    for k, pc in enumerate(pieces):
+        m = mem_by_edge[tuple(sorted((pc["from"], pc["to"])))]
+        L = round(cut_mm(m, N, STICK_D)*2)/2      # mismo redondeo que la regla y el checklist
+        i = n_on % per_row; j = n_on // per_row
+        x = i*(fw + gap); y = top + j*(fh + gap)
+        col = colors.get(pc["code"], "#3b3f44")
+        cur += (f'<rect x="{f(x,2)}" y="{f(y,2)}" width="{fw}" height="{fh}" class="flag"/>'
+                f'<rect x="{f(x,2)}" y="{f(y,2)}" width="3" height="{fh}" fill="{col}"/>'
+                f'<line x1="{f(x+fw/2,2)}" y1="{f(y,2)}" x2="{f(x+fw/2,2)}" y2="{f(y+fh,2)}" class="fold"/>')
+        for tx in (x + 4.5, x + fw/2 + 2):
+            cur += (f'<text x="{f(tx,2)}" y="{f(y+3.2,2)}" class="fl1">{pc["id"]} {pc["code"]}</text>'
+                    f'<text x="{f(tx,2)}" y="{f(y+5.9,2)}" class="fl2">#{pc["from"]}→#{pc["to"]}</text>'
+                    f'<text x="{f(tx,2)}" y="{f(y+8.3,2)}" class="fl3">{L:.1f} mm</text>')
+        n_on += 1
+        if n_on == per_row*per_col or k == len(pieces) - 1:
+            lab_pages.append(cur); cur = ""; n_on = 0
+    for lp in lab_pages:
+        head = (f'<text x="0" y="6" class="h2">Etiquetas de los palitos · 1:{N} · palitos de {STICK_D:.0f} mm</text>'
+                f'<text x="0" y="11" class="p">Recorte cada banderita, dóblela por la línea del medio alrededor del palito y péguela. Código = paso.número, igual que en el checklist</text>'
+                f'<text x="0" y="14.6" class="p">y en la secuencia real. Debajo: los dos nodos que une y el largo de corte.</text>')
+        pages.append(page(f'<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">{head}{lp}</svg>'))
 
-    # triangulos
-    tri_types = []
-    seen = {}
-    for t in D.triangles:
-        sides = tuple(sorted(round(v_norm(v_sub(D.verts[t[i]], D.verts[t[(i+1) % 3]])), 3) for i in range(3)))
-        seen.setdefault(sides, 0); seen[sides] += 1
-    new = [tuple(sorted(round(v_norm(v_sub(D.verts[t[i]], D.verts[t[(i+1) % 3]])), 3) for i in range(3))) for t in D.new_triangles]
-    k = 0
-    for sides, n in sorted(seen.items(), key=lambda kv: (kv[0] in new, -kv[1])):
-        if sides in new:
-            k += 1; name = f"V{k}"
-        else:
-            name = "P1" if n > 35 else "P2"
-        tri_types.append((name, sides, n))
-
-    def tri_svg(name, sides, n, ox, oy):
-        a, b, c = [x*1000/N for x in sides]          # c el mas largo
-        # base c horizontal, tercer vertice por ley de cosenos
-        x = (a*a - b*b + c*c)/(2*c); y = math.sqrt(max(0.0, a*a - x*x))
-        pts = [(0, 0), (c, 0), (x, -y)]
-        def off(poly, dd):
-            # contorno exterior a dd mm (pestaña): desplazar cada lado hacia afuera
-            n_ = len(poly); lines = []
-            cx = sum(p[0] for p in poly)/3; cy = sum(p[1] for p in poly)/3
-            for i in range(n_):
-                (x1, y1), (x2, y2) = poly[i], poly[(i+1) % n_]
-                dx, dy = x2-x1, y2-y1; L = math.hypot(dx, dy); nx, ny = dy/L, -dx/L
-                if (x1+nx-cx)*nx + (y1+ny-cy)*ny < 0: nx, ny = -nx, -ny
-                lines.append(((x1+nx*dd, y1+ny*dd), (dx, dy)))
-            outp = []
-            for i in range(n_):
-                (p_, r_), (q_, s_) = lines[i-1], lines[i]
-                den = r_[0]*s_[1] - r_[1]*s_[0]
-                t_ = ((q_[0]-p_[0])*s_[1] - (q_[1]-p_[1])*s_[0])/den
-                outp.append((p_[0]+t_*r_[0], p_[1]+t_*r_[1]))
-            return outp
-        tab = off(pts, 5.0)
-        g = f'<g transform="translate({f(ox,2)},{f(oy,2)})">'
-        g += '<polygon points="' + " ".join(f"{f(px,2)},{f(py,2)}" for px, py in tab) + '" class="tab"/>'
-        g += '<polygon points="' + " ".join(f"{f(px,2)},{f(py,2)}" for px, py in pts) + '" class="tri"/>'
-        for px, py in pts:
-            g += f'<circle cx="{f(px,2)}" cy="{f(py,2)}" r="1.4" class="anc"/>'
-        g += f'<text x="{f(c/2,2)}" y="5.5" class="lbl" text-anchor="middle">{c:.1f}</text>'
-        g += f'<text x="{f(x/2-3,2)}" y="{f(-y/2,2)}" class="lbl" text-anchor="end">{a:.1f}</text>'
-        g += f'<text x="{f((x+c)/2+3,2)}" y="{f(-y/2,2)}" class="lbl">{b:.1f}</text>'
-        g += f'<text x="{f(x,2)}" y="{f(-y/2+2,2)}" class="h2" text-anchor="middle">{name} ×{n}</text></g>'
-        return g, c, y
-
-    head = (f'<text x="0" y="10" class="h2">Triángulos a escala 1:{N} (centro de nodo a centro de nodo, mm)</text>'
-            f'<text x="0" y="17" class="p">Línea negra: triángulo para comprobar. Línea gris: pestaña de 5 mm para cortar la cubierta en papel mantequilla.</text>')
-    tri_pages, cur = [], ""
-    cursor_x, cursor_y, rowh = 8, 30, 0
-    for name, sides, n in tri_types:
-        _, w, h = tri_svg(name, sides, n, 0, 0)
-        if cursor_x > 8 and cursor_x + w + 8 > W:
-            cursor_x = 8; cursor_y += rowh + 16; rowh = 0
-        if cursor_y + h + 8 > H - 10 and cur:
-            tri_pages.append(cur); cur = ""; cursor_x, cursor_y, rowh = 8, 30, 0
-        g, _, _ = tri_svg(name, sides, n, cursor_x, cursor_y + h)
-        cur += g
-        cursor_x += w + 16; rowh = max(rowh, h)
-    if cur:
-        tri_pages.append(cur)
-    for tp in tri_pages:
-        pages.append(page(f'<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">{head}{tp}{scale_bar(W-110, H-6)}</svg>'))
-
-    # reglas de corte
+    # ---- reglas de corte
     names = {"A": "barra A", "B": "barra B", "C": "barra C", "P": "poste marco", "D": "dintel", "V": "viga techo", "K1": "amarre bajo", "K2": "amarre alto"}
     rl = f'<text x="0" y="10" class="h2">Reglas de corte · escala 1:{N} · palitos de {STICK_D:.0f} mm</text>'
     rl += '<text x="0" y="17" class="p">Apoye el palito sobre la barra, con la punta en el tope izquierdo, y marque en el tope derecho.</text>'
     y = 28
-    colors = {"A": "#2a78d6", "B": "#eb6834", "C": "#1baf7a"}
     for (code, L), n in groups:
         colr = colors.get(code, "#3b3f44")
         rl += (f'<rect x="0" y="{y}" width="{L:.2f}" height="7" fill="{colr}" fill-opacity=".22" stroke="{colr}" stroke-width=".4"/>'
                f'<line x1="0" y1="{y-1.5}" x2="0" y2="{y+8.5}" class="stop"/><line x1="{L:.2f}" y1="{y-1.5}" x2="{L:.2f}" y2="{y+8.5}" class="stop"/>'
                + (f'<text x="{L+3:.2f}" y="{y+5.2}" class="rl"><tspan font-weight="700">{code}</tspan> {names[code]} · {L:.1f} mm · ×{n}</text>'
-                if L + 62 < W else
-                f'<text x="4" y="{y+5.2}" class="rl"><tspan font-weight="700">{code}</tspan> {names[code]} · {L:.1f} mm · ×{n}</text>'))
+                  if L + 62 < W else
+                  f'<text x="4" y="{y+5.2}" class="rl"><tspan font-weight="700">{code}</tspan> {names[code]} · {L:.1f} mm · ×{n}</text>'))
         y += 12.5
     rl += scale_bar(W-110, H-6)
     pages.append(page(f'<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">{rl}</svg>'))
+
+    # ---- discos de angulo
+    def disc(name, v, cx, cy, R=30.0):
+        g = door.hub_geometry(D, v)
+        mem, gaps = g["members"], g["az_gaps"]
+        if not g["open"]:
+            kk = next((i for i, m in enumerate(mem) if m["label"] in ("P", "K1", "K2", "V", "C")), 0)
+            mem = mem[kk:] + mem[:kk]; gaps = gaps[kk:] + gaps[:kk]
+        n = len(mem)
+        cum = [0.0]
+        for gg in gaps[:n-1]:
+            cum.append(cum[-1] + gg)
+        o = f'<circle cx="{cx}" cy="{cy}" r="{R}" class="disc"/>'
+        for i, m in enumerate(mem):
+            a = math.radians(cum[i] - 90)
+            col = colors.get(m["label"], "#3b3f44")
+            o += f'<line x1="{cx}" y1="{cy}" x2="{f(cx + R*math.cos(a),2)}" y2="{f(cy + R*math.sin(a),2)}" stroke="{col}" stroke-width=".7"/>'
+            o += f'<text x="{f(cx + (R+4.5)*math.cos(a),2)}" y="{f(cy + (R+4.5)*math.sin(a) + 1.2,2)}" class="dl" fill="{col}">{m["label"]}</text>'
+        arcs = n if not g["open"] else n - 1
+        for i in range(arcs):
+            a0 = cum[i]; a1 = cum[i+1] if i + 1 < n else 360.0
+            am = math.radians((a0 + a1)/2 - 90)
+            o += f'<text x="{f(cx + R*0.62*math.cos(am),2)}" y="{f(cy + R*0.62*math.sin(am) + 1,2)}" class="da">{gaps[i]:.1f}°</text>'
+        o += f'<circle cx="{cx}" cy="{cy}" r="1.2" class="center"/>'
+        ids = [t["hub_ids"] for t in D.hub_types if t["name"] == name][0]
+        o += f'<text x="{cx}" y="{cy + R + 11}" class="dn">{name} · nodos {", ".join("#" + str(x) for x in ids[:6])}{"…" if len(ids) > 6 else ""}</text>'
+        return o
+    disc_types = [t["name"] for t in D.hub_types if t["name"] != "PE"]
+    per_page = 6
+    for pg in range(0, len(disc_types), per_page):
+        body = (f'<text x="0" y="8" class="h2">Discos de ángulo (sirven a cualquier escala)</text>'
+                f'<text x="0" y="14" class="p">Recorte el disco y apóyelo sobre el nodo terminado, mirando desde afuera del domo y con el centro sobre el punto de pega:</text>'
+                f'<text x="0" y="18.4" class="p">cada palito tiene que caer sobre su línea. Son los mismos ángulos que se marcan en los discos de acero del domo real.</text>')
+        for i, name in enumerate(disc_types[pg:pg+per_page]):
+            v = [t["hub_ids"] for t in D.hub_types if t["name"] == name][0][0]
+            cx = 45 + (i % 3)*88; cy = 62 + (i // 3)*84
+            body += disc(name, v, cx, cy)
+        pages.append(page(f'<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">{body}</svg>'))
+
+    # ---- hoja de control
+    rowsh = ""
+    yy = 30
+    for i, c in enumerate(data["checks"]):
+        if c["kind"] == "dist": val = f"{c['m']*1000/N:.1f} mm"
+        elif c["kind"] == "height": val = f"{c['m']*1000/N + STICK_D/2:.1f} mm"
+        elif c["kind"] == "doorw": val = f"{c['m']*1000/N - STICK_D:.1f} mm"
+        elif c["kind"] == "doorh": val = f"{c['m']*1000/N:.1f} mm"
+        else: val = "sobre su cruz"
+        where = c["where"] if len(c["where"]) < 44 else c["where"][:42].rstrip(", ") + "…"
+        rowsh += (f'<text x="0" y="{yy}" class="ct">{i+1}. {esc(c["what"])}</text>'
+                  f'<text x="112" y="{yy}" class="cw">{esc(where)}</text>'
+                  f'<text x="192" y="{yy}" class="cv">{val}</text><text x="219" y="{yy}" class="cw">± {c["tol"]} mm</text>'
+                  f'<line x1="236" y1="{yy+0.8}" x2="262" y2="{yy+0.8}" class="wline"/>')
+        yy += 8.1
+    sheet = (f'<text x="0" y="8" class="h2">Hoja de control · maqueta 1:{N} · palitos de {STICK_D:.0f} mm</text>'
+             f'<text x="0" y="14" class="p">Distancias entre centros de nodo (centros de los puntos de pega). Alturas desde el tablero. Ninguna de estas medidas se usó para cortar.</text>'
+             f'<text x="0" y="22" class="th">Qué medir</text><text x="112" y="22" class="th">Entre</text><text x="192" y="22" class="th">Debe dar</text>'
+             f'<text x="219" y="22" class="th">Tol.</text><text x="236" y="22" class="th">Medido</text>{rowsh}')
+    pages.append(page(f'<svg viewBox="0 0 {W} {H}" width="{W}mm" height="{H}mm">{sheet}</svg>'))
 
     css = f"""@page {{ size: {PAGE_W}mm {PAGE_H}mm; margin: 0 }}
 *{{box-sizing:border-box}} html,body{{margin:0; padding:0; background:#fff}}
@@ -697,20 +904,26 @@ body{{font-family:"DejaVu Sans","Helvetica","Arial",sans-serif; color:#111}}
 .page:last-child{{page-break-after:auto; break-after:auto}}
 svg{{display:block}}
 .foot{{font-size:3.2mm; color:#333; margin-top:2mm}}
-.h1{{font-size:7px; font-weight:700}} .h2{{font-size:4.6px; font-weight:700}} .p{{font-size:3.6px}} .lbl{{font-size:3px; fill:#333}}
+.h1{{font-size:7px; font-weight:700}} .h2{{font-size:4.6px; font-weight:700}} .p{{font-size:3.3px}} .lbl{{font-size:3px; fill:#333}}
 .bl{{font-size:3.2px; fill:#111}} .bar{{stroke:#111; stroke-width:.5}} .tb{{stroke:#111; stroke-width:.35}}
-.pile{{fill:#d9d9d4; stroke:#777; stroke-width:.3}} .pid{{font-size:2.6px; text-anchor:middle; fill:#222}}
-.plate{{fill:none; stroke:#111; stroke-width:.5}} .inner{{fill:none; stroke:#999; stroke-width:.3}}
-.axis{{stroke:#bbb; stroke-width:.25}} .tick{{stroke:#999; stroke-width:.3}} .center{{fill:#111}}
-.anc{{fill:#fff; stroke:#111; stroke-width:.4}} .anc-h{{fill:#2a78d6; stroke:#111; stroke-width:.4}}
+.axis{{stroke:#bbb; stroke-width:.25}} .center{{fill:#111}}
+.anc{{fill:#fff; stroke:#111; stroke-width:.45}} .anc-h{{fill:#2a78d6; stroke:#111; stroke-width:.45}}
 .nodel{{font-size:3px; text-anchor:middle; fill:#111; font-weight:700}}
-.doorl{{stroke:#111; stroke-width:1.6}} .doort{{font-size:3.4px; text-anchor:middle; font-weight:700}}
-.cross{{stroke:#111; stroke-width:.3; fill:none}} .edge{{fill:none; stroke:#666; stroke-width:.3}} .ov{{fill:#000; fill-opacity:.07}}
+.basestick{{stroke:#999; stroke-width:{STICK_D}; stroke-linecap:round; stroke-opacity:.35}}
+.sid{{font-size:2.8px; text-anchor:middle; fill:#333; font-weight:700}}
+.post{{fill:#3b3f44}} .doort{{font-size:3.4px; text-anchor:middle; font-weight:700}}
+.plumb{{stroke:#555; stroke-width:.25; fill:none}} .plumbl{{font-size:2.5px; fill:#555}}
+.cross{{stroke:#111; stroke-width:.3; fill:none}} .ov{{fill:#000; fill-opacity:.07}} .edge{{fill:none; stroke:#666; stroke-width:.3}}
 .mini{{fill:#f1f1ee; stroke:#777; stroke-width:.3}} .minil{{font-size:3.2px; text-anchor:middle}}
-.tri{{fill:none; stroke:#111; stroke-width:.4}} .tab{{fill:none; stroke:#aaa; stroke-width:.3}}
+.flag{{fill:#fff; stroke:#888; stroke-width:.25}} .fold{{stroke:#bbb; stroke-width:.2}}
+.fl1{{font-size:2.9px; font-weight:700}} .fl2{{font-size:2.4px}} .fl3{{font-size:2.1px; fill:#555}}
 .stop{{stroke:#111; stroke-width:.5}} .rl{{font-size:3.4px}}
+.disc{{fill:none; stroke:#999; stroke-width:.3}} .dl{{font-size:3px; text-anchor:middle; font-weight:700}}
+.da{{font-size:2.8px; text-anchor:middle; fill:#111}} .dn{{font-size:3.2px; text-anchor:middle; font-weight:700}}
+.th{{font-size:3px; font-weight:700; fill:#555}} .ct{{font-size:3px}} .cw{{font-size:2.8px; fill:#444}} .cv{{font-size:3.2px; font-weight:700}}
+.wline{{stroke:#999; stroke-width:.3}}
 """
-    return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Plantillas maqueta 1:{N}</title><style>{css}</style></head>
+    return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Plantillas maqueta de la estructura 1:{N}</title><style>{css}</style></head>
 <body>{''.join(pages)}</body></html>""", len(pages), rows*cols
 
 
@@ -718,7 +931,7 @@ def main():
     D, PL, members, data = collect()
     with open(os.path.join(HERE, "maqueta.html"), "w", encoding="utf-8") as fh:
         fh.write(build_page(D, PL, members, data))
-    tpl, npages, ntiles = build_templates(D, PL, members)
+    tpl, npages, ntiles = build_templates(D, PL, members, data)
     with open(os.path.join(HERE, "maqueta_plantillas.html"), "w", encoding="utf-8") as fh:
         fh.write(tpl)
     groups = cut_groups(members, SCALE, STICK_D)

@@ -888,18 +888,41 @@ mientras tanto.
 
 ## 12. Maqueta a escala 1:10 (palos chinos y pega loca)
 
-La carpeta `maqueta/` tiene todo para armar una maqueta a escala exacta, sacada del
-mismo modelo verificado:
+La maqueta es una **prueba de las medidas**: se arma la estructura completa con palos
+chinos, pieza por pieza y en el mismo orden que el domo real, y al final se mide contra
+valores que no se usaron para cortar. La carpeta `maqueta/` sale del mismo modelo
+verificado:
 
-- **`maqueta.html`:** vista 3D realista de la unidad completa, con domo, puerta,
-  plataforma, pilotes, descanso, una persona de 1.75 m y una cama para dar escala. Trae
-  un modo "maqueta" que dibuja los tubos del grueso de los palitos. Tiene también una
-  calculadora de corte para cualquier escala y grosor de palito, las medidas de la
-  plataforma a escala y el paso a paso.
-- **`maqueta_plantillas.pdf`:** plantillas a tamaño real en hoja carta horizontal. Trae
-  la planta base en 12 hojas, el descanso y los escalones, los triángulos y las reglas
-  de corte. Hay que imprimirla al 100% y medir la barra de control de 10 cm.
+- **`maqueta.html`:** vista 3D de la estructura con el número de cada nodo, checklist de
+  las 119 piezas agrupadas por paso (mismo orden y códigos que
+  `secuencia_de_armado.md`; las marcas se guardan en el navegador), calculadora de corte
+  para cualquier escala y grosor de palito, y la tabla de medidas de control.
+- **`maqueta_plantillas.pdf`:** hoja carta horizontal, imprimir al 100% y medir la barra
+  de 10 cm. Trae la planta base en 12 hojas (anclajes, palitos del anillo de base con su
+  código, postes de la puerta y una cruz donde cae la plomada de cada nodo de arriba),
+  una banderita de etiqueta por palito (código, nodos que une y largo de corte), reglas
+  de corte, discos de ángulo por tipo de nodo y una hoja de control para anotar lo medido.
 - **Regenerar:** `python3 maqueta.py`, y para el PDF, `node imprimir_pdf.js`.
+
+**Cómo prueba las medidas:**
+
+1. **Los largos cierran.** Cada triángulo lleva 3 palitos cortados por separado. Si un
+   largo estuviera mal, al llegar al nodo el palito sobraría o faltaría. Que las 119
+   piezas cierren sin forzar confirma la lista de corte.
+2. **Medidas independientes.** Con la estructura terminada se miden distancias y alturas
+   que no salen de ningún corte: del ápice a los 10 nodos bajos (392.0 mm, todos
+   iguales) y a los 5 altos (388.2 mm), la altura de cada anillo (86.4, 107.0, 171.6,
+   192.2, 236.2 y 254.8 mm desde el tablero), la distancia entre nodos del mismo anillo
+   que no llevan palito (320.2, 198.8, 245.8, 217.3 y 198.8 mm), el vano de la puerta
+   (117.9 mm de ancho, 210.0 mm de alto) y la plomada de cada nodo sobre su cruz de la
+   planta. Tolerancia: ±3 mm (±2 mm en la puerta).
+3. **Los ángulos del nodo.** Los discos impresos se apoyan sobre cada nodo terminado; los
+   palitos tienen que caer sobre las líneas. Son los mismos azimuts de los discos de
+   acero (§4 y plano de taller).
+
+Las alturas de la maqueta se miden desde el tablero, al centro del punto de pega (por
+eso suman medio palito, 2.5 mm, a la altura real a escala). Los 5 nodos altos del
+anillo de base llevan un taco de 4.9 mm, que es el riser de 4.86 cm del domo real.
 
 **Por qué 1:10:** el domo queda de 60 cm de diámetro y 25 cm de alto, y cada barra sale
 de un palo chino. Un palo de 5 mm equivale al tubo cuadrado de 50 mm del marco. Las

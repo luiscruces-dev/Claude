@@ -782,7 +782,7 @@ def build_page():
   </div>
 </section>
 
-<footer>Maqueta 1:10 y vista 3D realista: <a href="https://claude.ai/artifact/QzhQ4UyVbxqeMXogM7poM6">maqueta del domo</a> (en el repositorio: <span class="mono">maqueta/maqueta.html</span>).<br>Generado por <span class="mono">dome_viewer.py</span> desde <span class="mono">dome_model.py</span>, <span class="mono">dome_door.py</span> y <span class="mono">dome_build_sequence.py</span>. Verificación de la geometría: <span class="mono">dome_verify.py</span> y <span class="mono">auditoria/</span>. Verificación de la puerta: <span class="mono">python3 dome_door.py</span>.</footer>
+<footer>Maqueta 1:10 de la estructura con palos chinos (prueba de las medidas): <a href="https://claude.ai/artifact/QzhQ4UyVbxqeMXogM7poM6">maqueta del domo</a> (en el repositorio: <span class="mono">maqueta/maqueta.html</span>).<br>Generado por <span class="mono">dome_viewer.py</span> desde <span class="mono">dome_model.py</span>, <span class="mono">dome_door.py</span> y <span class="mono">dome_build_sequence.py</span>. Verificación de la geometría: <span class="mono">dome_verify.py</span> y <span class="mono">auditoria/</span>. Verificación de la puerta: <span class="mono">python3 dome_door.py</span>.</footer>
 </div>
 <div id="tip" hidden></div>
 <script>{js}</script>
