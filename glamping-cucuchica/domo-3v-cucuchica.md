@@ -446,7 +446,108 @@ un parámetro (por ejemplo, el diámetro de base o la frecuencia del domo), se e
 
 ---
 
-## 9. Pendientes / próximos pasos
+## 9. Plataforma y anclaje (diseño conceptual)
+
+Diseño de primera pasada, usando directamente las cargas de §6. No sustituye el
+estudio de suelo pendiente (§10) — es la base de partida para que el ingeniero
+afine, no el diseño final.
+
+### 9.1 Concepto general
+
+**Plataforma elevada sobre pilotes**, no losa a nivel de piso. Dos razones, ambas ya
+identificadas antes en el proyecto:
+1. El anclaje tiene que resistir **tracción** (succión de viento, §6.2), no solo
+   compresión — una losa apoyada directo en tierra no da forma fácil de anclar a
+   tracción; un pilote de concreto con perno embebido sí.
+2. Cucuchica tiene riesgo real de escorrentías y crecidas (quebradas, lluvia fuerte
+   de montaña — ver el análisis de ubicación original). Elevar la plataforma es la
+   misma solución que ya se había planteado para ese riesgo, y ahora además resuelve
+   el anclaje.
+
+Estructura: **pilotes de concreto** (fundación puntual) + **viga de anillo**
+(cadena de amarre continua seteando los 15 nodos) + **entablado de madera o deck
+compuesto** sobre vigas secundarias.
+
+### 9.2 Geometría del anillo de fundación
+
+Ya calculada en §4 — se reutiliza directo, sin volver a derivarla:
+
+| | Valor |
+|---|---|
+| Nodos de anclaje | 15 (10 "bajos" H4 + 5 "altos" H5, zigzag) |
+| Diámetro del anillo (nodos bajos) | 6.00 m exacto |
+| Perímetro del anillo | 18.70 m |
+| Desnivel bajo→alto | 4.86 cm |
+
+Las posiciones angulares exactas de los 15 nodos están en `dome_model.py` /
+`secuencia_de_armado.md` (Paso 0) — son las mismas coordenadas que usa la
+estructura de acero, así que el anclaje queda garantizado a coincidir con el domo
+sin tener que volver a medir en campo desde cero (se replantea desde el centro con
+los ángulos ya calculados).
+
+### 9.3 Pilotes
+
+**10 pilotes de concreto**, no los 15 — un pilote en cada uno de los 5 nodos "altos"
+(H5, obligatorio: son los más expuestos a succión de viento según §6.2) más 5
+alternados de los 10 nodos "bajos" (H4). Los 5 nodos H4 restantes cuelgan de la viga
+de anillo entre dos pilotes (luces de 1.2–2.5 m, triviales para una viga de amarre
+reforzada con las cargas tan bajas de §6 — esto es carga de un domo liviano, no de
+una losa pesada).
+
+- Pilote: concreto, sección mínima sugerida 25×25 cm, profundidad según el estudio
+  de suelo pendiente — como punto de partida razonable en terreno de montaña con
+  buena capacidad portante, 60–80 cm; en terreno con relleno o cercano a la quebrada,
+  más profundo y a confirmar por el ingeniero.
+- Cabeza del pilote por encima del nivel de terreno/crecida esperado (freeboard) —
+  valor a definir con el estudio hidrológico pendiente de la ubicación exacta dentro
+  del balneario; como referencia de partida, no menos de 40–60 cm sobre el nivel de
+  suelo circundante.
+
+### 9.4 Anclaje mecánico (perno por nodo)
+
+Con las cargas ilustrativas de §6.2/6.3 y factores de seguridad conservadores
+(2.5 a tracción, 2.0 a corte, más un factor de concentración 1.5× sobre el promedio
+para no diseñar todos los nodos por el caso promedio):
+
+| | Valor |
+|---|---|
+| Succión de diseño por perno (nodo crítico) | ≈274 kgf (2 685 N) |
+| Corte lateral de diseño por perno (nodo crítico) | ≈66 kgf (647 N) |
+| Perno recomendado | M12 galvanizado, con gancho en L o placa/tuerca de anclaje en el extremo embebido (**no** un perno recto liso — la resistencia a arranque de un perno liso depende solo de fricción, mucho menos confiable) |
+| Capacidad a fluencia del acero del perno (verificación) | ≈2 078 kgf — **7.6× el uplift de diseño** |
+
+El acero del perno no es lo que limita — un M12 sobra por resistencia propia. Lo que
+sí gobierna es el **arranque del concreto** (cuánto perno queda embebido, y con qué
+resistencia del concreto), que depende de `f'c` real y de la geometría del pilote —
+esto es justo lo que falta cerrar con el ingeniero. Como punto de partida: embebido
+mínimo 20–25 cm con gancho/placa, nunca un perno recto solo por fricción.
+
+Los 5 nodos H5 (los altos del zigzag) llevan además el **taco/riser de 4.86 cm**
+definido en §4, soldado entre la cabeza del pilote y el nodo del domo.
+
+### 9.5 Entablado (deck)
+
+Superficie plana a nivel de los 10 nodos "bajos", con los 5 tacos de 4.86 cm de
+§4 sobresaliendo en los nodos H5 — así el entablado se instala plano y parejo, y
+solo los 5 puntos de anclaje del domo quedan un poco más altos, no toda una zona
+del deck.
+
+- Vigas secundarias entre pilotes, entablado de madera tratada o deck compuesto por
+  encima.
+- Dejar una zona de transición/borde alrededor del anillo de 6.00 m para que el
+  entablado no termine exactamente en el borde del domo — da margen para ajuste en
+  obra y para la terraza/fogatero exterior ya contemplada en el concepto original.
+
+### 9.6 Pendiente antes de construir
+
+- [ ] Estudio de suelo (capacidad portante, nivel freático, cercanía a la quebrada) — define profundidad y sección real de los pilotes
+- [ ] Estudio hidrológico puntual del sitio exacto dentro del balneario — define el freeboard real, no el valor ilustrativo de §9.3
+- [ ] `f'c` real del concreto a usar — define el embebido real del perno de anclaje (§9.4)
+- [ ] Revisión del ingeniero estructural, integrando esto con las cargas combinadas viento+sismo+peso propio (§6.2/6.3) y el diseño del anclaje del domo a la plataforma
+
+---
+
+## 10. Pendientes / próximos pasos
 
 **Cálculo puro — resuelto en este documento:**
 - [x] Peso total de la estructura y carga por nodo de fundación (§6.1)
@@ -457,16 +558,17 @@ un parámetro (por ejemplo, el diámetro de base o la frecuencia del domo), se e
 - [x] Simulación de secuencia de armado pieza por pieza, con checklist barra por barra (§8.3, `secuencia_de_armado.md`)
 
 **Con esto, todos los cálculos puramente geométricos y de carga que identificamos
-como posibles con la información disponible están resueltos.** Lo que queda ya no es
-"cálculo pendiente" sino datos de sitio oficiales + decisiones de diseño + verificación profesional:
+como posibles con la información disponible están resueltos, y hay un concepto de
+plataforma/anclaje (§9).** Lo que queda ya no es "cálculo pendiente" sino datos de
+sitio oficiales + decisiones de diseño + verificación profesional:
 
 - [ ] Reemplazar los valores ilustrativos de viento (§6.2) y sismo (§6.3) por los datos oficiales de COVENIN-MINDUR 2003 y COVENIN 1756 para Tovar en cuanto estén disponibles
-- [ ] Verificación estructural final por ingeniero matriculado (incluye combinación de cargas viento+sismo+peso propio, y diseño del anclaje a tensión)
+- [ ] Estudio de suelo y estudio hidrológico puntual del sitio (§9.6) — definen profundidad de pilotes, freeboard real y `f'c` del concreto
+- [ ] Verificación estructural final por ingeniero matriculado (incluye combinación de cargas viento+sismo+peso propio, y el anclaje a tensión de §9.4)
 
 **Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
 - [ ] Diseño físico del hub plate (diámetro de disco, patrón de pernos o muñones, espesor final — los ángulos ya están en §3)
-- [ ] Diseño de la plataforma/deck y anillo de fundación (incluye estudio de suelo — ver riesgo de escorrentías/agua mencionado en el análisis de ubicación)
-- [ ] Altura del riser/taco en los 5 nodos altos (H5) — el desnivel exacto (4.86 cm) ya está calculado en §4, falta decidir si se resuelve con muro de arranque, taco soldado o pies regulables
+- [ ] Altura del riser/taco en los 5 nodos altos (H5) — el desnivel exacto (4.86 cm) ya está calculado en §4 y el concepto de pilote+taco en §9.4, falta solo la decisión final de detalle de fijación
 
 **No es cálculo — investigación de mercado:**
 - [ ] Cotización real de tubo galvanizado 32×2mm y de la membrana (PVC/poliéster) en talleres venezolanos
