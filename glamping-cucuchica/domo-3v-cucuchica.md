@@ -347,20 +347,114 @@ viento.
 8. Lista de corte: bin-packing (first-fit-decreasing) de las 120 barras contra barras
    comerciales de 6 m y 12 m, con 3 mm de pérdida por corte.
 
-Herramientas: Python (`numpy`, `scipy.spatial.ConvexHull` para generar las caras del
-icosaedro). Los scripts de cálculo no se conservaron en este repositorio — este
-documento y el HTML adjunto contienen todos los resultados numéricos derivados de
-ellos.
+Herramientas: Python puro (sin dependencias externas) — ver §8, donde este mismo
+método quedó reimplementado como programa ejecutable y verificado de forma
+independiente.
 
 ---
 
-## 8. Pendientes / próximos pasos
+## 8. Programa de verificación y simulación de armado
+
+Todo lo anterior se validó con un programa real, en Python puro (sin `numpy` ni
+`scipy`, corre con `python3 archivo.py` en cualquier máquina), guardado en este
+mismo directorio del repositorio. La idea: no confiar en los números de este
+documento porque "salieron de un cálculo" — poder **reproducirlos, verificarlos y
+simular el armado pieza por pieza** de forma independiente.
+
+### 8.1 `dome_model.py` — motor geométrico (fuente única de verdad)
+
+Reimplementación completa, desde cero, del método descrito en §7 (icosaedro →
+subdivisión 3V → corte → escalado → clasificación). Se corrió de forma independiente
+del cálculo original y **reprodujo exactamente los mismos números** publicados en
+este documento (R, altura del ápice, área de piso, longitud total de tubo, área de
+membrana) — es la primera verificación real: dos implementaciones distintas del
+mismo método, mismo resultado.
+
+### 8.2 `dome_verify.py` — batería de chequeos automáticos
+
+Corre `dome_model.py` y valida, con PASS/FAIL explícito por cada chequeo:
+
+- **Geometría de la esfera completa:** fórmula de Euler (V−E+F=2), y que la
+  subdivisión 3V dé exactamente 92 vértices / 180 triángulos / 270 aristas (el
+  número estándar de la industria para este método — si no coincide, hay un bug).
+- **Los 75 paneles:** que ningún triángulo sea degenerado (desigualdad triangular) y
+  que sus 3 ángulos internos sumen 180° en todos los casos.
+- **Las 120 barras:** que la longitud recalculada de cada arista coincida con su
+  clase declarada (±1 mm) — atrapa errores de redondeo o de clasificación.
+- **Regresión contra este documento:** recalcula altura del ápice, área de piso,
+  área de membrana, longitud total de tubo, R, y las 3 longitudes de barra con sus
+  cantidades — y verifica que coincidan con los valores publicados en §1–§2. Si
+  alguien edita un número en este `.md` a mano y se equivoca, este chequeo lo
+  detectaría.
+- **Los 46 nodos:** exactamente 5 tipos geométricos, que la suma de nodos por tipo
+  dé 46, que la suma de grados de todos los nodos sea el doble del número de
+  aristas (chequeo de consistencia del grafo), y que la suma de ángulos en cada tipo
+  de nodo cerrado sea menor a 360° (la curvatura tiene que ser positiva en toda
+  esfera real — si diera ≥360° en algún nodo, la geometría estaría mal).
+- **El anillo base:** que sean 15 nodos de borde (no 10 — la corrección de §4), que
+  formen exactamente 2 niveles de altura, y que el desnivel sea 4.86 cm.
+- **Pandeo (Euler) de las 3 barras:** que las 3 —no solo la más larga, como en el
+  chequeo manual original— tengan capacidad crítica por encima de un mínimo
+  aceptado.
+
+**Resultado de la última corrida: todos los chequeos pasaron** (ver
+`reporte_verificacion.txt` en este directorio, generado con
+`python3 dome_verify.py > reporte_verificacion.txt`).
+
+Lo que este programa **no** hace, para que quede claro el alcance: no es un
+análisis estructural (FEA / método matricial de rigidez), y no reemplaza el chequeo
+de viento/sismo con datos oficiales de sitio (§6.2/6.3) — verifica consistencia
+geométrica y de datos, no seguridad estructural bajo carga real. Eso sigue
+necesitando al ingeniero.
+
+### 8.3 `dome_build_sequence.py` — simulación de armado pieza por pieza
+
+Este es el que responde "¿en qué orden corto y suelto esto para que se pueda armar
+de verdad?". Simula el armado **de la base hacia el ápice, anillo por anillo** (el
+método realista para construir en sitio sin grúa: cada pieza nueva se suelda
+apoyada en estructura ya fija, nunca al aire), y en cada paso valida que cada nodo
+nuevo quede geométricamente fijo por **al menos 2 barras no paralelas** antes de
+seguir — si un nodo quedara sostenido por una sola barra, el programa lo marca como
+que necesita sujeción temporal (gato, cuerda, un ayudante) hasta que la segunda
+barra lo triangule.
+
+**Resultado de la simulación:**
+- **7 anillos** de armado, de la fundación al ápice.
+- **120/120 barras** quedan asignadas a un paso — ninguna barra "huérfana" sin
+  lugar en la secuencia (el programa aborta con error si esto llegara a pasar).
+- **0 nodos necesitan sujeción temporal** — cada nodo nuevo, en los 7 anillos,
+  queda triangulado (≥2 barras a estructura ya fija) en el mismo paso en que
+  aparece. Esto es una propiedad real y verificada del diseño, no una suposición:
+  el domo se puede armar anillo por anillo sin andamiaje de soporte temporal para
+  los nodos, más allá de lo normal para sostener al soldador.
+
+El checklist completo, barra por barra, con qué nodo va a qué nodo y con qué queda
+fijado cada uno, está en **`secuencia_de_armado.md`** (generado automáticamente,
+120 barras + 15 anclajes de fundación, listo para imprimir y llevar al taller).
+
+### 8.4 Cómo correr esto
+
+```bash
+cd glamping-cucuchica
+python3 dome_verify.py               # imprime el reporte de verificación
+python3 dome_build_sequence.py       # regenera secuencia_de_armado.md
+```
+
+Sin instalar nada — los 3 scripts son Python estándar. Si en algún momento cambia
+un parámetro (por ejemplo, el diámetro de base o la frecuencia del domo), se edita
+`build_dome(...)` en `dome_model.py` y los otros dos scripts recalculan todo solos.
+
+---
+
+## 9. Pendientes / próximos pasos
 
 **Cálculo puro — resuelto en este documento:**
 - [x] Peso total de la estructura y carga por nodo de fundación (§6.1)
 - [x] Patronaje de los paneles de membrana — solo 2 formas distintas (§5.1)
 - [x] Empuje y succión de viento — **estimación ilustrativa** con V=100 km/h supuesta, no con el dato oficial de sitio (§6.2)
 - [x] Fuerza sísmica horizontal — **estimación ilustrativa** con Ao=0.30 supuesto, no con el mapa oficial de zonificación (§6.3)
+- [x] Verificación independiente de toda la geometría y los totales publicados, con programa reproducible (§8) — todos los chequeos pasan
+- [x] Simulación de secuencia de armado pieza por pieza, con checklist barra por barra (§8.3, `secuencia_de_armado.md`)
 
 **Con esto, todos los cálculos puramente geométricos y de carga que identificamos
 como posibles con la información disponible están resueltos.** Lo que queda ya no es

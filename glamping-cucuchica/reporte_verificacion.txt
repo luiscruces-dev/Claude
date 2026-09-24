@@ -1,0 +1,50 @@
+Domo 3V construido: R=3.0452 m, base=6.0 m
+
+== 1. Geometria de la esfera completa (Euler) ==
+[PASS] V - E + F = 2 (formula de Euler, esfera completa) — V=92 E=270 F=180
+[PASS] esfera completa tiene 92 vertices / 180 triangulos / 270 aristas (3V estandar) — (V,F,E)=(92,180,270)
+
+== 2. Triangulos del casquete construido (los 75 paneles) ==
+[PASS] triangulos totales = 75 — 75
+[PASS] los 75 paneles cumplen la desigualdad triangular (ningun panel degenerado) — 0 paneles invalidos
+[PASS] los 3 angulos internos de cada panel suman 180° — 0 paneles con suma fuera de tolerancia
+
+== 3. Barras (struts): consistencia de longitud declarada vs. real ==
+[PASS] las 120 aristas recalculadas coinciden con su clase declarada (±1mm) — 0 discrepancias
+[PASS] solo existen 3 clases de longitud de barra — 3 clases
+[PASS] 120 barras en total — 120
+
+== 4. Regresion contra los valores publicados en domo-3v-cucuchica.md ==
+[PASS] altura del apice = 2.5225 m — 2.5225 m
+[PASS] area de piso = 28.274 m2 — 28.274 m2
+[PASS] area de membrana = 46.24 m2 — 46.24 m2
+[PASS] longitud total de tubo = 143.80 m — 143.80 m
+[PASS] radio de esfera R = 3.0452 m — 3.0452 m
+[PASS] tipo A = 125.59 cm x50 — 125.59 cm x50
+[PASS] tipo B = 122.89 cm x40 — 122.89 cm x40
+[PASS] tipo C = 106.16 cm x30 — 106.16 cm x30
+
+== 5. Nodos (hubs): simetria y clasificacion ==
+[PASS] 46 nodos en total — 46
+[PASS] exactamente 5 tipos de nodo geometricamente distintos — 5
+[PASS] la suma de nodos por tipo da 46 — suma=46, {'H1': 20, 'H2': 5, 'H3': 6, 'H4': 10, 'H5': 5}
+[PASS] suma de grados de todos los nodos = 2 x numero de aristas (cada arista cuenta en sus 2 extremos) — suma_grados=240, 2*aristas=240
+[PASS] nodo H1 (cerrado, grado 6): suma de angulos < 360° (curvatura positiva real) — suma=352.00°
+[PASS] nodo H2 (cerrado, grado 6): suma de angulos < 360° (curvatura positiva real) — suma=351.60°
+[PASS] nodo H3 (cerrado, grado 5): suma de angulos < 360° (curvatura positiva real) — suma=353.50°
+
+== 6. Anillo base (zigzag) ==
+[PASS] 15 nodos en el borde del domo (10 bajos + 5 altos, no 10) — 15
+[PASS] el borde tiene exactamente 2 niveles de altura (el zigzag) — niveles relativos=[0.0, 0.0486]
+[PASS] desnivel del zigzag = 4.86 cm — 4.86 cm
+
+== 7. Chequeo de pandeo (Euler, apoyo simple K=1) por tipo de barra ==
+[PASS] barra tipo A (125.59 cm): carga critica de pandeo > 500 kgf (margen minimo aceptado) — Pcr=26657 N (2717 kgf)
+[PASS] barra tipo B (122.89 cm): carga critica de pandeo > 500 kgf (margen minimo aceptado) — Pcr=27841 N (2838 kgf)
+[PASS] barra tipo C (106.16 cm): carga critica de pandeo > 500 kgf (margen minimo aceptado) — Pcr=37307 N (3803 kgf)
+
+============================================================
+RESULTADO: todos los chequeos pasaron.
+Esto verifica consistencia geometrica y de datos, NO sustituye
+el analisis estructural (FEA) ni el chequeo de viento/sismo con
+datos oficiales de sitio — ver domo-3v-cucuchica.md secciones 6.2/6.3.
