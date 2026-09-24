@@ -1,745 +1,345 @@
-<title>Domo Geodésico Cucuchica</title>
-<style>
-  :root{
-    color-scheme: light;
-    --page:      #f9f9f7;
-    --surface:   #fcfcfb;
-    --surface-2: #f3f2ee;
-    --ink:       #0b0b0b;
-    --ink-2:     #52514e;
-    --muted:     #898781;
-    --grid:      #e1e0d9;
-    --line:      #c3c2b7;
-    --border:    rgba(11,11,11,0.10);
-    --border-2:  rgba(11,11,11,0.16);
-    --accent:    #2a78d6;
-    --a-A:       #2a78d6;
-    --a-B:       #eb6834;
-    --a-C:       #1baf7a;
-    --good:      #0ca30c;
-    --shadow: 0 1px 2px rgba(11,11,11,.06), 0 8px 24px -12px rgba(11,11,11,.18);
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      color-scheme: dark;
-      --page:      #0d0d0d;
-      --surface:   #1a1a19;
-      --surface-2: #141413;
-      --ink:       #ffffff;
-      --ink-2:     #c3c2b7;
-      --muted:     #898781;
-      --grid:      #2c2c2a;
-      --line:      #383835;
-      --border:    rgba(255,255,255,0.10);
-      --border-2:  rgba(255,255,255,0.18);
-      --accent:    #3987e5;
-      --a-A:       #3987e5;
-      --a-B:       #d95926;
-      --a-C:       #199e70;
-      --good:      #0ca30c;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
-    }
-  }
-  :root[data-theme="dark"]{
-    color-scheme: dark;
-    --page:      #0d0d0d;
-    --surface:   #1a1a19;
-    --surface-2: #141413;
-    --ink:       #ffffff;
-    --ink-2:     #c3c2b7;
-    --muted:     #898781;
-    --grid:      #2c2c2a;
-    --line:      #383835;
-    --border:    rgba(255,255,255,0.10);
-    --border-2:  rgba(255,255,255,0.18);
-    --accent:    #3987e5;
-    --a-A:       #3987e5;
-    --a-B:       #d95926;
-    --a-C:       #199e70;
-    --good:      #0ca30c;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
-  }
-
-  *{box-sizing:border-box;}
-  body{
-    background:var(--page);
-    color:var(--ink);
-    font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-    padding-inline:16px;
-    line-height:1.45;
-  }
-  .mono{ font-family:"IBM Plex Mono",ui-monospace,"SF Mono",Consolas,monospace; }
-  .tab{ font-variant-numeric:tabular-nums; }
-
-  .wrap{ max-width:920px; margin:0 auto; }
-
-  /* ---- top bar ---- */
-  header.top{
-    position:sticky; top:env(safe-area-inset-top,0px);
-    z-index:20; background:color-mix(in srgb, var(--page) 88%, transparent);
-    backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--border);
-    margin-inline:-16px; padding-inline:16px;
-  }
-  .top-inner{
-    max-width:920px; margin:0 auto;
-    display:flex; align-items:baseline; justify-content:space-between; gap:12px;
-    padding-block:10px; flex-wrap:wrap;
-  }
-  .brand{ font-weight:700; font-size:14px; letter-spacing:.01em; }
-  .brand .dim{ color:var(--muted); font-weight:500; }
-  nav.jump{ display:flex; gap:14px; flex-wrap:wrap; }
-  nav.jump a{
-    color:var(--ink-2); text-decoration:none; font-size:12.5px; font-weight:500;
-    border-bottom:1px solid transparent; padding-bottom:2px;
-  }
-  nav.jump a:hover{ color:var(--ink); border-color:var(--line); }
-
-  /* ---- hero ---- */
-  .hero{ padding-block:28px 8px; }
-  .eyebrow{
-    font-family:"IBM Plex Mono",monospace; font-size:11.5px; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--accent); font-weight:600; margin-bottom:10px;
-  }
-  h1{ font-size:clamp(26px,4.2vw,34px); line-height:1.12; margin:0 0 10px; letter-spacing:-.01em; text-wrap:balance; }
-  .lede{ color:var(--ink-2); font-size:15px; max-width:64ch; margin:0 0 22px; }
-
-  .statgrid{
-    display:grid; grid-template-columns:repeat(4,1fr);
-    gap:1px; background:var(--border); border:1px solid var(--border);
-    border-radius:8px; overflow:hidden; margin-bottom:8px;
-  }
-  @media (max-width:560px){ .statgrid{ grid-template-columns:repeat(2,1fr); } }
-  .stat{ background:var(--surface); padding:14px 14px 12px; }
-  .stat .v{ font-family:"IBM Plex Mono",monospace; font-size:20px; font-weight:600; letter-spacing:-.01em; }
-  .stat .u{ font-size:11px; color:var(--muted); margin-left:2px; }
-  .stat .l{ font-size:11px; color:var(--ink-2); margin-top:3px; }
-
-  section{ padding-block:40px; border-top:1px solid var(--grid); scroll-margin-top:70px; }
-  section:first-of-type{ border-top:none; }
-  .sec-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:6px; }
-  .sec-no{ font-family:"IBM Plex Mono",monospace; color:var(--muted); font-size:13px; }
-  h2{ font-size:19px; margin:0; letter-spacing:-.005em; }
-  .sec-sub{ color:var(--ink-2); font-size:13.5px; max-width:68ch; margin:8px 0 22px; }
-
-  .card{
-    background:var(--surface); border:1px solid var(--border); border-radius:8px;
-  }
-  .panel{ padding:16px; }
-
-  /* ---- 3D viewer ---- */
-  .viewer{ background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:var(--shadow); }
-  .viewer-head{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-bottom:1px solid var(--border); gap:10px; flex-wrap:wrap; }
-  .viewer-head .hint{ font-size:11.5px; color:var(--muted); }
-  canvas#domeCanvas{ display:block; width:100%; height:440px; touch-action:none; cursor:grab; background:
-    linear-gradient(var(--grid) 1px, transparent 1px) 0 0/28px 28px,
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/28px 28px,
-    var(--surface-2);
-  }
-  canvas#domeCanvas:active{ cursor:grabbing; }
-  .viewer-foot{ display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-top:1px solid var(--border); gap:14px; flex-wrap:wrap; }
-  .legend{ display:flex; gap:16px; flex-wrap:wrap; }
-  .legend .item{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-2); }
-  .swatch{ width:16px; height:3px; border-radius:2px; display:inline-block; }
-  .dot{ width:9px;height:9px;border-radius:50%; display:inline-block; border:1px solid var(--border-2); background:var(--surface-2); }
-  label.toggle{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-2); cursor:pointer; user-select:none; }
-  button.ghost{
-    font: inherit; font-size:12px; color:var(--ink-2); background:transparent;
-    border:1px solid var(--border-2); border-radius:6px; padding:5px 10px; cursor:pointer;
-  }
-  button.ghost:hover{ color:var(--ink); border-color:var(--line); }
-  #hubTip{
-    position:absolute; pointer-events:none; background:var(--ink); color:var(--page);
-    font-family:"IBM Plex Mono",monospace; font-size:11.5px; padding:6px 8px; border-radius:5px;
-    line-height:1.4; box-shadow:var(--shadow); max-width:200px; z-index:5;
-  }
-  :root:not([data-theme="light"]) #hubTip{ background:var(--surface); color:var(--ink); border:1px solid var(--border-2); }
-  :root[data-theme="dark"] #hubTip{ background:var(--surface); color:var(--ink); border:1px solid var(--border-2); }
-  .viewer-rel{ position:relative; }
-
-  /* ---- tables ---- */
-  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
-  th,td{ text-align:left; padding:9px 10px; border-bottom:1px solid var(--grid); }
-  th{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600; }
-  td.num, th.num{ text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
-  tr:last-child td{ border-bottom:none; }
-  tr.total td{ font-weight:600; border-top:1px solid var(--line); }
-  .tbl-wrap{ overflow-x:auto; }
-  .pill{ display:inline-flex; align-items:center; gap:5px; font-family:"IBM Plex Mono",monospace; font-size:11.5px; font-weight:600; padding:2px 7px; border-radius:20px; }
-  .pill .sw{ width:8px;height:8px;border-radius:50%; }
-
-  /* ---- cutting list cards ---- */
-  .twocol{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
-  @media (max-width:620px){ .twocol{ grid-template-columns:1fr; } }
-  .bar-card h3{ font-size:14px; margin:0 0 2px; }
-  .bar-card .big{ font-family:"IBM Plex Mono",monospace; font-size:26px; font-weight:600; margin:8px 0 2px; }
-  .bar-card .sub{ font-size:12px; color:var(--ink-2); margin-bottom:12px; }
-  .waste-bar{ height:6px; border-radius:4px; background:var(--grid); overflow:hidden; margin-bottom:4px; }
-  .waste-bar i{ display:block; height:100%; background:var(--a-B); }
-  .patternlist{ margin-top:10px; font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-2); display:flex; flex-direction:column; gap:3px; }
-
-  /* ---- hub gallery ---- */
-  .hubgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:18px; }
-  .hubcard{ padding:14px; display:flex; flex-direction:column; gap:8px; }
-  .hubcard .hh{ display:flex; justify-content:space-between; align-items:baseline; }
-  .hubcard .hname{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:15px; }
-  .hubcard .hcount{ font-size:11.5px; color:var(--muted); }
-  .hubcard svg{ width:100%; height:auto; }
-  .hubcard .desc{ font-size:12px; color:var(--ink-2); }
-  .hubcard .tilt{ font-size:11px; color:var(--muted); font-family:"IBM Plex Mono",monospace; border-top:1px solid var(--grid); padding-top:8px; }
-
-  /* ---- base plan ---- */
-  .baseflex{ display:flex; gap:24px; flex-wrap:wrap; align-items:flex-start; margin-top:18px; }
-  .baseflex svg{ flex:0 0 340px; max-width:100%; height:auto; }
-  .basenotes{ flex:1 1 260px; min-width:240px; }
-  .basenotes ol{ padding-left:20px; margin:0; display:flex; flex-direction:column; gap:10px; font-size:13.5px; }
-  .basenotes li::marker{ font-family:"IBM Plex Mono",monospace; color:var(--muted); font-size:12px; }
-
-  /* ---- notes ---- */
-  .notegrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:16px; }
-  .note{ padding:14px 16px; }
-  .note h3{ font-size:13.5px; margin:0 0 6px; display:flex; align-items:center; gap:7px; }
-  .note p{ font-size:13px; color:var(--ink-2); margin:0; }
-  .warn{ border-color: color-mix(in srgb, var(--a-B) 45%, var(--border)); }
-  .warn h3{ color:var(--a-B); }
-
-  footer{ padding-block:36px 48px; color:var(--muted); font-size:12px; border-top:1px solid var(--grid); }
-
-  ::selection{ background:var(--accent); color:#fff; }
-</style>
+<title>Domo Cucuchica · Plano de taller</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --page:#f5f6f3; --surface:#fcfcfa; --surface-2:#eceeea; --ink:#121517; --ink-2:#4a5156; --muted:#7c8388;
+  --grid:#dfe2de; --line:#c1c6c2; --accent:#2b5a78; --door:#3b3f44;
+  --sA:#2a78d6; --sB:#eb6834; --sC:#1baf7a; --warn:#b3302f; --warn-wash:rgba(208,59,59,.10); --warn2-wash:rgba(236,131,90,.16);
+  --passage:rgba(42,120,214,.12); --open:rgba(124,131,136,.12);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark; --page:#0f1112; --surface:#1b1d1f; --surface-2:#25282a; --ink:#f1f2f0; --ink-2:#c1c6c3; --muted:#8b9296;
+  --grid:#2b2f31; --line:#3b4043; --accent:#86b5d6; --door:#d6d9d6;
+  --sA:#3987e5; --sB:#d95926; --sC:#199e70; --warn:#ec7070; --warn-wash:rgba(208,59,59,.18); --warn2-wash:rgba(236,131,90,.20);
+  --passage:rgba(57,135,229,.18); --open:rgba(193,198,195,.10);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark; --page:#0f1112; --surface:#1b1d1f; --surface-2:#25282a; --ink:#f1f2f0; --ink-2:#c1c6c3; --muted:#8b9296;
+  --grid:#2b2f31; --line:#3b4043; --accent:#86b5d6; --door:#d6d9d6;
+  --sA:#3987e5; --sB:#d95926; --sC:#199e70; --warn:#ec7070; --warn-wash:rgba(208,59,59,.18); --warn2-wash:rgba(236,131,90,.20);
+  --passage:rgba(57,135,229,.18); --open:rgba(193,198,195,.10);
+}
+*{box-sizing:border-box}
+body{background:var(--page); color:var(--ink); font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; padding-inline:16px; padding-block:0 40px}
+.wrap{max-width:1040px; margin:0 auto}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif; text-wrap:balance}
+h1{font-size:clamp(28px,4.4vw,40px); line-height:1.08; margin:0 0 10px}
+h2{font-size:23px; margin:0}
+h3{font-size:16px; margin:0 0 8px}
+h3.sub{margin-top:18px}
+p{max-width:72ch; margin:0 0 10px}
+.mono,.num{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:13px} .strong{font-weight:700}
+header.top{position:sticky; top:env(safe-area-inset-top,0px); z-index:20; background:color-mix(in srgb,var(--page) 90%,transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--grid); margin-inline:-16px; padding-inline:16px}
+.top-inner{max-width:1040px; margin:0 auto; display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; padding-block:10px}
+.brand{font:700 13px "IBM Plex Mono",monospace; letter-spacing:.04em} .brand .dim{color:var(--muted); font-weight:500}
+nav.jump{display:flex; gap:12px; flex-wrap:wrap} nav.jump a{color:var(--ink-2); text-decoration:none; font-size:12.5px} nav.jump a:hover{color:var(--ink)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.hero{padding-block:26px 8px}
+.eyebrow{font:600 11.5px "IBM Plex Mono",monospace; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:10px}
+.lede{color:var(--ink-2); font-size:16px}
+.statgrid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; background:var(--grid); border:1px solid var(--grid); border-radius:8px; overflow:hidden; margin-block:18px}
+@media (max-width:640px){.statgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--surface); padding:12px 14px}
+.stat .v{font:600 21px "IBM Plex Mono",monospace} .stat .u{font-size:11px; color:var(--muted); margin-left:2px} .stat .l{font-size:12px; color:var(--ink-2)}
+section{padding-block:34px; border-top:1px solid var(--grid); scroll-margin-top:60px}
+.sec-head{margin-bottom:6px} .sec-sub{color:var(--ink-2); font-size:14px}
+.card{background:var(--surface); border:1px solid var(--grid); border-radius:8px}
+.note{padding:12px 16px; margin-top:12px} .note p{margin:0; font-size:14px; color:var(--ink-2)}
+.note.warn{border-color:color-mix(in srgb,var(--warn) 40%,var(--grid)); background:var(--warn-wash)} .note.warn h3{color:var(--warn)}
+.panel{background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:14px} .panel svg{width:100%; height:auto; display:block}
+.twocol{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; margin-top:14px}
+@media (max-width:820px){.twocol{grid-template-columns:minmax(0,1fr)}}
+.viewer{background:var(--surface); border:1px solid var(--grid); border-radius:10px; overflow:hidden}
+.viewer-rel{position:relative}
+canvas#c3d{display:block; width:100%; height:460px; touch-action:none; cursor:grab; background:var(--surface-2)}
+.viewer-foot{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:10px 14px; border-top:1px solid var(--grid)}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-2)} .legend span{display:inline-flex; gap:6px; align-items:center}
+.sw{width:16px; height:3px; border-radius:2px; display:inline-block} .swb{width:11px; height:11px; border-radius:50%; display:inline-block}
+.ctrls{display:flex; gap:12px; align-items:center}
+label.toggle{font-size:12.5px; color:var(--ink-2); display:flex; gap:6px; align-items:center}
+button.ghost{font:inherit; font-size:12.5px; color:var(--ink-2); background:transparent; border:1px solid var(--line); border-radius:6px; padding:5px 10px; cursor:pointer}
+#hubTip,#tip{position:absolute; pointer-events:none; background:var(--ink); color:var(--page); font:12px/1.4 "IBM Plex Mono",monospace; padding:6px 8px; border-radius:5px; max-width:280px; z-index:5}
+#tip{position:fixed}
+.tbl{overflow-x:auto; border:1px solid var(--grid); border-radius:8px; background:var(--surface); margin-top:12px}
+.tbl.narrow{max-width:620px}
+.planpanel{max-width:480px; margin-top:12px}
+table{border-collapse:collapse; width:100%; font-size:13.5px}
+th,td{text-align:left; padding:7px 10px; border-bottom:1px solid var(--grid); vertical-align:top}
+th{font:600 10.5px "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+th.num,td.num{text-align:right; white-space:nowrap}
+tr:last-child td{border-bottom:none} tr.total td{font-weight:700; border-top:1px solid var(--line)} tr.hl td{background:var(--warn2-wash)}
+.code{display:inline-block; min-width:26px; text-align:center; font:700 12px "IBM Plex Mono",monospace; color:#fff; background:var(--c); border-radius:4px; padding:2px 5px}
+.seg{display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:12px}
+.seg-l{font-size:13px; color:var(--ink-2)}
+.segbtn{font:600 13px "IBM Plex Mono",monospace; background:var(--surface); color:var(--ink-2); border:1px solid var(--line); border-radius:6px; padding:6px 12px; cursor:pointer}
+.segbtn[aria-pressed="true"]{background:var(--ink); color:var(--page); border-color:var(--ink)}
+.sum{margin-top:12px}
+.cuts{display:grid; gap:8px}
+.cutrow{display:grid; grid-template-columns:90px minmax(0,1fr) 100px; gap:10px; align-items:center}
+@media (max-width:560px){.cutrow{grid-template-columns:minmax(0,1fr)}}
+.cutrow svg{width:100%; height:auto; display:block}
+.cutlabel{font:600 13px "IBM Plex Mono",monospace} .cutnote{font:12px "IBM Plex Mono",monospace; color:var(--muted)}
+.stock{fill:var(--surface-2); stroke:var(--line)}
+.seg-A{fill:var(--sA)} .seg-B{fill:var(--sB)} .seg-C{fill:var(--sC)} .seg-door{fill:var(--door)}
+.seglbl{fill:#fff; font:600 10px "IBM Plex Mono",monospace}
+.seg-door + .seglbl{fill:var(--page)}
+.hubgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px}
+.hubcard{margin:0; background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:4px}
+.hubcard .hh{display:flex; justify-content:space-between; font:600 15px "IBM Plex Mono",monospace}
+.hubcard svg{width:100%; height:auto}
+.disc{fill:var(--surface-2); stroke:var(--line)}
+.openwedge{fill:var(--open); stroke:var(--line); stroke-dasharray:none}
+.arc{fill:none; stroke:var(--line); stroke-width:1.2}
+.ray{stroke-width:4; stroke-linecap:round}
+.hubdot{fill:var(--ink)}
+.t-angle{fill:var(--ink); font:700 11px "IBM Plex Mono",monospace; paint-order:stroke; stroke:var(--surface-2); stroke-width:3px}
+.t-code{fill:var(--ink); font:700 11.5px "IBM Plex Mono",monospace} .t-tilt{fill:var(--muted); font-weight:500; font-size:10px}
+.t-muted{fill:var(--muted); font:11px "IBM Plex Mono",monospace}
+.t-dim{fill:var(--ink); font:600 11.5px "IBM Plex Mono",monospace}
+.t-node{fill:var(--ink-2); font:600 11px "IBM Plex Mono",monospace}
+.t-door{fill:var(--door); font:700 12px "IBM Plex Mono",monospace; letter-spacing:.08em}
+.dome-outline{fill:none; stroke:var(--ink-2); stroke-width:1.6}
+.floor{stroke:var(--line); stroke-width:2}
+.strut-faint{fill:none; stroke:var(--line); stroke-width:1.3}
+.door-member{stroke:var(--door); stroke-width:3; stroke-linecap:round}
+.frame{fill:var(--door)}
+.door-open{fill:var(--passage)}
+.sill{stroke:var(--sB); stroke-width:4; stroke-linecap:round}
+.dim{stroke:var(--ink); stroke-width:1}
+.node{fill:var(--surface); stroke:var(--ink); stroke-width:2}
+.passage{fill:var(--passage); stroke:var(--sA); stroke-width:1}
+.ring-guide{fill:none; stroke:var(--grid)} .ring-poly{fill:color-mix(in srgb,var(--sA) 7%,transparent); stroke:var(--ink-2); stroke-width:1.2}
+.grid{stroke:var(--grid)}
+.door-plan{stroke:var(--door); stroke-width:6; stroke-linecap:round}
+.anc-low{fill:var(--ink); stroke:var(--surface); stroke-width:2} .anc-high{fill:var(--sA); stroke:var(--surface); stroke-width:2}
+.anc-post{fill:var(--door); stroke:var(--sB); stroke-width:3}
+ul.plain{margin:0; padding-left:18px; display:grid; gap:6px; font-size:14px}
+.warn{color:var(--warn); font-size:13px} .warn2{color:var(--ink-2); font-size:13px}
+.notegrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:12px; margin-top:12px}
+.notegrid .note{margin-top:0}
+footer{padding-block:26px; color:var(--muted); font-size:12.5px; border-top:1px solid var(--grid)}
+[data-tip]{cursor:default}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
 <div class="wrap">
+<header class="top"><div class="top-inner">
+  <div class="brand">DOMO 3V <span class="dim">/ CUCUCHICA · PLANO DE TALLER</span></div>
+  <nav class="jump"><a href="#vista">Vista 3D</a><a href="#piezas">Piezas y corte</a><a href="#nodos">Nodos</a><a href="#puerta">Puerta</a><a href="#base">Base</a><a href="#armado">Armado</a><a href="#cubierta">Cubierta</a><a href="#cargas">Cargas</a><a href="#notas">Notas</a></nav>
+</div></header>
 
-  <header class="top">
-    <div class="top-inner">
-      <div class="brand">DOMO 3V <span class="dim mono">/ CUCUCHICA</span></div>
-      <nav class="jump">
-        <a href="#resumen">Resumen</a>
-        <a href="#vista3d">Vista 3D</a>
-        <a href="#barras">Barras</a>
-        <a href="#nodos">Nodos</a>
-        <a href="#base">Base</a>
-        <a href="#cubierta">Cubierta</a>
-        <a href="#cargas">Cargas</a>
-        <a href="#notas">Notas</a>
-      </nav>
+<section class="hero" id="resumen">
+  <div class="eyebrow">Glamping Cucuchica · domo geodésico 3V ⌀6 m con puerta · generado desde el modelo verificado</div>
+  <h1>Domo de 6 m con portal de entrada</h1>
+  <p class="lede">Todo lo necesario para cortar, soldar y armar la estructura: piezas y plan de corte, plantillas de cada disco de nodo, el marco de la puerta, el replanteo de los anclajes y el orden de armado. Cada número sale del mismo modelo que pasó la auditoría independiente; esta página se regenera con <span class="mono">python3 dome_viewer.py</span>.</p>
+  <div class="statgrid">
+    <div class="stat"><div class="v">6.00<span class="u">m</span></div><div class="l">Diámetro de base (anclajes bajos)</div></div>
+    <div class="stat"><div class="v">2.52<span class="u">m</span></div><div class="l">Altura al ápice</div></div>
+    <div class="stat"><div class="v">117×207<span class="u">cm</span></div><div class="l">Vano libre de la puerta</div></div>
+    <div class="stat"><div class="v">28.3<span class="u">m²</span></div><div class="l">Área de piso</div></div>
+    <div class="stat"><div class="v">110+9</div><div class="l">Barras del domo + piezas de la puerta</div></div>
+    <div class="stat"><div class="v">46</div><div class="l">Nodos (15 anclados)</div></div>
+    <div class="stat"><div class="v">141.8<span class="u">m</span></div><div class="l">Tubo 32×2 (centro a centro)</div></div>
+    <div class="stat"><div class="v">250<span class="u">kg</span></div><div class="l">Acero (sin soldadura ni pernos)</div></div>
+  </div>
+  <div class="card note warn"><h3>Antes de cortar</h3><p>Falta decidir cómo se une cada barra al disco del nodo. De eso depende el <b>retiro</b> que se le resta a cada barra (mínimo 3.1 cm, porque los tubos chocan en los nodos de 54.6°). Arme primero <b>un nodo de prueba</b> con una barra de cada tipo, mida el retiro real y recién ahí corte el lote completo.</p></div>
+</section>
+
+<section id="vista">
+  <div class="sec-head"><h2>Vista 3D</h2></div>
+  <p class="sec-sub">Arrastre para girar; rueda o pellizco para acercar. Pase el cursor sobre un nodo para ver su número y tipo, iguales a los de la secuencia de armado.</p>
+  <div class="viewer"><div class="viewer-rel"><canvas id="c3d" aria-label="Vista 3D del domo con la puerta"></canvas><div id="hubTip" hidden></div></div>
+    <div class="viewer-foot">
+      <div class="legend"><span><i class="sw" style="background:var(--sA)"></i>A 125.59</span><span><i class="sw" style="background:var(--sB)"></i>B 122.89</span><span><i class="sw" style="background:var(--sC)"></i>C 106.16</span><span><i class="sw" style="background:var(--door)"></i>puerta (P D V K)</span></div>
+      <div class="ctrls"><label class="toggle"><input type="checkbox" id="mem"> membrana</label><button class="ghost" id="reset" type="button">Vista inicial</button></div>
     </div>
-  </header>
+  </div>
+</section>
 
-  <section id="resumen" class="hero">
-    <div class="eyebrow">Plano técnico — geometría verificada numéricamente</div>
-    <h1>Domo geodésico 3V, 6 m de base</h1>
-    <p class="lede">Lista de materiales, ángulos exactos de cada nodo y plan de corte para construir la estructura de acero. Cada número en esta página sale de la geometría real del domo, calculada punto por punto — no de tablas genéricas.</p>
-    <div class="card note warn" style="margin-bottom:18px"><h3>⚠ Auditoría independiente (2026-09-24)</h3><p>La geometría (barras, nodos, paneles, áreas) se confirmó con un cálculo independiente. Se corrigieron en esta página los ángulos a marcar en los discos de nodo, el retiro mínimo de corte, la capacidad de pandeo y el rango de diferencia entre barras. Pendientes y errores que no son de esta página (alturas de armado, nodos sin arriostrar en el paso 1, cantidad de membrana, reparto real del viento por anclaje, puerta, plataforma): ver <code>auditoria/AUDITORIA.md</code>. Este visor no numera los nodos: para el taller vale la numeración de <code>secuencia_de_armado.md</code>.</p></div>
-
-    <div class="statgrid">
-      <div class="stat"><div class="v tab">6.00<span class="u">m</span></div><div class="l">Diámetro de base</div></div>
-      <div class="stat"><div class="v tab">2.52<span class="u">m</span></div><div class="l">Altura al ápice</div></div>
-      <div class="stat"><div class="v tab">28.3<span class="u">m²</span></div><div class="l">Área de piso</div></div>
-      <div class="stat"><div class="v tab">120</div><div class="l">Barras totales</div></div>
-      <div class="stat"><div class="v tab">46</div><div class="l">Nodos totales</div></div>
-      <div class="stat"><div class="v tab">5</div><div class="l">Tipos de nodo</div></div>
-      <div class="stat"><div class="v tab">143.8<span class="u">m</span></div><div class="l">Tubo lineal total</div></div>
-      <div class="stat"><div class="v tab">51.8<span class="u">m²</span></div><div class="l">Membrana (con merma) — insuficiente con costuras, ver auditoría</div></div>
-    </div>
-  </section>
-
-  <section id="vista3d">
-    <div class="sec-head"><span class="sec-no mono">01</span><h2>Vista 3D interactiva</h2></div>
-    <p class="sec-sub">Arrastra para rotar el domo, usa la rueda o pellizca para acercar. Pasa el cursor sobre un nodo para ver su tipo y las barras que llegan a él.</p>
-
-    <div class="viewer">
-      <div class="viewer-head">
-        <div class="legend">
-          <span class="item"><span class="swatch" style="background:var(--a-A)"></span>Tipo A — 125.59 cm</span>
-          <span class="item"><span class="swatch" style="background:var(--a-B)"></span>Tipo B — 122.89 cm</span>
-          <span class="item"><span class="swatch" style="background:var(--a-C)"></span>Tipo C — 106.16 cm</span>
-        </div>
-        <span class="hint">Arrastrar: rotar · Rueda: zoom</span>
-      </div>
-      <div class="viewer-rel">
-        <canvas id="domeCanvas"></canvas>
-        <div id="hubTip" hidden></div>
-      </div>
-      <div class="viewer-foot">
-        <label class="toggle"><input type="checkbox" id="toggleMembrane"> Mostrar cubierta (membrana)</label>
-        <div style="display:flex; gap:10px; align-items:center;">
-          <span class="hint">Tamaño del punto = nº de barras en el nodo</span>
-          <button class="ghost" id="resetView">Reiniciar vista</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="barras">
-    <div class="sec-head"><span class="sec-no mono">02</span><h2>Barras — lista de corte</h2></div>
-    <p class="sec-sub">120 barras en solo 3 longitudes. La medida es centro de nodo a centro de nodo — resta el largo de tu conector en cada extremo antes de cortar. Con tubo de 32 mm el retiro mínimo es 3.1 cm por extremo (a menos distancia los tubos chocan en los nodos de 54.63°); con disco de ⌀13 cm, del orden de 6.5 cm.</p>
-
-    <div class="card tbl-wrap">
-      <table>
-        <thead><tr><th>Tipo</th><th class="num">Longitud</th><th class="num">Cantidad</th><th class="num">Total</th></tr></thead>
-        <tbody>
-          <tr><td><span class="pill" style="background:color-mix(in srgb, var(--a-A) 14%, transparent); color:var(--a-A);"><span class="sw" style="background:var(--a-A)"></span>A</span></td><td class="num tab">125.59 cm</td><td class="num tab">50</td><td class="num tab">62.80 m</td></tr>
-          <tr><td><span class="pill" style="background:color-mix(in srgb, var(--a-B) 14%, transparent); color:var(--a-B);"><span class="sw" style="background:var(--a-B)"></span>B</span></td><td class="num tab">122.89 cm</td><td class="num tab">40</td><td class="num tab">49.16 m</td></tr>
-          <tr><td><span class="pill" style="background:color-mix(in srgb, var(--a-C) 14%, transparent); color:var(--a-C);"><span class="sw" style="background:var(--a-C)"></span>C</span></td><td class="num tab">106.16 cm</td><td class="num tab">30</td><td class="num tab">31.85 m</td></tr>
-          <tr class="total"><td>Total</td><td></td><td class="num tab">120</td><td class="num tab">143.80 m</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="twocol">
-      <div class="card bar-card panel">
-        <h3>Barras comerciales de 6 m</h3>
-        <div class="sub">Corte optimizado (nesting), 3 mm de pérdida por corte</div>
-        <div class="big tab">27 <span style="font-size:14px;font-weight:500;color:var(--ink-2);">barras</span></div>
-        <div class="sub">162.0 m comprados · 143.8 m usados</div>
-        <div class="waste-bar"><i style="width:11.2%"></i></div>
-        <div class="sub">11.2% de desperdicio</div>
-        <div class="patternlist">
-          <div>12× [A,A,A,A]</div>
-          <div>9× [B,B,B,B,C]</div>
-          <div>3× [C,C,C,C,C]</div>
-          <div>3× patrones mixtos restantes</div>
-        </div>
-      </div>
-      <div class="card bar-card panel">
-        <h3>Barras comerciales de 12 m</h3>
-        <div class="sub">Corte optimizado (nesting), 3 mm de pérdida por corte</div>
-        <div class="big tab">13 <span style="font-size:14px;font-weight:500;color:var(--ink-2);">barras</span></div>
-        <div class="sub">156.0 m comprados · 143.8 m usados</div>
-        <div class="waste-bar"><i style="width:7.8%"></i></div>
-        <div class="sub">7.8% de desperdicio — recomendado si está disponible</div>
-        <div class="patternlist">
-          <div>5× 9×A</div>
-          <div>4× 9×B</div>
-          <div>2× 11×C</div>
-          <div>2× patrones mixtos restantes</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="nodos">
-    <div class="sec-head"><span class="sec-no mono">03</span><h2>Nodos — 5 tipos, 46 hubs</h2></div>
-    <p class="sec-sub">La simetría del domo reduce 46 nodos a solo 5 geometrías distintas. Cada diagrama es la plantilla del disco del nodo: muestra el <strong>azimut</strong> entre pestañas consecutivas medido sobre el disco plano (en los nodos cerrados suma exactamente 360°). Después de marcar, cada pestaña se inclina hacia abajo el ángulo indicado abajo (bajo el plano tangente).</p>
-    <div class="card note warn" style="margin-bottom:6px"><h3>⚠ Corregido en la auditoría del 2026-09-24</h3><p>La versión anterior dibujaba aquí el ángulo 3D entre tubos (54.63°, 60.71°, 58.58°, 70.73°) y decía que eran los ángulos a marcar en el disco. No lo son: suman menos de 360° y un disco marcado así queda desviado entre 1.06° y 1.45° por pestaña (≈3 cm en el otro extremo de una barra). Los valores correctos para marcar son 55.69°, 62.15°, 60.00° y 72.00°.</p></div>
-    <div id="hubGallery" class="hubgrid"></div>
-  </section>
-
-  <section id="base">
-    <div class="sec-head"><span class="sec-no mono">04</span><h2>Anillo base y anclaje</h2></div>
-    <p class="sec-sub">El borde del domo no es un anillo plano de 10 puntos — son 15 nodos en zigzag: 10 "bajos" sobre un círculo de 6.00 m de diámetro, y 5 "altos" 4.86 cm por encima de ellos. Esto es normal en cualquier domo geodésico real.</p>
-
-    <div class="baseflex">
-      <svg id="basePlan" viewBox="0 0 340 340"></svg>
-      <div class="basenotes card panel">
-        <ol>
-          <li><strong>10 nodos bajos</strong> (tipo H4) apoyan directo sobre el anillo de fundación, a 3.000 m del eje central — diámetro exacto 6.00 m.</li>
-          <li><strong>5 nodos altos</strong> (tipo H5) van 4.86 cm más arriba y 0.9 cm más adentro — prácticamente el mismo radio, solo más alto.</li>
-          <li>Solución más simple: soldar un taco/riser de <strong>4.86 cm</strong> bajo cada uno de los 5 nodos altos, y dejar los 10 bajos al ras de la plataforma. No se necesita barra adicional — las 15 barras del borde ya están incluidas en el conteo de tipo A y B.</li>
-          <li>Perímetro total del borde: <strong>18.70 m</strong> — útil como referencia para el anillo de fundación o cadena de amarre.</li>
-        </ol>
-      </div>
-    </div>
-  </section>
-
-  <section id="cubierta">
-    <div class="sec-head"><span class="sec-no mono">05</span><h2>Cubierta (membrana)</h2></div>
-    <p class="sec-sub">Suma de las 75 caras triangulares del domo.</p>
-    <div class="statgrid" style="margin-top:4px;">
-      <div class="stat"><div class="v tab">46.2<span class="u">m²</span></div><div class="l">Área de superficie</div></div>
-      <div class="stat"><div class="v tab">51.8<span class="u">m²</span></div><div class="l">Con 12% de merma — con solape de 3–5 cm por lado las piezas solas ya suman 55–61 m²</div></div>
-      <div class="stat"><div class="v tab">75</div><div class="l">Paneles triangulares</div></div>
-      <div class="stat"><div class="v tab">44.1<span class="u">m³</span></div><div class="l">Volumen interior</div></div>
-    </div>
-
-    <div class="card tbl-wrap" style="margin-top:16px;">
-      <table>
-        <thead><tr><th>Panel</th><th>Lados</th><th class="num">Ángulos</th><th class="num">Área c/u</th><th class="num">Cantidad</th><th class="num">Área total</th></tr></thead>
-        <tbody>
-          <tr><td><b>P1</b></td><td class="mono">A·A·B — 125.59·125.59·122.89 cm</td><td class="num mono">60.7°·60.7°·58.6°</td><td class="num tab">0.673 m²</td><td class="num tab">45</td><td class="num tab">30.29 m²</td></tr>
-          <tr><td><b>P2</b></td><td class="mono">B·C·C — 122.89·106.16·106.16 cm</td><td class="num mono">70.7°·54.6°·54.6°</td><td class="num tab">0.532 m²</td><td class="num tab">30</td><td class="num tab">15.96 m²</td></tr>
-          <tr class="total"><td colspan="4">Solo 2 formas de panel para todo el domo</td><td class="num tab">75</td><td class="num tab">46.24 m²</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section id="cargas">
-    <div class="sec-head"><span class="sec-no mono">06</span><h2>Cargas — peso, viento y sismo</h2></div>
-    <p class="sec-sub">Peso propio calculado directo de la geometría. Viento y sismo son <strong>estimaciones ilustrativas</strong> (marcadas con *) — no sustituyen el cálculo con los datos oficiales de sitio, ver notas abajo.</p>
-
-    <div class="statgrid" style="margin-top:4px;">
-      <div class="stat"><div class="v tab">278<span class="u">kg</span></div><div class="l">Peso total del domo</div></div>
-      <div class="stat"><div class="v tab">18.6<span class="u">kg</span></div><div class="l">Carga prom./nodo (peso propio)</div></div>
-      <div class="stat"><div class="v tab">330<span class="u">kgf</span></div><div class="l">Empuje lateral de viento *</div></div>
-      <div class="stat"><div class="v tab">1091<span class="u">kgf</span></div><div class="l">Succión en cresta, referencia *</div></div>
-      <div class="stat"><div class="v tab">83.5<span class="u">kgf</span></div><div class="l">Fuerza sísmica horizontal **</div></div>
-      <div class="stat"><div class="v tab">73<span class="u">kgf</span></div><div class="l">Succión prom./nodo (ilustrativa)</div></div>
-      <div class="stat"><div class="v tab">1.18×</div><div class="l">Viento / peso propio</div></div>
-      <div class="stat"><div class="v tab">0.25×</div><div class="l">Sismo / viento</div></div>
-    </div>
-    <p class="sec-sub" style="margin-top:10px; font-size:11.5px; max-width:none;">* Viento: V=100 km/h ilustrativo (ráfaga capaz de arrancar árboles, según referencia local). ** Sismo: Ao=0.30g ilustrativo, elegido por la proximidad de Tovar a la falla de Boconó — un sismo fuerte sin registro reciente no significa zona de bajo peligro, así que este valor no se bajó por la ausencia de sismos recientes. Ninguno de los dos reemplaza COVENIN-MINDUR 2003 / COVENIN 1756.</p>
-
-    <div class="notegrid" style="margin-top:18px;">
-      <div class="card note panel">
-        <h3>El viento gobierna, no el sismo</h3>
-        <p>Para una estructura tan liviana, la fuerza sísmica ilustrativa (83.5 kgf) es ~4× menor que el empuje de viento (330 kgf). El sismo escala con la masa del domo —que pesa poco—, mientras el viento escala con el área expuesta. El viento manda el dimensionamiento lateral; el sismo importa sobre todo por la ductilidad del anclaje.</p>
-      </div>
-      <div class="card note panel warn">
-        <h3>⚠ El anclaje debe resistir tensión, no solo peso</h3>
-        <p>La succión de viento en la cresta llega a varias veces el peso propio del domo. Los 15 nodos de fundación —sobre todo los 5 "altos" (H5)— necesitan pernos de anclaje mecánicos diseñados a tracción/arranque, no solo apoyo por gravedad.</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="notas">
-    <div class="sec-head"><span class="sec-no mono">07</span><h2>Notas de construcción</h2></div>
-    <div class="notegrid">
-      <div class="card note panel">
-        <h3>Tubo recomendado</h3>
-        <p>Redondo, <strong>32 mm OD × 2 mm de pared</strong>, acero estructural galvanizado. Chequeo de pandeo (Euler, apoyo simple) en la barra más larga (125.59 cm): carga crítica elástica ≈ 2.7 t; la capacidad de diseño (AISC 360, rango inelástico, KL/r≈118) es ≈1.3–2.1 t. El análisis de armadura de la auditoría da como máximo ≈0.12 t de compresión con los supuestos de §06, así que la sección alcanza como barra axial. No caminar sobre las barras: 100 kg a media barra la llevan al límite de fluencia.</p>
-      </div>
-      <div class="card note panel">
-        <h3>Galvanizar después de soldar</h3>
-        <p>No sueldes tubo pre-galvanizado: el zinc se quema justo en la unión, que es donde más protección se necesita en un clima húmedo como Cucuchica. Corta, taladra y suelda primero — galvaniza al final. Ojo: si el domo se arma soldando en sitio, esas uniones se sueldan después del galvanizado y hay que repararlas con galvanizado en frío (pintura rica en zinc). Los tubos cerrados necesitan agujeros de venteo para el baño en caliente.</p>
-      </div>
-      <div class="card note panel">
-        <h3>Una sola sección de tubo</h3>
-        <p>Los 3 tipos de barra (A/B/C) difieren entre 2.7 y 19.4 cm entre sí. Usar la misma sección en toda la estructura simplifica el taller — no hay ganancia real en variar el calibre por tramo.</p>
-      </div>
-      <div class="card note panel warn">
-        <h3>⚠ Verificación estructural pendiente</h3>
-        <p>Ya se estimó peso propio, viento y sismo (§06) con valores ilustrativos. Falta reemplazarlos por los datos oficiales de sitio (COVENIN-MINDUR 2003 / COVENIN 1756 para Tovar) y la revisión final de un ingeniero estructural matriculado, dado que la unidad va a alojar personas.</p>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    Geometría generada por subdivisión icosaédrica (Clase I, frecuencia 3V), proyección radial sobre esfera de radio 3.045 m, corte justo sobre el ecuador. Todos los valores de esta página se derivan directamente de esa malla — sin tablas de referencia externas.
-  </footer>
+<section id="piezas">
+  <div class="sec-head"><h2>Piezas y plan de corte</h2></div>
+  <p class="sec-sub">Largos de centro de nodo a centro de nodo, y el largo de corte según el retiro por extremo que resulte del nodo de prueba. Plan de corte en barras comerciales de 6 m con 3 mm de disco por corte.</p>
+  <div class="seg" role="group" aria-label="Retiro por extremo">
+    <span class="seg-l">Retiro por extremo:</span>
+    <button type="button" class="segbtn" data-sb="0" aria-pressed="false">3.5 cm</button><button type="button" class="segbtn" data-sb="1" aria-pressed="true">5.0 cm</button><button type="button" class="segbtn" data-sb="2" aria-pressed="false">6.5 cm</button>
+  </div>
+  <div class="cutblock" data-sb="0" hidden>
+  <div class="tbl"><table><thead><tr><th>Pieza</th><th>Qué es</th><th>Tubo</th><th class="num">Cant.</th><th class="num">Centro a centro (cm)</th><th class="num">Cortar a (cm)</th><th>Nota</th></tr></thead><tbody><tr><td><span class='code' style='--c:var(--sA);color:#fff'>A</span></td><td>barra A del domo</td><td>tubo redondo 32x2</td><td class='num'>48</td><td class='num'>125.59</td><td class='num strong'>118.59</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--sB);color:#fff'>B</span></td><td>barra B del domo</td><td>tubo redondo 32x2</td><td class='num'>37</td><td class='num'>122.89</td><td class='num strong'>115.89</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--sC);color:#fff'>C</span></td><td>barra C del domo</td><td>tubo redondo 32x2</td><td class='num'>25</td><td class='num'>106.16</td><td class='num strong'>99.16</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>V</span></td><td>viga del techo del vestíbulo</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>200.25</td><td class='num strong'>193.25</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K1</span></td><td>amarre marco–nodo lateral bajo</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>123.68</td><td class='num strong'>116.68</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K2</span></td><td>amarre marco–nodo lateral alto</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>152.97</td><td class='num strong'>145.97</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>P</span></td><td>poste del marco</td><td>tubo cuadrado 50x50x2</td><td class='num'>2</td><td class='num'>210.00</td><td class='num strong'>212.50</td><td class='small muted'>desde el eje del nodo de anclaje hasta el tope del marco; restar el detalle de la placa base</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>D</span></td><td>dintel del marco</td><td>tubo cuadrado 50x50x2</td><td class='num'>1</td><td class='num'>122.89</td><td class='num strong'>117.89</td><td class='small muted'>va entre las caras interiores de los postes</td></tr></tbody></table></div>
+  <p class="sum"><b>24 barras de 6 m</b> de tubo redondo 32×2 (desperdicio 7.1%, al menos 56 mm de sobra en cada barra) <b>+ 1 barra de 6 m</b> de tubo cuadrado 50×50×2 para el marco.</p>
+  <div class="panel cuts"><div class='cutrow'><div class='cutlabel'>× 8 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="176.8" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="235.1" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="293.0" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="351.3" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="409.2" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="467.5" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="525.4" y="19" text-anchor="middle" class="seglbl">B · 115.9</text></svg><div class='cutnote'>sobran 164 mm</div></div><div class='cutrow'><div class='cutlabel'>× 6 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="178.2" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="237.8" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="297.1" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="356.7" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="416.0" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="475.5" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="534.8" y="19" text-anchor="middle" class="seglbl">A · 118.6</text></svg><div class='cutnote'>sobran 56 mm</div></div><div class='cutrow'><div class='cutlabel'>× 6 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 99.2 cm"/><text x="168.5" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="218.3" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 99.2 cm"/><text x="267.9" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="317.8" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 99.2 cm"/><text x="367.4" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="417.3" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 99.2 cm"/><text x="466.8" y="19" text-anchor="middle" class="seglbl">C · 99.2</text></svg><div class='cutnote'>sobran 833 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="178.2" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="237.8" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="297.1" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="356.7" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="414.6" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="472.8" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="530.8" y="19" text-anchor="middle" class="seglbl">B · 115.9</text></svg><div class='cutnote'>sobran 110 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 118.6 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="176.8" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="235.1" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="293.0" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="351.3" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 115.9 cm"/><text x="409.2" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="467.5" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 99.2 cm"/><text x="517.0" y="19" text-anchor="middle" class="seglbl">C · 99.2</text></svg><div class='cutnote'>sobran 331 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="191.3" height="22" rx="3" class="seg-door" data-tip="V: cortar a 193.3 cm"/><text x="96.6" y="19" text-anchor="middle" class="seglbl">V · 193.3</text><rect x="193.6" y="4" width="191.3" height="22" rx="3" class="seg-door" data-tip="V: cortar a 193.3 cm"/><text x="290.2" y="19" text-anchor="middle" class="seglbl">V · 193.3</text><rect x="387.1" y="4" width="144.0" height="22" rx="3" class="seg-door" data-tip="K2: cortar a 146.0 cm"/><text x="460.1" y="19" text-anchor="middle" class="seglbl">K2 · 146.0</text></svg><div class='cutnote'>sobran 666 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="114.7" height="22" rx="3" class="seg-door" data-tip="K1: cortar a 116.7 cm"/><text x="58.3" y="19" text-anchor="middle" class="seglbl">K1 · 116.7</text><rect x="117.0" y="4" width="114.7" height="22" rx="3" class="seg-door" data-tip="K1: cortar a 116.7 cm"/><text x="175.3" y="19" text-anchor="middle" class="seglbl">K1 · 116.7</text><rect x="234.0" y="4" width="144.0" height="22" rx="3" class="seg-door" data-tip="K2: cortar a 146.0 cm"/><text x="306.9" y="19" text-anchor="middle" class="seglbl">K2 · 146.0</text></svg><div class='cutnote'>sobran 2198 mm</div></div></div>
+</div><div class="cutblock" data-sb="1" >
+  <div class="tbl"><table><thead><tr><th>Pieza</th><th>Qué es</th><th>Tubo</th><th class="num">Cant.</th><th class="num">Centro a centro (cm)</th><th class="num">Cortar a (cm)</th><th>Nota</th></tr></thead><tbody><tr><td><span class='code' style='--c:var(--sA);color:#fff'>A</span></td><td>barra A del domo</td><td>tubo redondo 32x2</td><td class='num'>48</td><td class='num'>125.59</td><td class='num strong'>115.59</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--sB);color:#fff'>B</span></td><td>barra B del domo</td><td>tubo redondo 32x2</td><td class='num'>37</td><td class='num'>122.89</td><td class='num strong'>112.89</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--sC);color:#fff'>C</span></td><td>barra C del domo</td><td>tubo redondo 32x2</td><td class='num'>25</td><td class='num'>106.16</td><td class='num strong'>96.16</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>V</span></td><td>viga del techo del vestíbulo</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>200.25</td><td class='num strong'>190.25</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K1</span></td><td>amarre marco–nodo lateral bajo</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>123.68</td><td class='num strong'>113.68</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K2</span></td><td>amarre marco–nodo lateral alto</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>152.97</td><td class='num strong'>142.97</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>P</span></td><td>poste del marco</td><td>tubo cuadrado 50x50x2</td><td class='num'>2</td><td class='num'>210.00</td><td class='num strong'>212.50</td><td class='small muted'>desde el eje del nodo de anclaje hasta el tope del marco; restar el detalle de la placa base</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>D</span></td><td>dintel del marco</td><td>tubo cuadrado 50x50x2</td><td class='num'>1</td><td class='num'>122.89</td><td class='num strong'>117.89</td><td class='small muted'>va entre las caras interiores de los postes</td></tr></tbody></table></div>
+  <p class="sum"><b>23 barras de 6 m</b> de tubo redondo 32×2 (desperdicio 5.6%, al menos 45 mm de sobra en cada barra) <b>+ 1 barra de 6 m</b> de tubo cuadrado 50×50×2 para el marco.</p>
+  <div class="panel cuts"><div class='cutrow'><div class='cutlabel'>× 8 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="113.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 115.6 cm"/><text x="57.8" y="19" text-anchor="middle" class="seglbl">A · 115.6</text><rect x="115.9" y="4" width="113.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 115.6 cm"/><text x="173.7" y="19" text-anchor="middle" class="seglbl">A · 115.6</text><rect x="231.8" y="4" width="113.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 115.6 cm"/><text x="289.6" y="19" text-anchor="middle" class="seglbl">A · 115.6</text><rect x="347.7" y="4" width="113.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 115.6 cm"/><text x="405.5" y="19" text-anchor="middle" class="seglbl">A · 115.6</text><rect x="463.5" y="4" width="113.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 115.6 cm"/><text x="521.3" y="19" text-anchor="middle" class="seglbl">A · 115.6</text></svg><div class='cutnote'>sobran 206 mm</div></div><div class='cutrow'><div class='cutlabel'>× 8 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="113.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 115.6 cm"/><text x="57.8" y="19" text-anchor="middle" class="seglbl">A · 115.6</text><rect x="115.9" y="4" width="110.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 112.9 cm"/><text x="172.3" y="19" text-anchor="middle" class="seglbl">B · 112.9</text><rect x="229.1" y="4" width="110.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 112.9 cm"/><text x="285.5" y="19" text-anchor="middle" class="seglbl">B · 112.9</text><rect x="342.3" y="4" width="110.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 112.9 cm"/><text x="398.7" y="19" text-anchor="middle" class="seglbl">B · 112.9</text><rect x="455.5" y="4" width="110.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 112.9 cm"/><text x="511.9" y="19" text-anchor="middle" class="seglbl">B · 112.9</text></svg><div class='cutnote'>sobran 314 mm</div></div><div class='cutrow'><div class='cutlabel'>× 5 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="110.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 112.9 cm"/><text x="56.4" y="19" text-anchor="middle" class="seglbl">B · 112.9</text><rect x="113.2" y="4" width="94.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 96.2 cm"/><text x="161.3" y="19" text-anchor="middle" class="seglbl">C · 96.2</text><rect x="209.6" y="4" width="94.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 96.2 cm"/><text x="257.7" y="19" text-anchor="middle" class="seglbl">C · 96.2</text><rect x="306.1" y="4" width="94.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 96.2 cm"/><text x="354.2" y="19" text-anchor="middle" class="seglbl">C · 96.2</text><rect x="402.6" y="4" width="94.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 96.2 cm"/><text x="450.6" y="19" text-anchor="middle" class="seglbl">C · 96.2</text><rect x="499.0" y="4" width="94.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 96.2 cm"/><text x="547.1" y="19" text-anchor="middle" class="seglbl">C · 96.2</text></svg><div class='cutnote'>sobran 45 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="188.3" height="22" rx="3" class="seg-door" data-tip="V: cortar a 190.3 cm"/><text x="95.1" y="19" text-anchor="middle" class="seglbl">V · 190.3</text><rect x="190.6" y="4" width="188.3" height="22" rx="3" class="seg-door" data-tip="V: cortar a 190.3 cm"/><text x="285.7" y="19" text-anchor="middle" class="seglbl">V · 190.3</text><rect x="381.1" y="4" width="141.0" height="22" rx="3" class="seg-door" data-tip="K2: cortar a 143.0 cm"/><text x="452.6" y="19" text-anchor="middle" class="seglbl">K2 · 143.0</text></svg><div class='cutnote'>sobran 756 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="111.7" height="22" rx="3" class="seg-door" data-tip="K1: cortar a 113.7 cm"/><text x="56.8" y="19" text-anchor="middle" class="seglbl">K1 · 113.7</text><rect x="114.0" y="4" width="111.7" height="22" rx="3" class="seg-door" data-tip="K1: cortar a 113.7 cm"/><text x="170.8" y="19" text-anchor="middle" class="seglbl">K1 · 113.7</text><rect x="228.0" y="4" width="141.0" height="22" rx="3" class="seg-door" data-tip="K2: cortar a 143.0 cm"/><text x="299.4" y="19" text-anchor="middle" class="seglbl">K2 · 143.0</text></svg><div class='cutnote'>sobran 2288 mm</div></div></div>
+</div><div class="cutblock" data-sb="2" hidden>
+  <div class="tbl"><table><thead><tr><th>Pieza</th><th>Qué es</th><th>Tubo</th><th class="num">Cant.</th><th class="num">Centro a centro (cm)</th><th class="num">Cortar a (cm)</th><th>Nota</th></tr></thead><tbody><tr><td><span class='code' style='--c:var(--sA);color:#fff'>A</span></td><td>barra A del domo</td><td>tubo redondo 32x2</td><td class='num'>48</td><td class='num'>125.59</td><td class='num strong'>112.59</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--sB);color:#fff'>B</span></td><td>barra B del domo</td><td>tubo redondo 32x2</td><td class='num'>37</td><td class='num'>122.89</td><td class='num strong'>109.89</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--sC);color:#fff'>C</span></td><td>barra C del domo</td><td>tubo redondo 32x2</td><td class='num'>25</td><td class='num'>106.16</td><td class='num strong'>93.16</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>V</span></td><td>viga del techo del vestíbulo</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>200.25</td><td class='num strong'>187.25</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K1</span></td><td>amarre marco–nodo lateral bajo</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>123.68</td><td class='num strong'>110.68</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K2</span></td><td>amarre marco–nodo lateral alto</td><td>tubo redondo 32x2</td><td class='num'>2</td><td class='num'>152.97</td><td class='num strong'>139.97</td><td class='small muted'>L − 2 × retiro</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>P</span></td><td>poste del marco</td><td>tubo cuadrado 50x50x2</td><td class='num'>2</td><td class='num'>210.00</td><td class='num strong'>212.50</td><td class='small muted'>desde el eje del nodo de anclaje hasta el tope del marco; restar el detalle de la placa base</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>D</span></td><td>dintel del marco</td><td>tubo cuadrado 50x50x2</td><td class='num'>1</td><td class='num'>122.89</td><td class='num strong'>117.89</td><td class='small muted'>va entre las caras interiores de los postes</td></tr></tbody></table></div>
+  <p class="sum"><b>23 barras de 6 m</b> de tubo redondo 32×2 (desperdicio 8.2%, al menos 198 mm de sobra en cada barra) <b>+ 1 barra de 6 m</b> de tubo cuadrado 50×50×2 para el marco.</p>
+  <div class="panel cuts"><div class='cutrow'><div class='cutlabel'>× 9 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="56.3" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="112.9" y="4" width="107.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 109.9 cm"/><text x="167.8" y="19" text-anchor="middle" class="seglbl">B · 109.9</text><rect x="223.1" y="4" width="107.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 109.9 cm"/><text x="278.0" y="19" text-anchor="middle" class="seglbl">B · 109.9</text><rect x="333.3" y="4" width="107.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 109.9 cm"/><text x="388.2" y="19" text-anchor="middle" class="seglbl">B · 109.9</text><rect x="443.5" y="4" width="107.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 109.9 cm"/><text x="498.4" y="19" text-anchor="middle" class="seglbl">B · 109.9</text></svg><div class='cutnote'>sobran 464 mm</div></div><div class='cutrow'><div class='cutlabel'>× 6 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="56.3" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="112.9" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="169.2" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="225.8" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="282.1" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="338.7" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="395.0" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="451.5" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="507.8" y="19" text-anchor="middle" class="seglbl">A · 112.6</text></svg><div class='cutnote'>sobran 356 mm</div></div><div class='cutrow'><div class='cutlabel'>× 5 barras</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="56.3" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="112.9" y="4" width="91.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 93.2 cm"/><text x="159.5" y="19" text-anchor="middle" class="seglbl">C · 93.2</text><rect x="206.3" y="4" width="91.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 93.2 cm"/><text x="252.9" y="19" text-anchor="middle" class="seglbl">C · 93.2</text><rect x="299.8" y="4" width="91.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 93.2 cm"/><text x="346.4" y="19" text-anchor="middle" class="seglbl">C · 93.2</text><rect x="393.3" y="4" width="91.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 93.2 cm"/><text x="439.8" y="19" text-anchor="middle" class="seglbl">C · 93.2</text><rect x="486.7" y="4" width="91.2" height="22" rx="3" class="seg-C" data-tip="C: cortar a 93.2 cm"/><text x="533.3" y="19" text-anchor="middle" class="seglbl">C · 93.2</text></svg><div class='cutnote'>sobran 198 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="56.3" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="112.9" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="169.2" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="225.8" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="282.1" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="338.7" y="4" width="110.6" height="22" rx="3" class="seg-A" data-tip="A: cortar a 112.6 cm"/><text x="395.0" y="19" text-anchor="middle" class="seglbl">A · 112.6</text><rect x="451.5" y="4" width="107.9" height="22" rx="3" class="seg-B" data-tip="B: cortar a 109.9 cm"/><text x="506.5" y="19" text-anchor="middle" class="seglbl">B · 109.9</text></svg><div class='cutnote'>sobran 383 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="185.3" height="22" rx="3" class="seg-door" data-tip="V: cortar a 187.3 cm"/><text x="93.6" y="19" text-anchor="middle" class="seglbl">V · 187.3</text><rect x="187.6" y="4" width="185.3" height="22" rx="3" class="seg-door" data-tip="V: cortar a 187.3 cm"/><text x="281.2" y="19" text-anchor="middle" class="seglbl">V · 187.3</text><rect x="375.1" y="4" width="138.0" height="22" rx="3" class="seg-door" data-tip="K2: cortar a 140.0 cm"/><text x="445.1" y="19" text-anchor="middle" class="seglbl">K2 · 140.0</text></svg><div class='cutnote'>sobran 846 mm</div></div><div class='cutrow'><div class='cutlabel'>× 1 barra</div><svg viewBox="0 0 600 30" role="img" aria-label="Barra de 6 m"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="108.7" height="22" rx="3" class="seg-door" data-tip="K1: cortar a 110.7 cm"/><text x="55.3" y="19" text-anchor="middle" class="seglbl">K1 · 110.7</text><rect x="111.0" y="4" width="108.7" height="22" rx="3" class="seg-door" data-tip="K1: cortar a 110.7 cm"/><text x="166.3" y="19" text-anchor="middle" class="seglbl">K1 · 110.7</text><rect x="222.0" y="4" width="138.0" height="22" rx="3" class="seg-door" data-tip="K2: cortar a 140.0 cm"/><text x="291.9" y="19" text-anchor="middle" class="seglbl">K2 · 140.0</text></svg><div class='cutnote'>sobran 2378 mm</div></div></div>
 </div>
+</section>
 
-<script id="dome-data" type="application/json">
-{"meta": {"R": 3.045190898645163, "base_diameter": 6.0, "apex_height": 2.5225}, "vertices": [{"id": 0, "pos": [-1.601, 2.5904, 0.0], "height_rel": 2.5225, "hub_type": "H3", "degree": 5}, {"id": 1, "pos": [-2.2231, 1.9884, 0.6144], "height_rel": 2.3375, "hub_type": "H1", "degree": 6}, {"id": 2, "pos": [-2.6028, 0.9942, 1.2289], "height_rel": 1.6914, "hub_type": "H1", "degree": 6}, {"id": 3, "pos": [-2.5904, 0.0, 1.601], "height_rel": 0.8392, "hub_type": "H3", "degree": 5}, {"id": 4, "pos": [-1.2289, 2.6028, 0.9942], "height_rel": 2.3375, "hub_type": "H1", "degree": 6}, {"id": 5, "pos": [-1.7581, 1.7581, 1.7581], "height_rel": 1.8972, "hub_type": "H2", "degree": 6}, {"id": 6, "pos": [-1.9884, 0.6144, 2.2231], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 7, "pos": [-0.6144, 2.2231, 1.9884], "height_rel": 1.6914, "hub_type": "H1", "degree": 6}, {"id": 8, "pos": [-0.9942, 1.2289, 2.6028], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 9, "pos": [0.0, 1.601, 2.5904], "height_rel": 0.8392, "hub_type": "H3", "degree": 5}, {"id": 10, "pos": [0.0, 0.6144, 2.9826], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 11, "pos": [0.9942, 1.2289, 2.6028], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 12, "pos": [-1.9884, -0.6144, 2.2231], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 13, "pos": [-1.0866, 0.0, 2.8447], "height_rel": 0.0486, "hub_type": "H5", "degree": 4}, {"id": 14, "pos": [0.9942, 1.2289, -2.6028], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 15, "pos": [0.0, 1.601, -2.5904], "height_rel": 0.8392, "hub_type": "H3", "degree": 5}, {"id": 16, "pos": [0.0, 0.6144, -2.9826], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 17, "pos": [-2.5904, 0.0, -1.601], "height_rel": 0.8392, "hub_type": "H3", "degree": 5}, {"id": 18, "pos": [-1.9884, 0.6144, -2.2231], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 19, "pos": [-0.9942, 1.2289, -2.6028], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 20, "pos": [-1.9884, -0.6144, -2.2231], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 21, "pos": [-1.0866, 0.0, -2.8447], "height_rel": 0.0486, "hub_type": "H5", "degree": 4}, {"id": 22, "pos": [-2.6028, 0.9942, -1.2289], "height_rel": 1.6914, "hub_type": "H1", "degree": 6}, {"id": 23, "pos": [-1.7581, 1.7581, -1.7581], "height_rel": 1.8972, "hub_type": "H2", "degree": 6}, {"id": 24, "pos": [-0.6144, 2.2231, -1.9884], "height_rel": 1.6914, "hub_type": "H1", "degree": 6}, {"id": 25, "pos": [-2.2231, 1.9884, -0.6144], "height_rel": 2.3375, "hub_type": "H1", "degree": 6}, {"id": 26, "pos": [-1.2289, 2.6028, -0.9942], "height_rel": 2.3375, "hub_type": "H1", "degree": 6}, {"id": 27, "pos": [-2.9826, 0.0, -0.6144], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 28, "pos": [-2.9826, 0.0, 0.6144], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 29, "pos": [-2.8447, 1.0866, 0.0], "height_rel": 1.8972, "hub_type": "H2", "degree": 6}, {"id": 30, "pos": [1.601, 2.5904, 0.0], "height_rel": 0.8392, "hub_type": "H3", "degree": 5}, {"id": 31, "pos": [2.2231, 1.9884, 0.6144], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 32, "pos": [1.2289, 2.6028, 0.9942], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 33, "pos": [1.7581, 1.7581, 1.7581], "height_rel": 0.0486, "hub_type": "H5", "degree": 4}, {"id": 34, "pos": [0.6144, 2.2231, 1.9884], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 35, "pos": [0.6144, 2.9826, 0.0], "height_rel": 1.6914, "hub_type": "H1", "degree": 6}, {"id": 36, "pos": [0.0, 2.8447, 1.0866], "height_rel": 1.8972, "hub_type": "H2", "degree": 6}, {"id": 37, "pos": [-0.6144, 2.9826, 0.0], "height_rel": 2.3375, "hub_type": "H1", "degree": 6}, {"id": 38, "pos": [1.2289, 2.6028, -0.9942], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 39, "pos": [0.6144, 2.2231, -1.9884], "height_rel": 1.0453, "hub_type": "H1", "degree": 6}, {"id": 40, "pos": [0.0, 2.8447, -1.0866], "height_rel": 1.8972, "hub_type": "H2", "degree": 6}, {"id": 41, "pos": [2.2231, 1.9884, -0.6144], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 42, "pos": [1.7581, 1.7581, -1.7581], "height_rel": 0.0486, "hub_type": "H5", "degree": 4}, {"id": 43, "pos": [-2.6028, -0.9942, 1.2289], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 44, "pos": [-2.6028, -0.9942, -1.2289], "height_rel": 0.0, "hub_type": "H4", "degree": 4}, {"id": 45, "pos": [-2.8447, -1.0866, 0.0], "height_rel": 0.0486, "hub_type": "H5", "degree": 4}], "edges": [{"a": 0, "b": 1, "label": "C", "length_cm": 106.16}, {"a": 0, "b": 4, "label": "C", "length_cm": 106.16}, {"a": 0, "b": 25, "label": "C", "length_cm": 106.16}, {"a": 0, "b": 26, "label": "C", "length_cm": 106.16}, {"a": 0, "b": 37, "label": "C", "length_cm": 106.16}, {"a": 1, "b": 2, "label": "B", "length_cm": 122.89}, {"a": 1, "b": 4, "label": "B", "length_cm": 122.89}, {"a": 1, "b": 5, "label": "A", "length_cm": 125.59}, {"a": 1, "b": 25, "label": "B", "length_cm": 122.89}, {"a": 1, "b": 29, "label": "A", "length_cm": 125.59}, {"a": 2, "b": 3, "label": "C", "length_cm": 106.16}, {"a": 2, "b": 5, "label": "A", "length_cm": 125.59}, {"a": 2, "b": 6, "label": "B", "length_cm": 122.89}, {"a": 2, "b": 28, "label": "B", "length_cm": 122.89}, {"a": 2, "b": 29, "label": "A", "length_cm": 125.59}, {"a": 3, "b": 6, "label": "C", "length_cm": 106.16}, {"a": 3, "b": 12, "label": "C", "length_cm": 106.16}, {"a": 3, "b": 28, "label": "C", "length_cm": 106.16}, {"a": 3, "b": 43, "label": "C", "length_cm": 106.16}, {"a": 4, "b": 5, "label": "A", "length_cm": 125.59}, {"a": 4, "b": 7, "label": "B", "length_cm": 122.89}, {"a": 4, "b": 36, "label": "A", "length_cm": 125.59}, {"a": 4, "b": 37, "label": "B", "length_cm": 122.89}, {"a": 5, "b": 6, "label": "A", "length_cm": 125.59}, {"a": 5, "b": 7, "label": "A", "length_cm": 125.59}, {"a": 5, "b": 8, "label": "A", "length_cm": 125.59}, {"a": 6, "b": 8, "label": "B", "length_cm": 122.89}, {"a": 6, "b": 12, "label": "B", "length_cm": 122.89}, {"a": 6, "b": 13, "label": "A", "length_cm": 125.59}, {"a": 7, "b": 8, "label": "B", "length_cm": 122.89}, {"a": 7, "b": 9, "label": "C", "length_cm": 106.16}, {"a": 7, "b": 34, "label": "B", "length_cm": 122.89}, {"a": 7, "b": 36, "label": "A", "length_cm": 125.59}, {"a": 8, "b": 9, "label": "C", "length_cm": 106.16}, {"a": 8, "b": 10, "label": "B", "length_cm": 122.89}, {"a": 8, "b": 13, "label": "A", "length_cm": 125.59}, {"a": 9, "b": 10, "label": "C", "length_cm": 106.16}, {"a": 9, "b": 11, "label": "C", "length_cm": 106.16}, {"a": 9, "b": 34, "label": "C", "length_cm": 106.16}, {"a": 10, "b": 11, "label": "B", "length_cm": 122.89}, {"a": 10, "b": 13, "label": "A", "length_cm": 125.59}, {"a": 11, "b": 33, "label": "A", "length_cm": 125.59}, {"a": 11, "b": 34, "label": "B", "length_cm": 122.89}, {"a": 12, "b": 13, "label": "A", "length_cm": 125.59}, {"a": 12, "b": 43, "label": "B", "length_cm": 122.89}, {"a": 14, "b": 15, "label": "C", "length_cm": 106.16}, {"a": 14, "b": 16, "label": "B", "length_cm": 122.89}, {"a": 14, "b": 39, "label": "B", "length_cm": 122.89}, {"a": 14, "b": 42, "label": "A", "length_cm": 125.59}, {"a": 15, "b": 16, "label": "C", "length_cm": 106.16}, {"a": 15, "b": 19, "label": "C", "length_cm": 106.16}, {"a": 15, "b": 24, "label": "C", "length_cm": 106.16}, {"a": 15, "b": 39, "label": "C", "length_cm": 106.16}, {"a": 16, "b": 19, "label": "B", "length_cm": 122.89}, {"a": 16, "b": 21, "label": "A", "length_cm": 125.59}, {"a": 17, "b": 18, "label": "C", "length_cm": 106.16}, {"a": 17, "b": 20, "label": "C", "length_cm": 106.16}, {"a": 17, "b": 22, "label": "C", "length_cm": 106.16}, {"a": 17, "b": 27, "label": "C", "length_cm": 106.16}, {"a": 17, "b": 44, "label": "C", "length_cm": 106.16}, {"a": 18, "b": 19, "label": "B", "length_cm": 122.89}, {"a": 18, "b": 20, "label": "B", "length_cm": 122.89}, {"a": 18, "b": 21, "label": "A", "length_cm": 125.59}, {"a": 18, "b": 22, "label": "B", "length_cm": 122.89}, {"a": 18, "b": 23, "label": "A", "length_cm": 125.59}, {"a": 19, "b": 21, "label": "A", "length_cm": 125.59}, {"a": 19, "b": 23, "label": "A", "length_cm": 125.59}, {"a": 19, "b": 24, "label": "B", "length_cm": 122.89}, {"a": 20, "b": 21, "label": "A", "length_cm": 125.59}, {"a": 20, "b": 44, "label": "B", "length_cm": 122.89}, {"a": 22, "b": 23, "label": "A", "length_cm": 125.59}, {"a": 22, "b": 25, "label": "B", "length_cm": 122.89}, {"a": 22, "b": 27, "label": "B", "length_cm": 122.89}, {"a": 22, "b": 29, "label": "A", "length_cm": 125.59}, {"a": 23, "b": 24, "label": "A", "length_cm": 125.59}, {"a": 23, "b": 25, "label": "A", "length_cm": 125.59}, {"a": 23, "b": 26, "label": "A", "length_cm": 125.59}, {"a": 24, "b": 26, "label": "B", "length_cm": 122.89}, {"a": 24, "b": 39, "label": "B", "length_cm": 122.89}, {"a": 24, "b": 40, "label": "A", "length_cm": 125.59}, {"a": 25, "b": 26, "label": "B", "length_cm": 122.89}, {"a": 25, "b": 29, "label": "A", "length_cm": 125.59}, {"a": 26, "b": 37, "label": "B", "length_cm": 122.89}, {"a": 26, "b": 40, "label": "A", "length_cm": 125.59}, {"a": 27, "b": 28, "label": "B", "length_cm": 122.89}, {"a": 27, "b": 29, "label": "A", "length_cm": 125.59}, {"a": 27, "b": 44, "label": "B", "length_cm": 122.89}, {"a": 27, "b": 45, "label": "A", "length_cm": 125.59}, {"a": 28, "b": 29, "label": "A", "length_cm": 125.59}, {"a": 28, "b": 43, "label": "B", "length_cm": 122.89}, {"a": 28, "b": 45, "label": "A", "length_cm": 125.59}, {"a": 30, "b": 31, "label": "C", "length_cm": 106.16}, {"a": 30, "b": 32, "label": "C", "length_cm": 106.16}, {"a": 30, "b": 35, "label": "C", "length_cm": 106.16}, {"a": 30, "b": 38, "label": "C", "length_cm": 106.16}, {"a": 30, "b": 41, "label": "C", "length_cm": 106.16}, {"a": 31, "b": 32, "label": "B", "length_cm": 122.89}, {"a": 31, "b": 33, "label": "A", "length_cm": 125.59}, {"a": 31, "b": 41, "label": "B", "length_cm": 122.89}, {"a": 32, "b": 33, "label": "A", "length_cm": 125.59}, {"a": 32, "b": 34, "label": "B", "length_cm": 122.89}, {"a": 32, "b": 35, "label": "B", "length_cm": 122.89}, {"a": 32, "b": 36, "label": "A", "length_cm": 125.59}, {"a": 33, "b": 34, "label": "A", "length_cm": 125.59}, {"a": 34, "b": 36, "label": "A", "length_cm": 125.59}, {"a": 35, "b": 36, "label": "A", "length_cm": 125.59}, {"a": 35, "b": 37, "label": "B", "length_cm": 122.89}, {"a": 35, "b": 38, "label": "B", "length_cm": 122.89}, {"a": 35, "b": 40, "label": "A", "length_cm": 125.59}, {"a": 36, "b": 37, "label": "A", "length_cm": 125.59}, {"a": 37, "b": 40, "label": "A", "length_cm": 125.59}, {"a": 38, "b": 39, "label": "B", "length_cm": 122.89}, {"a": 38, "b": 40, "label": "A", "length_cm": 125.59}, {"a": 38, "b": 41, "label": "B", "length_cm": 122.89}, {"a": 38, "b": 42, "label": "A", "length_cm": 125.59}, {"a": 39, "b": 40, "label": "A", "length_cm": 125.59}, {"a": 39, "b": 42, "label": "A", "length_cm": 125.59}, {"a": 41, "b": 42, "label": "A", "length_cm": 125.59}, {"a": 43, "b": 45, "label": "A", "length_cm": 125.59}, {"a": 44, "b": 45, "label": "A", "length_cm": 125.59}], "triangles": [[0, 4, 1], [4, 5, 1], [1, 5, 2], [5, 6, 2], [2, 6, 3], [4, 7, 5], [7, 8, 5], [5, 8, 6], [7, 9, 8], [10, 9, 11], [13, 6, 12], [12, 6, 3], [10, 8, 13], [13, 8, 6], [10, 9, 8], [14, 16, 15], [17, 20, 18], [20, 21, 18], [18, 21, 19], [21, 16, 19], [19, 16, 15], [17, 22, 18], [22, 23, 18], [18, 23, 19], [23, 24, 19], [19, 24, 15], [22, 25, 23], [25, 26, 23], [23, 26, 24], [25, 0, 26], [17, 22, 27], [22, 29, 27], [27, 29, 28], [29, 2, 28], [28, 2, 3], [22, 25, 29], [25, 1, 29], [29, 1, 2], [25, 0, 1], [30, 32, 31], [32, 33, 31], [32, 34, 33], [34, 11, 33], [34, 9, 11], [30, 35, 32], [35, 36, 32], [32, 36, 34], [36, 7, 34], [34, 7, 9], [35, 37, 36], [37, 4, 36], [36, 4, 7], [37, 0, 4], [30, 35, 38], [35, 40, 38], [38, 40, 39], [40, 24, 39], [39, 24, 15], [35, 37, 40], [37, 26, 40], [40, 26, 24], [37, 0, 26], [30, 41, 38], [41, 42, 38], [38, 42, 39], [42, 14, 39], [39, 14, 15], [30, 41, 31], [43, 12, 3], [44, 17, 20], [45, 28, 43], [43, 28, 3], [44, 27, 45], [45, 27, 28], [44, 17, 27]], "hub_types": [{"type": "H1", "degree": 6, "closed": true, "strut_labels": ["A", "A", "B", "B", "B", "C"], "angles": [54.63, 54.63, 60.71, 60.71, 60.71, 60.71], "count": 20, "hub_ids": [1, 2, 4, 6, 7, 8, 47, 48, 52, 54, 55, 56, 57, 58, 63, 65, 66, 68, 69, 70], "example_detail": {"degree": 6, "is_closed_fan": true, "struts": [{"neighbor": 0, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}, {"neighbor": 4, "label": "B", "length_cm": 122.89, "tilt_from_tangent_deg": -11.64}, {"neighbor": 5, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 2, "label": "B", "length_cm": 122.89, "tilt_from_tangent_deg": -11.64}, {"neighbor": 59, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 55, "label": "B", "length_cm": 122.89, "tilt_from_tangent_deg": -11.64}], "angles_between_adjacent": [54.63, 60.71, 60.71, 60.71, 60.71, 54.63], "angle_sum_deg": 352.1, "height": 2.8601, "azimuths_between_adjacent": [55.6906, 62.1547, 62.1547, 62.1547, 62.1547, 55.6906]}}, {"type": "H2", "degree": 6, "closed": true, "strut_labels": ["A", "A", "A", "A", "A", "A"], "angles": [58.58, 58.58, 58.58, 58.58, 58.58, 58.58], "count": 5, "hub_ids": [5, 53, 59, 67, 71], "example_detail": {"degree": 6, "is_closed_fan": true, "struts": [{"neighbor": 1, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 4, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 7, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 8, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 6, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 2, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}], "angles_between_adjacent": [58.58, 58.58, 58.58, 58.58, 58.58, 58.58], "angle_sum_deg": 351.48, "height": 2.4199, "azimuths_between_adjacent": [60.0, 60.0, 60.0, 60.0, 60.0, 60.0]}}, {"type": "H3", "degree": 5, "closed": true, "strut_labels": ["C", "C", "C", "C", "C"], "angles": [70.73, 70.73, 70.73, 70.73, 70.73], "count": 6, "hub_ids": [0, 3, 9, 36, 46, 60], "example_detail": {"degree": 5, "is_closed_fan": true, "struts": [{"neighbor": 1, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}, {"neighbor": 4, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}, {"neighbor": 68, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}, {"neighbor": 56, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}, {"neighbor": 55, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}], "angles_between_adjacent": [70.73, 70.73, 70.73, 70.73, 70.73], "angle_sum_deg": 353.65, "height": 3.0452, "azimuths_between_adjacent": [72.0, 72.0, 72.0, 72.0, 72.0]}}, {"type": "H4", "degree": 4, "closed": false, "strut_labels": ["A", "B", "B", "C"], "angles": [54.63, 54.63, 60.71], "count": 10, "hub_ids": [23, 24, 26, 35, 39, 49, 61, 72, 78, 90], "example_detail": {"degree": 4, "is_closed_fan": false, "struts": [{"neighbor": 24, "label": "B", "length_cm": 122.89, "tilt_from_tangent_deg": -11.64}, {"neighbor": 9, "label": "C", "length_cm": 106.16, "tilt_from_tangent_deg": -10.04}, {"neighbor": 8, "label": "B", "length_cm": 122.89, "tilt_from_tangent_deg": -11.64}, {"neighbor": 27, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}], "angles_between_adjacent": [54.63, 54.63, 60.71], "angle_sum_deg": 169.97, "height": 0.5227, "azimuths_between_adjacent": [55.6906, 55.6906, 62.1547]}}, {"type": "H5", "degree": 4, "closed": false, "strut_labels": ["A", "A", "A", "A"], "angles": [58.58, 58.58, 58.58], "count": 5, "hub_ids": [27, 50, 64, 73, 91], "example_detail": {"degree": 4, "is_closed_fan": false, "struts": [{"neighbor": 26, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 6, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 8, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}, {"neighbor": 23, "label": "A", "length_cm": 125.59, "tilt_from_tangent_deg": -11.9}], "angles_between_adjacent": [58.58, 58.58, 58.58], "angle_sum_deg": 175.74, "height": 0.5713, "azimuths_between_adjacent": [60.0, 60.0, 60.0]}}], "base_ring_vertex_ids": [10, 11, 12, 13, 14, 16, 20, 21, 31, 33, 41, 42, 43, 44, 45], "base_ring_plan": [{"id": 21, "type": "H5", "angle_deg": 18.0, "radius_m": 2.9911, "height_cm": 4.86}, {"id": 20, "type": "H4", "angle_deg": 42.18, "radius_m": 3.0, "height_cm": 0.0}, {"id": 44, "type": "H4", "angle_deg": 65.82, "radius_m": 3.0, "height_cm": 0.0}, {"id": 45, "type": "H5", "angle_deg": 90.0, "radius_m": 2.9911, "height_cm": 4.86}, {"id": 43, "type": "H4", "angle_deg": 114.18, "radius_m": 3.0, "height_cm": 0.0}, {"id": 12, "type": "H4", "angle_deg": 137.82, "radius_m": 3.0, "height_cm": 0.0}, {"id": 13, "type": "H5", "angle_deg": 162.0, "radius_m": 2.9911, "height_cm": 4.86}, {"id": 10, "type": "H4", "angle_deg": 186.18, "radius_m": 3.0, "height_cm": 0.0}, {"id": 11, "type": "H4", "angle_deg": 209.82, "radius_m": 3.0, "height_cm": 0.0}, {"id": 33, "type": "H5", "angle_deg": 234.0, "radius_m": 2.9911, "height_cm": 4.86}, {"id": 31, "type": "H4", "angle_deg": 258.18, "radius_m": 3.0, "height_cm": 0.0}, {"id": 41, "type": "H4", "angle_deg": 281.82, "radius_m": 3.0, "height_cm": 0.0}, {"id": 42, "type": "H5", "angle_deg": 306.0, "radius_m": 2.9911, "height_cm": 4.86}, {"id": 14, "type": "H4", "angle_deg": 330.18, "radius_m": 3.0, "height_cm": 0.0}, {"id": 16, "type": "H4", "angle_deg": 353.82, "radius_m": 3.0, "height_cm": 0.0}], "base_perimeter_m": 18.703, "apex_vertex_id": 0, "axis_hint": {"note": "vertices are stored relative to the dome sphere center; apex has max projection on the dome axis"}, "strut_summary": {"C": {"count": 30, "length_cm": 106.16, "total_m": 31.848}, "B": {"count": 40, "length_cm": 122.89, "total_m": 49.156}, "A": {"count": 50, "length_cm": 125.59, "total_m": 62.795}}, "strut_total_m": 143.8}
-</script>
+<section id="nodos">
+  <div class="sec-head"><h2>Plantillas de los discos de nodo</h2></div>
+  <p class="sec-sub">Cada dibujo es el disco visto desde afuera del domo. El número en cada arco es el <b>azimut</b> a marcar entre pestañas consecutivas; al lado de cada barra va su <b>inclinación</b> respecto al disco (negativa = hacia adentro del domo, positiva = hacia afuera). Los azimuts de los nodos cerrados suman 360°.</p>
+  <h3 class="sub">Nodos estándar</h3>
+  <div class="hubgrid"><figure class='hubcard'><div class='hh'><b>H1</b><span class='muted'>× 16</span></div><div class='small muted'>interior</div><svg viewBox="0 0 330 278" role="img" aria-label="H1"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 97.0 A 42 42 0 0 1 199.7 115.3" class="arc"/><text x="193.0" y="89.9" text-anchor="middle" class="t-angle">55.69°</text><path d="M 199.7 115.3 A 42 42 0 0 1 202.1 158.6" class="arc"/><text x="224.9" y="139.6" text-anchor="middle" class="t-angle">62.15°</text><path d="M 202.1 158.6 A 42 42 0 0 1 165.0 181.0" class="arc"/><text x="196.0" y="194.4" text-anchor="middle" class="t-angle">62.15°</text><path d="M 165.0 181.0 A 42 42 0 0 1 127.9 158.6" class="arc"/><text x="134.0" y="194.4" text-anchor="middle" class="t-angle">62.15°</text><path d="M 127.9 158.6 A 42 42 0 0 1 130.3 115.3" class="arc"/><text x="105.1" y="139.6" text-anchor="middle" class="t-angle">62.15°</text><path d="M 130.3 115.3 A 42 42 0 0 1 165.0 97.0" class="arc"/><text x="137.0" y="89.9" text-anchor="middle" class="t-angle">55.69°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--sC)" class="ray" data-tip="Pestaña 1: barra C hacia #0 · azimut acumulado 0.00° · inclinación -10.04°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="234.4" y2="91.7" stroke="var(--sB)" class="ray" data-tip="Pestaña 2: barra B hacia #4 · azimut acumulado 55.69° · inclinación -11.64°"/><text x="247.6" y="86.6" text-anchor="start" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="239.3" y2="178.2" stroke="var(--sA)" class="ray" data-tip="Pestaña 3: barra A hacia #5 · azimut acumulado 117.85° · inclinación -11.90°"/><text x="253.4" y="189.7" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="165.0" y2="223.0" stroke="var(--sB)" class="ray" data-tip="Pestaña 4: barra B hacia #2 · azimut acumulado 180.00° · inclinación -11.64°"/><text x="165.0" y="243.0" text-anchor="middle" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="90.7" y2="178.2" stroke="var(--sA)" class="ray" data-tip="Pestaña 5: barra A hacia #36 · azimut acumulado 242.15° · inclinación -11.90°"/><text x="76.6" y="189.7" text-anchor="end" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="95.6" y2="91.7" stroke="var(--sB)" class="ray" data-tip="Pestaña 6: barra B hacia #35 · azimut acumulado 304.31° · inclinación -11.64°"/><text x="82.4" y="86.6" text-anchor="end" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#1, #9, #11, #18, #22, #24, #28, #30, #31, #32, #33, #35, #37, #39, #41, #42</span></div><div class='small muted'>6 barras · azimuts suman 360.00°</div></figure><figure class='hubcard'><div class='hh'><b>H2</b><span class='muted'>× 3</span></div><div class='small muted'>interior</div><svg viewBox="0 0 330 278" role="img" aria-label="H2"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 97.0 A 42 42 0 0 1 201.4 118.0" class="arc"/><text x="195.0" y="91.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 201.4 118.0 A 42 42 0 0 1 201.4 160.0" class="arc"/><text x="225.0" y="143.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 201.4 160.0 A 42 42 0 0 1 165.0 181.0" class="arc"/><text x="195.0" y="195.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 165.0 181.0 A 42 42 0 0 1 128.6 160.0" class="arc"/><text x="135.0" y="195.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 128.6 160.0 A 42 42 0 0 1 128.6 118.0" class="arc"/><text x="105.0" y="143.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 128.6 118.0 A 42 42 0 0 1 165.0 97.0" class="arc"/><text x="135.0" y="91.0" text-anchor="middle" class="t-angle">60.00°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 1: barra A hacia #31 · azimut acumulado 0.00° · inclinación -11.90°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="237.7" y2="97.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 2: barra A hacia #32 · azimut acumulado 60.00° · inclinación -11.90°"/><text x="251.6" y="93.0" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="237.7" y2="181.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 3: barra A hacia #22 · azimut acumulado 120.00° · inclinación -11.90°"/><text x="251.6" y="193.0" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="165.0" y2="223.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 4: barra A hacia #24 · azimut acumulado 180.00° · inclinación -11.90°"/><text x="165.0" y="243.0" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="92.3" y2="181.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 5: barra A hacia #35 · azimut acumulado 240.00° · inclinación -11.90°"/><text x="78.4" y="193.0" text-anchor="end" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="92.3" y2="97.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 6: barra A hacia #33 · azimut acumulado 300.00° · inclinación -11.90°"/><text x="78.4" y="93.0" text-anchor="end" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#34, #38, #40</span></div><div class='small muted'>6 barras · azimuts suman 360.00°</div></figure><figure class='hubcard'><div class='hh'><b>H3</b><span class='muted'>× 5</span></div><div class='small muted'>interior, incluye el ápice</div><svg viewBox="0 0 330 278" role="img" aria-label="H3"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 97.0 A 42 42 0 0 1 204.9 126.0" class="arc"/><text x="200.3" y="94.5" text-anchor="middle" class="t-angle">72.00°</text><path d="M 204.9 126.0 A 42 42 0 0 1 189.7 173.0" class="arc"/><text x="222.1" y="161.5" text-anchor="middle" class="t-angle">72.00°</text><path d="M 189.7 173.0 A 42 42 0 0 1 140.3 173.0" class="arc"/><text x="165.0" y="203.0" text-anchor="middle" class="t-angle">72.00°</text><path d="M 140.3 173.0 A 42 42 0 0 1 125.1 126.0" class="arc"/><text x="107.9" y="161.5" text-anchor="middle" class="t-angle">72.00°</text><path d="M 125.1 126.0 A 42 42 0 0 1 165.0 97.0" class="arc"/><text x="129.7" y="94.5" text-anchor="middle" class="t-angle">72.00°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--sC)" class="ray" data-tip="Pestaña 1: barra C hacia #35 · azimut acumulado 0.00° · inclinación -10.04°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="244.9" y2="113.0" stroke="var(--sC)" class="ray" data-tip="Pestaña 2: barra C hacia #24 · azimut acumulado 72.00° · inclinación -10.04°"/><text x="260.1" y="112.1" text-anchor="start" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="214.4" y2="207.0" stroke="var(--sC)" class="ray" data-tip="Pestaña 3: barra C hacia #23 · azimut acumulado 144.00° · inclinación -10.04°"/><text x="223.8" y="223.9" text-anchor="start" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="115.6" y2="207.0" stroke="var(--sC)" class="ray" data-tip="Pestaña 4: barra C hacia #4 · azimut acumulado 216.00° · inclinación -10.04°"/><text x="106.2" y="223.9" text-anchor="end" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="85.1" y2="113.0" stroke="var(--sC)" class="ray" data-tip="Pestaña 5: barra C hacia #1 · azimut acumulado 288.00° · inclinación -10.04°"/><text x="69.9" y="112.1" text-anchor="end" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#0, #7, #13, #20, #25</span></div><div class='small muted'>5 barras · azimuts suman 360.00°</div></figure><figure class='hubcard'><div class='hh'><b>H4</b><span class='muted'>× 8</span></div><div class='small muted'>base, nodo bajo</div><svg viewBox="0 0 330 278" role="img" aria-label="H4"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 139.0 L 170.9 190.7 A 52.1 52.1 0 1 1 165.0 86.9 Z" class="openwedge"/><text x="134.8" y="144.7" text-anchor="middle" class="t-muted">abierto</text><path d="M 165.0 97.0 A 42 42 0 0 1 202.1 119.4" class="arc"/><text x="196.0" y="91.6" text-anchor="middle" class="t-angle">62.15°</text><path d="M 202.1 119.4 A 42 42 0 0 1 202.1 158.6" class="arc"/><text x="225.0" y="143.0" text-anchor="middle" class="t-angle">55.69°</text><path d="M 202.1 158.6 A 42 42 0 0 1 169.7 180.7" class="arc"/><text x="198.8" y="192.6" text-anchor="middle" class="t-angle">55.69°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 1: barra A hacia #5 · azimut acumulado 0.00° · inclinación -11.90°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="239.3" y2="99.8" stroke="var(--sB)" class="ray" data-tip="Pestaña 2: barra B hacia #1 · azimut acumulado 62.15° · inclinación -11.64°"/><text x="253.4" y="96.3" text-anchor="start" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="239.3" y2="178.2" stroke="var(--sC)" class="ray" data-tip="Pestaña 3: barra C hacia #0 · azimut acumulado 117.85° · inclinación -10.04°"/><text x="253.4" y="189.7" text-anchor="start" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="174.5" y2="222.5" stroke="var(--sB)" class="ray" data-tip="Pestaña 4: barra B hacia #23 · azimut acumulado 173.54° · inclinación -11.64°"/><text x="176.3" y="242.4" text-anchor="middle" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#4, #8, #12, #17, #19, #23, #43, #44</span></div><div class='small muted'>4 barras · azimuts suman 173.54° + abierto</div></figure><figure class='hubcard'><div class='hh'><b>H5</b><span class='muted'>× 5</span></div><div class='small muted'>base, nodo alto (+4.86 cm)</div><svg viewBox="0 0 330 278" role="img" aria-label="H5"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 139.0 L 165.0 191.1 A 52.1 52.1 0 0 1 165.0 86.9 Z" class="openwedge"/><text x="134.8" y="143.0" text-anchor="middle" class="t-muted">abierto</text><path d="M 165.0 97.0 A 42 42 0 0 1 201.4 118.0" class="arc"/><text x="195.0" y="91.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 201.4 118.0 A 42 42 0 0 1 201.4 160.0" class="arc"/><text x="225.0" y="143.0" text-anchor="middle" class="t-angle">60.00°</text><path d="M 201.4 160.0 A 42 42 0 0 1 165.0 181.0" class="arc"/><text x="195.0" y="195.0" text-anchor="middle" class="t-angle">60.00°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 1: barra A hacia #6 · azimut acumulado 0.00° · inclinación -11.90°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="237.7" y2="97.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 2: barra A hacia #2 · azimut acumulado 60.00° · inclinación -11.90°"/><text x="251.6" y="93.0" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="237.7" y2="181.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 3: barra A hacia #1 · azimut acumulado 120.00° · inclinación -11.90°"/><text x="251.6" y="193.0" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="165.0" y2="223.0" stroke="var(--sA)" class="ray" data-tip="Pestaña 4: barra A hacia #4 · azimut acumulado 180.00° · inclinación -11.90°"/><text x="165.0" y="243.0" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#5, #10, #15, #21, #45</span></div><div class='small muted'>4 barras · azimuts suman 180.00° + abierto</div></figure></div>
+  <h3 class="sub">Nodos especiales alrededor de la puerta</h3>
+  <p class="small muted">Se fabrican de a pares: izquierda y derecha (mirando la puerta desde afuera). Las pestañas de la puerta (P, K1, K2, V) salen hacia afuera del disco, con inclinación positiva.</p>
+  <div class="hubgrid"><figure class='hubcard'><div class='hh'><b>PA</b><span class='muted'>× 2</span></div><div class='small muted'>base, lleva el poste de la puerta</div><svg viewBox="0 0 330 278" role="img" aria-label="PA"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 139.0 L 170.9 190.7 A 52.1 52.1 0 1 1 165.0 86.9 Z" class="openwedge"/><text x="134.8" y="144.7" text-anchor="middle" class="t-muted">abierto</text><path d="M 165.0 97.0 A 42 42 0 0 1 207.0 137.5" class="arc"/><text x="206.7" y="99.8" text-anchor="middle" class="t-angle">87.94°</text><path d="M 207.0 137.5 A 42 42 0 0 1 204.1 154.3" class="arc"/><text x="224.1" y="153.1" text-anchor="middle" class="t-angle">23.44°</text><path d="M 204.1 154.3 A 42 42 0 0 1 169.7 180.7" class="arc"/><text x="201.6" y="190.6" text-anchor="middle" class="t-angle">62.15°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--sB)" class="ray" data-tip="Pestaña 1: barra B hacia #14 · azimut acumulado 0.00° · inclinación -11.64°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="248.9" y2="136.0" stroke="var(--door)" class="ray" data-tip="Pestaña 2: barra P hacia #46 · azimut acumulado 87.94° · inclinación +9.88°"/><text x="264.9" y="139.4" text-anchor="start" class="t-code">P <tspan class="t-tilt">+9.9°</tspan></text><line x1="165.0" y1="139.0" x2="243.2" y2="169.6" stroke="var(--sB)" class="ray" data-tip="Pestaña 3: barra B hacia #2 · azimut acumulado 111.38° · inclinación -11.64°"/><text x="258.1" y="179.5" text-anchor="start" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="174.5" y2="222.5" stroke="var(--sA)" class="ray" data-tip="Pestaña 4: barra A hacia #5 · azimut acumulado 173.54° · inclinación -11.90°"/><text x="176.3" y="242.4" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#6-izq, #14-der</span></div><div class='small muted'>4 barras · azimuts suman 173.54° + abierto</div><p class='small muted'>El nodo <b>-der</b> es la imagen espejo: mismas pestañas en el orden contrario.</p></figure><figure class='hubcard'><div class='hh'><b>PB</b><span class='muted'>× 2</span></div><div class='small muted'>junto a la puerta, amarre bajo K1</div><svg viewBox="0 0 330 278" role="img" aria-label="PB"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 97.0 A 42 42 0 0 1 200.5 116.6" class="arc"/><text x="194.0" y="90.5" text-anchor="middle" class="t-angle">57.75°</text><path d="M 200.5 116.6 A 42 42 0 0 1 201.4 159.9" class="arc"/><text x="225.0" y="141.8" text-anchor="middle" class="t-angle">62.15°</text><path d="M 201.4 159.9 A 42 42 0 0 1 163.5 181.0" class="arc"/><text x="194.1" y="195.5" text-anchor="middle" class="t-angle">62.15°</text><path d="M 163.5 181.0 A 42 42 0 0 1 127.2 157.3" class="arc"/><text x="132.2" y="193.2" text-anchor="middle" class="t-angle">62.15°</text><path d="M 127.2 157.3 A 42 42 0 0 1 165.0 97.0" class="arc"/><text x="114.2" y="111.1" text-anchor="middle" class="t-angle">115.78°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--door)" class="ray" data-tip="Pestaña 1: barra K1 hacia #46 · azimut acumulado 0.00° · inclinación +42.36°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">K1 <tspan class="t-tilt">+42.4°</tspan></text><line x1="165.0" y1="139.0" x2="236.0" y2="94.2" stroke="var(--sA)" class="ray" data-tip="Pestaña 2: barra A hacia #36 · azimut acumulado 57.75° · inclinación -11.90°"/><text x="249.6" y="89.6" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="237.8" y2="180.9" stroke="var(--sB)" class="ray" data-tip="Pestaña 3: barra B hacia #1 · azimut acumulado 119.91° · inclinación -11.64°"/><text x="251.7" y="192.9" text-anchor="start" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="162.0" y2="222.9" stroke="var(--sA)" class="ray" data-tip="Pestaña 4: barra A hacia #5 · azimut acumulado 182.06° · inclinación -11.90°"/><text x="161.4" y="242.9" text-anchor="middle" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="89.4" y2="175.5" stroke="var(--sB)" class="ray" data-tip="Pestaña 5: barra B hacia #6 · azimut acumulado 244.22° · inclinación -11.64°"/><text x="75.0" y="186.5" text-anchor="end" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#2-izq, #16-der</span></div><div class='small muted'>5 barras · azimuts suman 360.00°</div><p class='small muted'>El nodo <b>-der</b> es la imagen espejo: mismas pestañas en el orden contrario.</p></figure><figure class='hubcard'><div class='hh'><b>PC</b><span class='muted'>× 2</span></div><div class='small muted'>junto a la puerta, amarre alto K2</div><svg viewBox="0 0 330 278" role="img" aria-label="PC"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 97.0 A 42 42 0 0 1 188.9 104.4" class="arc"/><text x="182.9" y="85.7" text-anchor="middle" class="t-angle">34.63°</text><path d="M 188.9 104.4 A 42 42 0 0 1 206.9 142.4" class="arc"/><text x="219.2" y="117.3" text-anchor="middle" class="t-angle">60.00°</text><path d="M 206.9 142.4 A 42 42 0 0 1 183.0 177.0" class="arc"/><text x="214.4" y="177.1" text-anchor="middle" class="t-angle">60.00°</text><path d="M 183.0 177.0 A 42 42 0 0 1 141.1 173.6" class="arc"/><text x="160.2" y="202.8" text-anchor="middle" class="t-angle">60.00°</text><path d="M 141.1 173.6 A 42 42 0 0 1 123.1 135.6" class="arc"/><text x="110.8" y="168.7" text-anchor="middle" class="t-angle">60.00°</text><path d="M 123.1 135.6 A 42 42 0 0 1 165.0 97.0" class="arc"/><text x="124.3" y="98.9" text-anchor="middle" class="t-angle">85.37°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--door)" class="ray" data-tip="Pestaña 1: barra K2 hacia #47 · azimut acumulado 0.00° · inclinación +27.25°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">K2 <tspan class="t-tilt">+27.2°</tspan></text><line x1="165.0" y1="139.0" x2="212.7" y2="69.9" stroke="var(--sA)" class="ray" data-tip="Pestaña 2: barra A hacia #16 · azimut acumulado 34.63° · inclinación -11.90°"/><text x="221.8" y="60.7" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="248.7" y2="145.8" stroke="var(--sA)" class="ray" data-tip="Pestaña 3: barra A hacia #18 · azimut acumulado 94.63° · inclinación -11.90°"/><text x="264.7" y="151.1" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="201.0" y2="214.9" stroke="var(--sA)" class="ray" data-tip="Pestaña 4: barra A hacia #30 · azimut acumulado 154.63° · inclinación -11.90°"/><text x="207.8" y="233.4" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="117.3" y2="208.1" stroke="var(--sA)" class="ray" data-tip="Pestaña 5: barra A hacia #28 · azimut acumulado 214.63° · inclinación -11.90°"/><text x="108.2" y="225.3" text-anchor="end" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="81.3" y2="132.2" stroke="var(--sA)" class="ray" data-tip="Pestaña 6: barra A hacia #26 · azimut acumulado 274.63° · inclinación -11.90°"/><text x="65.3" y="134.9" text-anchor="end" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#29-der, #36-izq</span></div><div class='small muted'>6 barras · azimuts suman 360.00°</div><p class='small muted'>El nodo <b>-der</b> es la imagen espejo: mismas pestañas en el orden contrario.</p></figure><figure class='hubcard'><div class='hh'><b>PD</b><span class='muted'>× 1</span></div><div class='small muted'>sobre el vestíbulo, recibe las 2 vigas V</div><svg viewBox="0 0 330 278" role="img" aria-label="PD"><circle cx="165.0" cy="139.0" r="52.08" class="disc"/><path d="M 165.0 97.0 A 42 42 0 0 1 190.0 105.3" class="arc"/><text x="183.8" y="86.0" text-anchor="middle" class="t-angle">36.60°</text><path d="M 190.0 105.3 A 42 42 0 0 1 206.4 132.0" class="arc"/><text x="216.2" y="111.7" text-anchor="middle" class="t-angle">43.85°</text><path d="M 206.4 132.0 A 42 42 0 0 1 190.5 172.4" class="arc"/><text x="220.8" y="165.0" text-anchor="middle" class="t-angle">62.15°</text><path d="M 190.5 172.4 A 42 42 0 0 1 151.8 178.9" class="arc"/><text x="174.9" y="202.2" text-anchor="middle" class="t-angle">55.69°</text><path d="M 151.8 178.9 A 42 42 0 0 1 124.6 150.6" class="arc"/><text x="121.7" y="184.6" text-anchor="middle" class="t-angle">55.69°</text><path d="M 124.6 150.6 A 42 42 0 0 1 135.9 108.7" class="arc"/><text x="107.1" y="127.4" text-anchor="middle" class="t-angle">62.15°</text><path d="M 135.9 108.7 A 42 42 0 0 1 165.0 97.0" class="arc"/><text x="142.6" y="87.3" text-anchor="middle" class="t-angle">43.85°</text><line x1="165.0" y1="139.0" x2="165.0" y2="55.0" stroke="var(--door)" class="ray" data-tip="Pestaña 1: barra V hacia #46 · azimut acumulado 0.00° · inclinación +12.29°"/><text x="165.0" y="43.0" text-anchor="middle" class="t-code">V <tspan class="t-tilt">+12.3°</tspan></text><line x1="165.0" y1="139.0" x2="215.1" y2="71.6" stroke="var(--door)" class="ray" data-tip="Pestaña 2: barra V hacia #47 · azimut acumulado 36.60° · inclinación +12.29°"/><text x="224.6" y="62.7" text-anchor="start" class="t-code">V <tspan class="t-tilt">+12.3°</tspan></text><line x1="165.0" y1="139.0" x2="247.8" y2="125.1" stroke="var(--sA)" class="ray" data-tip="Pestaña 3: barra A hacia #29 · azimut acumulado 80.46° · inclinación -11.90°"/><text x="263.6" y="126.4" text-anchor="start" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><line x1="165.0" y1="139.0" x2="216.0" y2="205.7" stroke="var(--sB)" class="ray" data-tip="Pestaña 4: barra B hacia #28 · azimut acumulado 142.61° · inclinación -11.64°"/><text x="225.7" y="222.5" text-anchor="start" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="138.6" y2="218.8" stroke="var(--sC)" class="ray" data-tip="Pestaña 5: barra C hacia #25 · azimut acumulado 198.30° · inclinación -10.04°"/><text x="133.6" y="237.9" text-anchor="end" class="t-code">C <tspan class="t-tilt">-10.0°</tspan></text><line x1="165.0" y1="139.0" x2="84.3" y2="162.2" stroke="var(--sB)" class="ray" data-tip="Pestaña 6: barra B hacia #33 · azimut acumulado 253.99° · inclinación -11.64°"/><text x="68.9" y="170.6" text-anchor="end" class="t-code">B <tspan class="t-tilt">-11.6°</tspan></text><line x1="165.0" y1="139.0" x2="106.8" y2="78.4" stroke="var(--sA)" class="ray" data-tip="Pestaña 7: barra A hacia #36 · azimut acumulado 316.15° · inclinación -11.90°"/><text x="95.7" y="70.9" text-anchor="end" class="t-code">A <tspan class="t-tilt">-11.9°</tspan></text><circle cx="165.0" cy="139.0" r="4" class="hubdot"/></svg><div class='small'>Nodos: <span class='mono'>#26</span></div><div class='small muted'>7 barras · azimuts suman 360.00°</div></figure></div>
+  <h3 class="sub">PE · esquinas del marco (#46-izq, #47-der)</h3>
+  <p class="small muted">No llevan disco: las pestañas se sueldan directo a la esquina del marco de 50×50. Ángulo en planta medido desde el dintel, girando hacia adentro del domo; pendiente respecto a la horizontal. La esquina derecha es espejo.</p>
+  <div class="tbl narrow"><table><thead><tr><th>Pieza</th><th>Va a</th><th class="num">Largo c-c (cm)</th><th class="num">En planta</th><th class="num">Pendiente</th></tr></thead><tbody><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K1</span></td><td class='mono'>#2</td><td class='num'>123.68</td><td class='num'>126.0°</td><td class='num'>-58.5°</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>P</span></td><td class='mono'>#6</td><td class='num'>210.00</td><td class='num'>vertical</td><td class='num'>-90.0°</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>V</span></td><td class='mono'>#26</td><td class='num'>200.25</td><td class='num'>72.0°</td><td class='num'>+6.8°</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>K2</span></td><td class='mono'>#36</td><td class='num'>152.97</td><td class='num'>108.1°</td><td class='num'>-7.6°</td></tr><tr><td><span class='code' style='--c:var(--door);color:var(--page)'>D</span></td><td class='mono'>#47</td><td class='num'>122.89</td><td class='num'>0.0°</td><td class='num'>+0.0°</td></tr></tbody></table></div>
+</section>
 
+<section id="puerta">
+  <div class="sec-head"><h2>Puerta · portal de acceso</h2></div>
+  <p class="sec-sub">El domo mide 2.52 m en el centro y baja hasta el piso en el borde, así que la puerta necesita un pequeño techo de vestíbulo que entra al domo hasta donde el techo ya pasa de 2 m. El marco se apoya en dos anclajes que ya existen (#6 y #14), así que no hay anclajes nuevos.</p>
+  <div class="twocol">
+    <div class="panel"><h3>Vista de frente (desde afuera)</h3><svg viewBox="0 0 640 365" role="img" aria-label="Vista de frente de la puerta"><polyline points="44.0,293.0 50.9,263.2 57.8,242.4 64.7,225.7 71.6,211.5 78.5,199.1 85.4,187.9 92.3,177.9 99.2,168.6 106.1,160.2 113.0,152.3 119.9,145.0 126.8,138.2 133.7,131.8 140.6,125.9 147.5,120.3 154.4,115.1 161.3,110.2 168.2,105.6 175.1,101.3 182.0,97.3 188.9,93.5 195.8,90.0 202.7,86.7 209.6,83.6 216.5,80.7 223.4,78.1 230.3,75.7 237.2,73.4 244.1,71.4 251.0,69.6 257.9,67.9 264.8,66.4 271.7,65.1 278.6,64.0 285.5,63.1 292.4,62.3 299.3,61.7 306.2,61.3 313.1,61.0 320.0,60.9 326.9,61.0 333.8,61.3 340.7,61.7 347.6,62.3 354.5,63.1 361.4,64.0 368.3,65.1 375.2,66.4 382.1,67.9 389.0,69.6 395.9,71.4 402.8,73.4 409.7,75.7 416.6,78.1 423.5,80.7 430.4,83.6 437.3,86.7 444.2,90.0 451.1,93.5 458.0,97.3 464.9,101.3 471.8,105.6 478.7,110.2 485.6,115.1 492.5,120.3 499.4,125.9 506.3,131.8 513.2,138.2 520.1,145.0 527.0,152.3 533.9,160.2 540.8,168.6 547.7,177.9 554.6,187.9 561.5,199.1 568.4,211.5 575.3,225.7 582.2,242.4 589.1,263.2 596.0,293.0" class="dome-outline"/><line x1="21.0" y1="293" x2="619.0" y2="293" class="floor"/><line x1="81.7" y1="215.8" x2="137.1" y2="196.8" class="strut-faint"/><line x1="81.7" y1="215.8" x2="80.5" y2="293.0" class="strut-faint"/><line x1="81.7" y1="215.8" x2="45.6" y2="293.0" class="strut-faint"/><line x1="81.7" y1="215.8" x2="80.5" y2="196.8" class="strut-faint"/><line x1="81.7" y1="215.8" x2="137.1" y2="137.4" class="strut-faint"/><line x1="137.1" y1="196.8" x2="228.5" y2="196.8" class="strut-faint"/><line x1="137.1" y1="196.8" x2="80.5" y2="293.0" class="strut-faint"/><line x1="137.1" y1="196.8" x2="158.3" y2="288.5" class="strut-faint"/><line x1="137.1" y1="196.8" x2="137.1" y2="137.4" class="strut-faint"/><line x1="137.1" y1="196.8" x2="220.0" y2="118.5" class="strut-faint"/><line x1="228.5" y1="196.8" x2="158.3" y2="288.5" class="strut-faint"/><line x1="228.5" y1="196.8" x2="263.5" y2="293.0" class="strut-faint"/><line x1="228.5" y1="196.8" x2="220.0" y2="118.5" class="strut-faint"/><line x1="80.5" y1="293.0" x2="158.3" y2="288.5" class="strut-faint"/><line x1="80.5" y1="293.0" x2="45.6" y2="293.0" class="strut-faint"/><line x1="158.3" y1="288.5" x2="263.5" y2="293.0" class="strut-faint"/><line x1="263.5" y1="293.0" x2="376.5" y2="293.0" class="strut-faint"/><line x1="559.5" y1="196.8" x2="558.3" y2="215.8" class="strut-faint"/><line x1="559.5" y1="196.8" x2="502.9" y2="137.4" class="strut-faint"/><line x1="594.4" y1="293.0" x2="558.3" y2="215.8" class="strut-faint"/><line x1="594.4" y1="293.0" x2="559.5" y2="293.0" class="strut-faint"/><line x1="558.3" y1="215.8" x2="559.5" y2="293.0" class="strut-faint"/><line x1="558.3" y1="215.8" x2="502.9" y2="196.8" class="strut-faint"/><line x1="558.3" y1="215.8" x2="502.9" y2="137.4" class="strut-faint"/><line x1="376.5" y1="293.0" x2="481.7" y2="288.5" class="strut-faint"/><line x1="376.5" y1="293.0" x2="411.5" y2="196.8" class="strut-faint"/><line x1="481.7" y1="288.5" x2="411.5" y2="196.8" class="strut-faint"/><line x1="481.7" y1="288.5" x2="559.5" y2="293.0" class="strut-faint"/><line x1="481.7" y1="288.5" x2="502.9" y2="196.8" class="strut-faint"/><line x1="411.5" y1="196.8" x2="502.9" y2="196.8" class="strut-faint"/><line x1="411.5" y1="196.8" x2="420.0" y2="118.5" class="strut-faint"/><line x1="559.5" y1="293.0" x2="502.9" y2="196.8" class="strut-faint"/><line x1="502.9" y1="196.8" x2="420.0" y2="118.5" class="strut-faint"/><line x1="502.9" y1="196.8" x2="502.9" y2="137.4" class="strut-faint"/><line x1="80.5" y1="196.8" x2="137.1" y2="137.4" class="strut-faint"/><line x1="320.0" y1="60.9" x2="320.0" y2="78.0" class="strut-faint"/><line x1="320.0" y1="78.0" x2="411.5" y2="78.0" class="strut-faint"/><line x1="320.0" y1="78.0" x2="420.0" y2="118.5" class="strut-faint"/><line x1="320.0" y1="78.0" x2="228.5" y2="78.0" class="strut-faint"/><line x1="320.0" y1="78.0" x2="220.0" y2="118.5" class="strut-faint"/><line x1="411.5" y1="78.0" x2="420.0" y2="118.5" class="strut-faint"/><line x1="411.5" y1="78.0" x2="502.9" y2="137.4" class="strut-faint"/><line x1="420.0" y1="118.5" x2="502.9" y2="137.4" class="strut-faint"/><line x1="228.5" y1="78.0" x2="137.1" y2="137.4" class="strut-faint"/><line x1="228.5" y1="78.0" x2="220.0" y2="118.5" class="strut-faint"/><line x1="137.1" y1="137.4" x2="220.0" y2="118.5" class="strut-faint"/><line x1="228.5" y1="196.8" x2="263.5" y2="99.8" class="door-member" data-tip="K1: #2–#46, 123.68 cm"/><line x1="411.5" y1="196.8" x2="376.5" y2="99.8" class="door-member" data-tip="K1: #16–#47, 123.68 cm"/><line x1="320.0" y1="78.0" x2="263.5" y2="99.8" class="door-member" data-tip="V: #26–#46, 200.25 cm"/><line x1="320.0" y1="78.0" x2="376.5" y2="99.8" class="door-member" data-tip="V: #26–#47, 200.25 cm"/><line x1="420.0" y1="118.5" x2="376.5" y2="99.8" class="door-member" data-tip="K2: #29–#47, 152.97 cm"/><line x1="220.0" y1="118.5" x2="263.5" y2="99.8" class="door-member" data-tip="K2: #36–#46, 152.97 cm"/><rect x="261.2" y="97.5" width="4.6" height="195.5" class="frame" data-tip="Poste P 50×50×2"/><rect x="374.2" y="97.5" width="4.6" height="195.5" class="frame" data-tip="Poste P 50×50×2"/><rect x="265.8" y="97.5" width="108.5" height="4.6" class="frame" data-tip="Dintel D 50×50×2"/><rect x="265.8" y="102.1" width="108.5" height="190.9" class="door-open"/><line x1="263.5" y1="293.0" x2="376.5" y2="293.0" class="sill" data-tip="Umbral: barra B del domo (se conserva)"/><line x1="265.8" y1="318.8" x2="374.2" y2="318.8" class="dim"/><line x1="265.8" y1="313.8" x2="265.8" y2="323.8" class="dim"/><line x1="374.2" y1="313.8" x2="374.2" y2="323.8" class="dim"/><text x="320.0" y="334.8" text-anchor="middle" class="t-dim">vano libre 117.9 cm</text><line x1="274.1" y1="293.0" x2="274.1" y2="102.1" class="dim"/><line x1="269.1" y1="293.0" x2="279.1" y2="293.0" class="dim"/><line x1="269.1" y1="102.1" x2="279.1" y2="102.1" class="dim"/><text x="281.1" y="197.6" class="t-dim">207.5</text><text x="281.1" y="211.6" class="t-muted">cm libre</text><text x="320.0" y="350.8" text-anchor="middle" class="t-muted">eje del dintel a 210 cm sobre el piso · postes y dintel 50×50×2</text><circle cx="263.5" cy="293.0" r="4" class="node" data-tip="#6 (PA-izq)"/><text x="255.5" y="287.0" text-anchor="end" class="t-node">#6</text><circle cx="376.5" cy="293.0" r="4" class="node" data-tip="#14 (PA-der)"/><text x="384.5" y="287.0" text-anchor="start" class="t-node">#14</text><circle cx="320.0" cy="78.0" r="4" class="node" data-tip="#26 (PD)"/><text x="312.0" y="72.0" text-anchor="end" class="t-node">#26</text><circle cx="228.5" cy="196.8" r="4" class="node" data-tip="#2 (PB-izq)"/><text x="220.5" y="190.8" text-anchor="end" class="t-node">#2</text><circle cx="220.0" cy="118.5" r="4" class="node" data-tip="#36 (PC-izq)"/><text x="212.0" y="112.5" text-anchor="end" class="t-node">#36</text><circle cx="411.5" cy="196.8" r="4" class="node" data-tip="#16 (PB-der)"/><text x="419.5" y="190.8" text-anchor="start" class="t-node">#16</text><circle cx="420.0" cy="118.5" r="4" class="node" data-tip="#29 (PC-der)"/><text x="428.0" y="112.5" text-anchor="start" class="t-node">#29</text></svg></div>
+    <div class="panel"><h3>Corte por el eje de la puerta</h3><svg viewBox="0 0 640 400" role="img" aria-label="Corte por el eje de la puerta"><polyline points="30.0,47.7 33.7,47.0 37.4,46.4 41.2,45.8 44.9,45.2 48.6,44.7 52.3,44.2 56.0,43.7 59.8,43.3 63.5,42.9 67.2,42.6 70.9,42.3 74.6,42.0 78.3,41.8 82.1,41.6 85.8,41.4 89.5,41.3 93.2,41.2 96.9,41.2 100.7,41.1 104.4,41.2 108.1,41.2 111.8,41.3 115.5,41.4 119.3,41.6 123.0,41.8 126.7,42.0 130.4,42.3 134.1,42.6 137.8,43.0 141.6,43.4 145.3,43.8 149.0,44.2 152.7,44.7 156.4,45.3 160.2,45.8 163.9,46.4 167.6,47.1 171.3,47.8 175.0,48.5 178.8,49.3 182.5,50.1 186.2,50.9 189.9,51.8 193.6,52.7 197.3,53.6 201.1,54.6 204.8,55.7 208.5,56.8 212.2,57.9 215.9,59.0 219.7,60.2 223.4,61.5 227.1,62.8 230.8,64.1 234.5,65.5 238.3,66.9 242.0,68.4 245.7,69.9 249.4,71.4 253.1,73.0 256.8,74.7 260.6,76.4 264.3,78.1 268.0,79.9 271.7,81.7 275.4,83.6 279.2,85.6 282.9,87.6 286.6,89.6 290.3,91.7 294.0,93.9 297.8,96.1 301.5,98.4 305.2,100.7 308.9,103.1 312.6,105.6 316.3,108.1 320.1,110.7 323.8,113.3 327.5,116.0 331.2,118.8 334.9,121.7 338.7,124.6 342.4,127.6 346.1,130.7 349.8,133.9 353.5,137.1 357.3,140.5 361.0,143.9 364.7,147.4 368.4,151.0 372.1,154.7 375.9,158.6 379.6,162.5 383.3,166.5 387.0,170.7 390.7,175.0 394.4,179.4 398.2,184.0 401.9,188.7 405.6,193.6 409.3,198.6 413.0,203.8 416.8,209.2 420.5,214.8 424.2,220.7 427.9,226.7 431.6,233.1 435.4,239.7 439.1,246.7 442.8,254.0 446.5,261.8 450.2,270.0 453.9,278.8 457.7,288.3 461.4,298.7 465.1,310.0 468.8,322.8 472.5,337.7 476.3,356.0" class="strut-faint" data-tip="Superficie del domo al costado del paso"/><text x="426.8" y="234.4" class="t-muted" text-anchor="end">domo al costado</text><polyline points="30.0,39.5 35.1,38.6 40.2,37.8 45.3,37.0 50.4,36.3 55.5,35.7 60.6,35.2 65.7,34.7 70.8,34.2 75.9,33.9 81.1,33.6 86.2,33.4 91.3,33.2 96.4,33.1 101.5,33.1 106.6,33.2 111.7,33.3 116.8,33.5 121.9,33.7 127.0,34.0 132.1,34.4 137.2,34.9 142.3,35.4 147.4,36.0 152.5,36.6 157.6,37.3 162.7,38.1 167.8,39.0 172.9,39.9 178.0,40.9 183.2,42.0 188.3,43.1 193.4,44.4 198.5,45.7 203.6,47.0 208.7,48.5 213.8,50.0 218.9,51.6 224.0,53.2 229.1,55.0 234.2,56.8" class="dome-outline"/><line x1="30.0" y1="356.0" x2="554.8" y2="356.0" class="floor"/><rect x="290.7" y="91.0" width="181.7" height="262.4" class="passage" data-tip="Paso libre revisado: ninguna barra ni panel entra aquí"/><rect x="473.1" y="84.0" width="6.4" height="272.0" class="frame" data-tip="Poste P"/><line x1="476.3" y1="87.2" x2="234.2" y2="56.8" class="door-member" data-tip="Techo del vestíbulo (vigas V)"/><circle cx="234.2" cy="56.8" r="4" class="node" data-tip="#26 (PD)"/><text x="234.2" y="46.8" text-anchor="middle" class="t-node">#26 · 234 cm</text><text x="387.2" y="60.0" text-anchor="middle" class="t-muted">techo del vestíbulo, cae 13% hacia la puerta</text><text x="484.3" y="91.2" class="t-node">dintel 210 cm</text><text x="381.5" y="221.6" text-anchor="middle" class="t-dim">paso libre</text><text x="381.5" y="236.6" text-anchor="middle" class="t-dim">207 cm de alto</text><text x="486.3" y="311.2" class="t-muted">afuera →</text><text x="36.0" y="311.2" class="t-muted">← centro del domo</text><text x="100.4" y="374.0" text-anchor="middle" class="t-muted">0</text><text x="234.2" y="374.0" text-anchor="middle" class="t-muted">1.05 m</text><text x="476.3" y="374.0" text-anchor="middle" class="t-muted">2.94 m</text></svg></div>
+  </div>
+  <div class="twocol">
+    <div>
+      <h3>Qué cambia en el domo</h3>
+      <ul class="plain">
+        <li>Se quitan los nodos <b>#3</b> y <b>#27</b> y sus <b>10 barras</b> (2 A, 3 B, 5 C).</li>
+        <li>La barra B del piso entre #6 y #14 <b>se queda</b>: es el umbral y amarra la base de los postes.</li>
+        <li>Se agregan <b>9 piezas</b>: 2 postes P y 1 dintel D (tubo cuadrado 50×50×2), 2 vigas V del techo, y 4 amarres K1 y K2 (tubo 32×2).</li>
+        <li>7 nodos del domo pasan a ser especiales (PA–PD) y aparecen 2 esquinas de marco (PE).</li>
+        <li>La membrana pierde 9 paneles y gana 7 del vestíbulo (V1–V4).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Puerta a comprar o fabricar</h3>
+      <ul class="plain">
+        <li>Vano libre del marco: <b>117.9 × 207.5 cm</b>.</li>
+        <li>Opciones: puerta de 100 × 200 cm con su marco + un fijo lateral de unos 15 cm, o una puerta a medida de unos 115 × 205 cm.</li>
+        <li>Si abre hacia afuera, poner retenedor: el viento no la debe poder golpear contra el domo.</li>
+        <li>El techo del vestíbulo cae 13% hacia la puerta: <b>gotero o canalito sobre el dintel</b>.</li>
+        <li>La membrana se sella al marco con solapa y cinta; el marco queda por fuera de la tela.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card note"><h3>Verificación de la puerta</h3><p>Paso libre revisado barra por barra y panel por panel: nada invade el paso. Cada nodo queda fijo con 3 barras o más no coplanares. Con viento de 100 km/h desde 12 direcciones, con la puerta abierta y cerrada, la barra más exigida trabaja al <b>9%</b> de su capacidad. Los postes de 50×50 llegan a 23 MPa por el viento sobre la puerta cerrada; en tubo redondo 32×2 llegarían a unos 104 MPa, por eso el marco va en tubo cuadrado.</p></div>
+</section>
+
+<section id="base">
+  <div class="sec-head"><h2>Base y replanteo de anclajes</h2></div>
+  <p class="sec-sub">Origen en el centro del domo; 0° en el primer nodo alto; ángulos crecientes en sentido antihorario visto desde arriba. Los 5 nodos altos van 4.86 cm por encima de los demás (taco). Los anclajes #6 y #14 reciben además los postes de la puerta.</p>
+  <div class="panel planpanel"><svg viewBox="0 0 400 400" role="img" aria-label="Planta de anclajes con la puerta"><circle cx="200.0" cy="200.0" r="150" class="ring-guide"/><polygon points="349.6,200.0 336.8,138.6 300.7,88.8 246.2,57.8 183.8,50.9 125.4,69.9 79.0,112.1 53.2,169.3 53.2,230.7 79.0,287.9 125.4,330.1 183.8,349.1 246.2,342.2 300.7,311.2 336.8,261.4" class="ring-poly"/><line x1="200.0" y1="200.0" x2="398" y2="200.0" class="grid"/><text x="398" y="190.0" text-anchor="end" class="t-muted">0°</text><line x1="336.8" y1="138.6" x2="300.7" y2="88.8" class="door-plan" data-tip="Puerta: marco sobre #6 y #14"/><text x="343.6" y="99.7" text-anchor="middle" class="t-door">PUERTA</text><circle cx="349.6" cy="200.0" r="6" class="anc-high" data-tip="#5 H5 · azimut 0.000° · X +2.9911 · Y +0.0000"/><text x="367.5" y="204.0" text-anchor="middle" class="t-node">#5</text><circle cx="336.8" cy="138.6" r="7" class="anc-post" data-tip="#6 PA-izq · azimut 24.181° · X +2.7368 · Y +1.2289 · lleva poste de la puerta"/><text x="353.3" y="135.2" text-anchor="middle" class="t-node">#6</text><circle cx="300.7" cy="88.8" r="7" class="anc-post" data-tip="#14 PA-der · azimut 47.819° · X +2.0144 · Y +2.2231 · lleva poste de la puerta"/><text x="312.8" y="79.5" text-anchor="middle" class="t-node">#14</text><circle cx="246.2" cy="57.8" r="6" class="anc-high" data-tip="#15 H5 · azimut 72.000° · X +0.9243 · Y +2.8447"/><text x="251.8" y="44.7" text-anchor="middle" class="t-node">#15</text><circle cx="183.8" cy="50.9" r="4.5" class="anc-low" data-tip="#17 H4 · azimut 96.181° · X -0.3230 · Y +2.9826"/><text x="181.9" y="37.0" text-anchor="middle" class="t-node">#17</text><circle cx="125.4" cy="69.9" r="4.5" class="anc-low" data-tip="#12 H4 · azimut 119.819° · X -1.4918 · Y +2.6028"/><text x="116.5" y="58.2" text-anchor="middle" class="t-node">#12</text><circle cx="79.0" cy="112.1" r="6" class="anc-high" data-tip="#10 H5 · azimut 144.000° · X -2.4199 · Y +1.7581"/><text x="64.5" y="105.5" text-anchor="middle" class="t-node">#10</text><circle cx="53.2" cy="169.3" r="4.5" class="anc-low" data-tip="#8 H4 · azimut 168.181° · X -2.9364 · Y +0.6144"/><text x="35.6" y="169.6" text-anchor="middle" class="t-node">#8</text><circle cx="53.2" cy="230.7" r="4.5" class="anc-low" data-tip="#43 H4 · azimut 191.819° · X -2.9364 · Y -0.6144"/><text x="35.6" y="238.4" text-anchor="middle" class="t-node">#43</text><circle cx="79.0" cy="287.9" r="6" class="anc-high" data-tip="#45 H5 · azimut 216.000° · X -2.4199 · Y -1.7581"/><text x="64.5" y="302.5" text-anchor="middle" class="t-node">#45</text><circle cx="125.4" cy="330.1" r="4.5" class="anc-low" data-tip="#44 H4 · azimut 240.181° · X -1.4918 · Y -2.6028"/><text x="116.5" y="349.8" text-anchor="middle" class="t-node">#44</text><circle cx="183.8" cy="349.1" r="4.5" class="anc-low" data-tip="#19 H4 · azimut 263.819° · X -0.3230 · Y -2.9826"/><text x="181.9" y="371.0" text-anchor="middle" class="t-node">#19</text><circle cx="246.2" cy="342.2" r="6" class="anc-high" data-tip="#21 H5 · azimut 288.000° · X +0.9243 · Y -2.8447"/><text x="251.8" y="363.3" text-anchor="middle" class="t-node">#21</text><circle cx="300.7" cy="311.2" r="4.5" class="anc-low" data-tip="#23 H4 · azimut 312.181° · X +2.0144 · Y -2.2231"/><text x="312.8" y="328.5" text-anchor="middle" class="t-node">#23</text><circle cx="336.8" cy="261.4" r="4.5" class="anc-low" data-tip="#4 H4 · azimut 335.819° · X +2.7368 · Y -1.2289"/><text x="353.3" y="272.8" text-anchor="middle" class="t-node">#4</text><text x="200.0" y="204.0" text-anchor="middle" class="t-muted">⌀ 6.00 m</text></svg>
+    <div class="legend"><span><i class="swb" style="background:var(--ink)"></i>bajo H4</span><span><i class="swb" style="background:var(--sA)"></i>alto H5 (+4.86 cm)</span><span><i class="swb" style="background:var(--door)"></i>con poste de puerta</span></div>
+  </div>
+    <div class="tbl"><table><thead><tr><th>Nodo</th><th>Tipo</th><th class="num">Azimut</th><th class="num">Radio (m)</th><th class="num">X (m)</th><th class="num">Y (m)</th><th class="num">Sobre el piso</th><th class="num">Arranque kgf</th><th class="num">Corte kgf</th></tr></thead><tbody><tr><td class='mono'>#5</td><td>H5</td><td class='num'>0.000°</td><td class='num'>2.9911</td><td class='num'>+2.9911</td><td class='num'>+0.0000</td><td class='num'>+4.86 cm</td><td class='num'>83</td><td class='num'>77</td></tr><tr class=hl><td class='mono'>#6</td><td>PA-izq</td><td class='num'>24.181°</td><td class='num'>3.0000</td><td class='num'>+2.7368</td><td class='num'>+1.2289</td><td class='num'>+0.00 cm</td><td class='num'>72</td><td class='num'>94</td></tr><tr class=hl><td class='mono'>#14</td><td>PA-der</td><td class='num'>47.819°</td><td class='num'>3.0000</td><td class='num'>+2.0144</td><td class='num'>+2.2231</td><td class='num'>+0.00 cm</td><td class='num'>128</td><td class='num'>93</td></tr><tr><td class='mono'>#15</td><td>H5</td><td class='num'>72.000°</td><td class='num'>2.9911</td><td class='num'>+0.9243</td><td class='num'>+2.8447</td><td class='num'>+4.86 cm</td><td class='num'>81</td><td class='num'>78</td></tr><tr><td class='mono'>#17</td><td>H4</td><td class='num'>96.181°</td><td class='num'>3.0000</td><td class='num'>-0.3230</td><td class='num'>+2.9826</td><td class='num'>+0.00 cm</td><td class='num'>110</td><td class='num'>75</td></tr><tr><td class='mono'>#12</td><td>H4</td><td class='num'>119.819°</td><td class='num'>3.0000</td><td class='num'>-1.4918</td><td class='num'>+2.6028</td><td class='num'>+0.00 cm</td><td class='num'>105</td><td class='num'>62</td></tr><tr><td class='mono'>#10</td><td>H5</td><td class='num'>144.000°</td><td class='num'>2.9911</td><td class='num'>-2.4199</td><td class='num'>+1.7581</td><td class='num'>+4.86 cm</td><td class='num'>92</td><td class='num'>72</td></tr><tr><td class='mono'>#8</td><td>H4</td><td class='num'>168.181°</td><td class='num'>3.0000</td><td class='num'>-2.9364</td><td class='num'>+0.6144</td><td class='num'>+0.00 cm</td><td class='num'>79</td><td class='num'>68</td></tr><tr><td class='mono'>#43</td><td>H4</td><td class='num'>191.819°</td><td class='num'>3.0000</td><td class='num'>-2.9364</td><td class='num'>-0.6144</td><td class='num'>+0.00 cm</td><td class='num'>75</td><td class='num'>74</td></tr><tr><td class='mono'>#45</td><td>H5</td><td class='num'>216.000°</td><td class='num'>2.9911</td><td class='num'>-2.4199</td><td class='num'>-1.7581</td><td class='num'>+4.86 cm</td><td class='num'>60</td><td class='num'>64</td></tr><tr><td class='mono'>#44</td><td>H4</td><td class='num'>240.181°</td><td class='num'>3.0000</td><td class='num'>-1.4918</td><td class='num'>-2.6028</td><td class='num'>+0.00 cm</td><td class='num'>75</td><td class='num'>74</td></tr><tr><td class='mono'>#19</td><td>H4</td><td class='num'>263.819°</td><td class='num'>3.0000</td><td class='num'>-0.3230</td><td class='num'>-2.9826</td><td class='num'>+0.00 cm</td><td class='num'>78</td><td class='num'>69</td></tr><tr><td class='mono'>#21</td><td>H5</td><td class='num'>288.000°</td><td class='num'>2.9911</td><td class='num'>+0.9243</td><td class='num'>-2.8447</td><td class='num'>+4.86 cm</td><td class='num'>91</td><td class='num'>72</td></tr><tr><td class='mono'>#23</td><td>H4</td><td class='num'>312.181°</td><td class='num'>3.0000</td><td class='num'>+2.0144</td><td class='num'>-2.2231</td><td class='num'>+0.00 cm</td><td class='num'>105</td><td class='num'>62</td></tr><tr><td class='mono'>#4</td><td>H4</td><td class='num'>335.819°</td><td class='num'>3.0000</td><td class='num'>+2.7368</td><td class='num'>-1.2289</td><td class='num'>+0.00 cm</td><td class='num'>111</td><td class='num'>74</td></tr></tbody></table></div>
+  <p class="small muted">Arranque y corte: máximos por anclaje con el viento ilustrativo de 100 km/h, sin factor de seguridad. Para la fundación los tiene que usar el ingeniero con los datos oficiales del sitio.</p>
+</section>
+
+<section id="armado">
+  <div class="sec-head"><h2>Orden de armado</h2></div>
+  <p class="sec-sub">De la base al ápice, anillo por anillo. Alturas desde el piso. El detalle barra por barra está en <span class="mono">secuencia_de_armado.md</span>.</p>
+  <div class="tbl"><table><thead><tr><th class="num">Paso</th><th>Qué se arma</th><th class="num">Altura (m)</th><th class="num">Barras</th><th>Sujeción temporal</th></tr></thead><tbody><tr><td class='num'>0</td><td>Fundación: 15 anclajes (replanteo abajo) y 15 barras de la base</td><td class='num'>0</td><td class='num'>15</td><td>—</td></tr><tr><td class='num'>1</td><td>Anillo de 4 nodos</td><td class='num'>0.839</td><td class='num'>8</td><td><span class='warn'>▲ puntal hasta el paso siguiente: #0, #7, #13, #20</span></td></tr><tr><td class='num'>2</td><td>Anillo de 10 nodos</td><td class='num'>1.045</td><td class='num'>33</td><td><span class='warn2'>◆ sujetar hasta soldar las barras del paso: #2, #16</span></td></tr><tr><td class='num'>3</td><td>Anillo de 4 nodos</td><td class='num'>1.691</td><td class='num'>12</td><td>—</td></tr><tr><td class='num'>4</td><td>Anillo de 5 nodos</td><td class='num'>1.897</td><td class='num'>18</td><td>—</td></tr><tr><td class='num'>5</td><td>Marco de la puerta (soldado en taller) + amarres K1 y K2</td><td class='num'>2.100</td><td class='num'>7</td><td>—</td></tr><tr><td class='num'>6</td><td>Anillo de 5 nodos</td><td class='num'>2.337</td><td class='num'>21</td><td>—</td></tr><tr><td class='num'>7</td><td>Anillo de 1 nodo</td><td class='num'>2.522</td><td class='num'>5</td><td>—</td></tr></tbody></table></div>
+  <div class="card note warn"><h3>Nadie camina sobre las barras</h3><p>Una persona de 100 kg parada a media barra lleva el tubo de 32×2 al límite de fluencia. Armar y montar la membrana desde andamio o escalera. Los nodos marcados con ▲ quedan como bisagra: puntal o cuerda, y nadie debajo.</p></div>
+</section>
+
+<section id="cubierta">
+  <div class="sec-head"><h2>Cubierta (membrana)</h2></div>
+  <p class="sec-sub">Lados de cada panel de centro de nodo a centro de nodo. Al cortar la tela hay que sumar el solape de costura en cada borde.</p>
+  <div class="tbl"><table><thead><tr><th>Panel</th><th class="num">Lados (cm)</th><th class="num">Ángulos</th><th class="num">Área c/u (m²)</th><th class="num">Cant.</th><th class="num">Total (m²)</th></tr></thead><tbody><tr><td><b>P1</b></td><td class='num'>122.9 · 125.6 · 125.6</td><td class='num'>58.58° · 60.71° · 60.71°</td><td class='num'>0.673</td><td class='num'>41</td><td class='num'>27.60</td></tr><tr><td><b>P2</b></td><td class='num'>106.2 · 106.2 · 122.9</td><td class='num'>54.65° · 54.65° · 70.71°</td><td class='num'>0.532</td><td class='num'>25</td><td class='num'>13.31</td></tr><tr><td><b>V1</b> <span class=muted>(vestíbulo)</span></td><td class='num'>122.9 · 123.7 · 210.0</td><td class='num'>31.50° · 31.73° · 116.77°</td><td class='num'>0.679</td><td class='num'>2</td><td class='num'>1.36</td></tr><tr><td><b>V2</b> <span class=muted>(vestíbulo)</span></td><td class='num'>123.7 · 125.6 · 153.0</td><td class='num'>51.58° · 52.71° · 75.71°</td><td class='num'>0.753</td><td class='num'>2</td><td class='num'>1.51</td></tr><tr><td><b>V3</b> <span class=muted>(vestíbulo)</span></td><td class='num'>125.6 · 153.0 · 200.3</td><td class='num'>38.82° · 49.79° · 91.40°</td><td class='num'>0.961</td><td class='num'>2</td><td class='num'>1.92</td></tr><tr><td><b>V4</b> <span class=muted>(vestíbulo)</span></td><td class='num'>122.9 · 200.3 · 200.3</td><td class='num'>35.73° · 72.13° · 72.13°</td><td class='num'>1.171</td><td class='num'>1</td><td class='num'>1.17</td></tr>
+    <tr class="total"><td>Total</td><td></td><td></td><td></td><td class="num">73</td><td class="num">46.86</td></tr></tbody></table></div>
+  <p>Con 5 cm de solape por lado, las piezas cortadas suman <b>61.3 m²</b>, sin contar lo que se pierde al acomodarlas en el rollo. <b>Presupuestar unos 61–68 m²</b>, o pedir la cotización al fabricante con su propio patronaje. Aislante, forro interior y ventanas van aparte.</p>
+</section>
+
+<section id="cargas">
+  <div class="sec-head"><h2>Cargas (orden de magnitud)</h2></div>
+  <p class="sec-sub">Armadura espacial con nodos articulados, peso propio, una persona en el ápice o colgada del dintel, y viento ilustrativo de 100 km/h desde 12 direcciones con la puerta abierta y cerrada. No sustituye la firma del ingeniero.</p>
+  <div class="tbl"><table><thead><tr><th>Dato</th><th class="num">Con puerta</th><th class="num">Sin puerta</th></tr></thead><tbody>
+    <tr><td>Peso de la estructura de acero + membrana</td><td class="num">292 kg</td><td class="num">278 kg</td></tr>
+    <tr><td>Barra más exigida a compresión (% de su capacidad)</td><td class="num">184 kgf (9%)</td><td class="num">121 kgf</td></tr>
+    <tr><td>Arranque máximo en un anclaje</td><td class="num">128 kgf</td><td class="num">113 kgf</td></tr>
+    <tr><td>Corte máximo en un anclaje</td><td class="num">94 kgf</td><td class="num">59 kgf</td></tr>
+    <tr><td>Perno M12 por anclaje: capacidad del acero / demanda con FS 2.5 (tracción) y 2.0 (corte)</td><td class="num">8.4× · 8.6×</td><td class="num">9.5× · 13.7×</td></tr>
+  </tbody></table></div>
+  <p class="small muted">La puerta sube el corte en los anclajes de los postes de unos 59 a 94 kgf. El perno alcanza; el embebido en el concreto y el peso de los pilotes los define el ingeniero.</p>
+</section>
+
+<section id="notas">
+  <div class="sec-head"><h2>Notas de taller y pendientes</h2></div>
+  <div class="notegrid">
+    <div class="card note"><h3>Galvanizado</h3><p>No soldar tubo ya galvanizado: el zinc se quema en la unión. Si el domo se suelda en obra, reparar cada unión con galvanizado en frío (pintura rica en zinc), o hacer uniones empernadas y galvanizar en caliente las piezas ya soldadas en taller. Tubos cerrados: agujeros de venteo antes del baño en caliente.</p></div>
+    <div class="card note"><h3>Tubo</h3><p>Redondo 32×2 (o 1¼" = 31.75 mm) y cuadrado 50×50×2, acero estructural. Confirmar con el proveedor el grado del acero y el espesor real de pared.</p></div>
+    <div class="card note"><h3>Jacuzzi afuera</h3><p>El jacuzzi va en la terraza, fuera del domo, con su propia fundación: 1–2 t de agua no deben cargar la viga de anillo ni los pilotes del domo. Desaguar lejos de los pilotes.</p></div>
+    <div class="card note warn"><h3>Pendiente antes de construir</h3><p>Diseño de la unión en el nodo y nodo de prueba · plataforma del piso (personas, cama y muebles, unos 200 kgf/m² → cerca de 6 t sobre 28 m², con apoyos interiores) · pilotes y arranque con estudio de suelo · viento y sismo oficiales para Tovar · firma de un ingeniero estructural matriculado.</p></div>
+  </div>
+</section>
+
+<footer>Generado por <span class="mono">dome_viewer.py</span> desde <span class="mono">dome_model.py</span>, <span class="mono">dome_door.py</span> y <span class="mono">dome_build_sequence.py</span>. Verificación de la geometría: <span class="mono">dome_verify.py</span> y <span class="mono">auditoria/</span>. Verificación de la puerta: <span class="mono">python3 dome_door.py</span>.</footer>
+</div>
+<div id="tip" hidden></div>
 <script>
 (function(){
-  "use strict";
-  var DATA = JSON.parse(document.getElementById('dome-data').textContent);
-  var COLORS = { A: getVar('--a-A'), B: getVar('--a-B'), C: getVar('--a-C') };
-
-  function getVar(name){
-    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  }
-
-  /* ============ 3D VIEWER ============ */
-  var canvas = document.getElementById('domeCanvas');
-  var ctx = canvas.getContext('2d');
-  var verts = DATA.vertices;
-  var edges = DATA.edges;
-  var tris = DATA.triangles;
-
-  // bounding-box center for camera pivot
-  var min=[Infinity,Infinity,Infinity], max=[-Infinity,-Infinity,-Infinity];
-  verts.forEach(function(v){
-    for(var i=0;i<3;i++){ if(v.pos[i]<min[i]) min[i]=v.pos[i]; if(v.pos[i]>max[i]) max[i]=v.pos[i]; }
-  });
-  var center = [(min[0]+max[0])/2,(min[1]+max[1])/2,(min[2]+max[2])/2];
-  var extent = Math.max(max[0]-min[0], max[1]-min[1], max[2]-min[2]);
-
-  var state = { theta: 0.7, phi: -0.35, camDist: extent*3.4, userScale: 1 };
-  var dpr = Math.min(window.devicePixelRatio||1, 2);
-
-  function resize(){
-    var w = canvas.clientWidth, h = canvas.clientHeight;
-    canvas.width = Math.round(w*dpr); canvas.height = Math.round(h*dpr);
-    draw();
-  }
-
-  // camera-space projection (rotation + perspective only, no screen fit yet)
-  function toCamera(p){
-    var x=p[0]-center[0], y=p[1]-center[1], z=p[2]-center[2];
-    var ct=Math.cos(state.theta), st=Math.sin(state.theta);
-    var x1=x*ct+z*st, z1=-x*st+z*ct, y1=y;
-    var cp=Math.cos(state.phi), sp=Math.sin(state.phi);
-    var y2=y1*cp - z1*sp, z2=y1*sp + z1*cp, x2=x1;
-    var f = state.camDist/(state.camDist-z2);
-    return [x2*f, y2*f, z2];
-  }
-
-  function project(p, fit){
-    var c = toCamera(p);
-    var scale = fit.scale * state.userScale;
-    var sx = canvas.width/2 + (c[0]-fit.cx)*scale;
-    var sy = canvas.height/2 - (c[1]-fit.cy)*scale;
-    return [sx, sy, c[2]];
-  }
-
-  function computeFit(){
-    var xs=[], ys=[];
-    verts.forEach(function(v){ var c=toCamera(v.pos); xs.push(c[0]); ys.push(c[1]); });
-    var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs);
-    var minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys);
-    var w = Math.max(maxX-minX, 1e-6), h = Math.max(maxY-minY, 1e-6);
-    var pad = 0.86; // fraction of canvas used by the model bbox
-    var scale = Math.min((canvas.width*pad)/w, (canvas.height*pad)/h);
-    return { cx:(minX+maxX)/2, cy:(minY+maxY)/2, scale: scale };
-  }
-
-  function draw(){
-    var W=canvas.width, H=canvas.height;
-    ctx.clearRect(0,0,W,H);
-
-    var fit = computeFit();
-    var pv = verts.map(function(v){ return project(v.pos, fit); });
-    var zs = pv.map(function(p){return p[2];});
-    var zmin=Math.min.apply(null,zs), zmax=Math.max.apply(null,zs);
-    function depth01(z){ return (z-zmin)/((zmax-zmin)||1); }
-
-    // membrane
-    if(showMembrane){
-      var triD = tris.map(function(t){
-        var d=(pv[t[0]][2]+pv[t[1]][2]+pv[t[2]][2])/3; return {t:t,d:d};
-      }).sort(function(a,b){return a.d-b.d;});
-      triD.forEach(function(o){
-        var t=o.t;
-        ctx.beginPath();
-        ctx.moveTo(pv[t[0]][0],pv[t[0]][1]);
-        ctx.lineTo(pv[t[1]][0],pv[t[1]][1]);
-        ctx.lineTo(pv[t[2]][0],pv[t[2]][1]);
-        ctx.closePath();
-        var dd = depth01((pv[t[0]][2]+pv[t[1]][2]+pv[t[2]][2])/3);
-        ctx.fillStyle = 'color-mix(in srgb, ' + getVar('--ink-2') + ' ' + (6+dd*8).toFixed(0) + '%, transparent)';
-        ctx.fill();
-      });
-    }
-
-    // edges, back-to-front
-    var ed = edges.map(function(e){
-      var d=(pv[e.a][2]+pv[e.b][2])/2; return {e:e,d:d};
-    }).sort(function(a,b){return a.d-b.d;});
-
-    ed.forEach(function(o){
-      var e=o.e, a=pv[e.a], b=pv[e.b];
-      var dd = depth01(o.d);
-      var lw = (1.1 + dd*1.9) * dpr;
-      var alpha = 0.45 + dd*0.55;
-      ctx.beginPath();
-      ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]);
-      ctx.strokeStyle = hexA(COLORS[e.label], alpha);
-      ctx.lineWidth = lw;
-      ctx.lineCap='round';
-      ctx.stroke();
-    });
-
-    // hubs, back-to-front
-    var vd = verts.map(function(v,i){ return {v:v,p:pv[i],i:i}; }).sort(function(a,b){return a.p[2]-b.p[2];});
-    vd.forEach(function(o){
-      var p=o.p, v=o.v;
-      var dd = depth01(p[2]);
-      var r = (2.2 + v.degree*0.85) * (0.6+dd*0.5) * dpr;
-      ctx.beginPath();
-      ctx.arc(p[0],p[1],r,0,Math.PI*2);
-      ctx.fillStyle = v.hub_type==='H3' ? hexA(getVar('--accent'), 0.55+dd*0.45) : hexA(getVar('--ink-2'), 0.35+dd*0.45);
-      ctx.fill();
-      ctx.lineWidth = 1*dpr;
-      ctx.strokeStyle = hexA(getVar('--surface'), 0.9);
-      ctx.stroke();
-    });
-
-    lastProjected = pv;
-  }
-
-  function hexA(hex, a){
-    hex = hex.trim();
-    if(hex[0]!=='#') return hex;
-    var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
-    return 'rgba('+r+','+g+','+b+','+a+')';
-  }
-
-  var showMembrane=false, lastProjected=null;
-  document.getElementById('toggleMembrane').addEventListener('change', function(e){
-    showMembrane = e.target.checked; draw();
-  });
-  document.getElementById('resetView').addEventListener('click', function(){
-    state.theta=0.7; state.phi=-0.35; state.userScale=1; draw();
-  });
-
-  // pointer orbit
-  var dragging=false, lastX=0,lastY=0;
-  canvas.addEventListener('pointerdown', function(e){
-    dragging=true; lastX=e.clientX; lastY=e.clientY; canvas.setPointerCapture(e.pointerId);
-  });
-  canvas.addEventListener('pointerup', function(e){ dragging=false; });
-  canvas.addEventListener('pointercancel', function(){ dragging=false; });
-  canvas.addEventListener('pointermove', function(e){
-    if(dragging){
-      var dx=e.clientX-lastX, dy=e.clientY-lastY;
-      lastX=e.clientX; lastY=e.clientY;
-      state.theta += dx*0.008;
-      state.phi = Math.max(-1.4, Math.min(1.4, state.phi + dy*0.008));
-      hideTip();
-      draw();
-    } else {
-      hoverCheck(e);
-    }
-  });
-  canvas.addEventListener('wheel', function(e){
-    e.preventDefault();
-    state.userScale = Math.max(0.4, Math.min(3, state.userScale * (1 - e.deltaY*0.001)));
-    draw();
-  }, {passive:false});
-
-  var tip = document.getElementById('hubTip');
-  function hideTip(){ tip.hidden=true; }
-  function hoverCheck(e){
-    if(!lastProjected) return;
-    var rect = canvas.getBoundingClientRect();
-    var mx = (e.clientX-rect.left)*(canvas.width/rect.width);
-    var my = (e.clientY-rect.top)*(canvas.height/rect.height);
-    var best=-1, bestD=26*dpr;
-    lastProjected.forEach(function(p,i){
-      var d = Math.hypot(p[0]-mx,p[1]-my);
-      if(d<bestD){ bestD=d; best=i; }
-    });
-    if(best<0){ hideTip(); return; }
-    var v = verts[best];
-    var connected = edges.filter(function(e2){return e2.a===best||e2.b===best;})
-      .map(function(e2){return e2.label;}).sort().join(', ');
-    tip.innerHTML = '<b>'+v.hub_type+'</b> · '+v.degree+' barras<br>['+connected+']';
-    tip.style.left = (e.clientX - rect.left + 14)+'px';
-    tip.style.top = (e.clientY - rect.top + 10)+'px';
-    tip.hidden = false;
-  }
-  canvas.addEventListener('pointerleave', hideTip);
-
-  window.addEventListener('resize', debounce(resize, 120));
-  function debounce(fn,ms){ var t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
-
-  resize();
-
-  /* ============ HUB TYPE GALLERY ============ */
-  var gallery = document.getElementById('hubGallery');
-  var typeOrder = ['H3','H2','H1','H5','H4'];
-  var typeByName = {};
-  DATA.hub_types.forEach(function(t){ typeByName[t.type]=t; });
-
-  typeOrder.forEach(function(tname){
-    var t = typeByName[tname];
-    var d = t.example_detail;
-    var struts = d.struts;
-    // azimut en el plano tangente (lo que se marca en el disco, suma 360° en nodos
-    // cerrados); el angulo 3D entre tubos queda solo como dato de verificacion
-    var angles = d.azimuths_between_adjacent || d.angles_between_adjacent;
-    var angles3d = d.angles_between_adjacent;
-    var n = struts.length;
-    var closed = d.is_closed_fan;
-
-    var cx=140, cy=150, R=88, labelR=104, arcR=40;
-    var cum=0;
-    var rayAngles=[0];
-    for(var i=0;i<n-1;i++){ cum += angles[i]; rayAngles.push(cum); }
-
-    function pt(deg,r){
-      var rad = (deg-90)*Math.PI/180;
-      return [cx + r*Math.cos(rad), cy + r*Math.sin(rad)];
-    }
-
-    var svg = '<svg viewBox="0 0 280 260" xmlns="http://www.w3.org/2000/svg">';
-
-    // residual gap wedge
-    var lastAngle = rayAngles[n-1];
-    var gapSpan = 360-lastAngle;
-    // en nodos cerrados los azimuts suman 360°: no hay hueco, el ultimo angulo se dibuja como arco
-    if(!closed && gapSpan>0.5){
-      var p1 = pt(lastAngle, R*0.5), p2 = pt(360, R*0.5);
-      var large = gapSpan>180?1:0;
-      svg += '<path d="M '+cx+' '+cy+' L '+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+' A '+(R*0.5)+' '+(R*0.5)+' 0 '+large+' 1 '+p2[0].toFixed(1)+' '+p2[1].toFixed(1)+' Z" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1"/>';
-      var midp = pt((lastAngle+360)/2, R*0.32);
-      svg += '<text x="'+midp[0].toFixed(1)+'" y="'+midp[1].toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--muted)">'+(closed?'cierre cónico':'hacia el borde')+'<\/text>';
-      svg += '<text x="'+midp[0].toFixed(1)+'" y="'+(midp[1]+11).toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--muted)">'+gapSpan.toFixed(1)+'°<\/text>';
-    }
-
-    // angle arcs between consecutive rays (closed hubs also get last -> first)
-    for(i=0;i<(closed?n:n-1);i++){
-      var a0=rayAngles[i], a1=(i===n-1)?rayAngles[0]+360:rayAngles[i+1];
-      var mp = pt((a0+a1)/2, arcR);
-      var q1 = pt(a0, arcR), q2 = pt(a1, arcR);
-      var lg = (a1-a0)>180?1:0;
-      svg += '<path d="M '+q1[0].toFixed(1)+' '+q1[1].toFixed(1)+' A '+arcR+' '+arcR+' 0 '+lg+' 1 '+q2[0].toFixed(1)+' '+q2[1].toFixed(1)+'" fill="none" stroke="var(--line)" stroke-width="1.2"/>';
-      svg += '<text x="'+mp[0].toFixed(1)+'" y="'+mp[1].toFixed(1)+'" text-anchor="middle" dominant-baseline="middle" font-family="IBM Plex Mono" font-size="10.5" font-weight="600" fill="var(--ink)">'+angles[i].toFixed(2)+'°<\/text>';
-    }
-
-    // rays + end labels
-    for(i=0;i<n;i++){
-      var ang = rayAngles[i];
-      var end = pt(ang, R);
-      var lab = pt(ang, labelR);
-      var col = 'var(--a-'+struts[i].label+')';
-      svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+end[0].toFixed(1)+'" y2="'+end[1].toFixed(1)+'" stroke="'+col+'" stroke-width="3.5" stroke-linecap="round"/>';
-      var anchor = (lab[0]>cx+4)?'start':(lab[0]<cx-4?'end':'middle');
-      svg += '<text x="'+lab[0].toFixed(1)+'" y="'+lab[1].toFixed(1)+'" text-anchor="'+anchor+'" dominant-baseline="middle" font-family="IBM Plex Mono" font-size="11" font-weight="700" fill="'+col+'">'+struts[i].label+'<\/text>';
-      svg += '<text x="'+lab[0].toFixed(1)+'" y="'+(lab[1]+12).toFixed(1)+'" text-anchor="'+anchor+'" dominant-baseline="middle" font-family="IBM Plex Mono" font-size="9" fill="var(--muted)">'+struts[i].length_cm.toFixed(1)+' cm<\/text>';
-    }
-
-    // center hub dot
-    svg += '<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="var(--ink)"/>';
-    svg += '</svg>';
-
-    var tiltVals = {};
-    struts.forEach(function(s){ tiltVals[s.label]=s.tilt_from_tangent_deg; });
-    var tiltStr = Object.keys(tiltVals).sort().map(function(k){return k+': '+tiltVals[k].toFixed(1)+'°';}).join('  ·  ');
-
-    var card = document.createElement('div');
-    card.className='card hubcard';
-    card.innerHTML =
-      '<div class="hh"><span class="hname">'+t.type+'</span><span class="hcount">× '+t.count+' nodos</span></div>'+
-      svg+
-      '<div class="desc">'+n+' barras concurrentes · '+(closed?'nodo interior (cerrado)':'nodo de borde (abierto)')+'</div>'+
-      '<div class="tilt">ángulo 3D entre tubos (solo para verificar la pieza armada) — '+angles3d.map(function(a){return a.toFixed(2)+'°';}).join(' · ')+'</div>'+
-      '<div class="tilt">inclinación bajo el plano tangente — '+tiltStr+'</div>';
-    gallery.appendChild(card);
-  });
-
-  /* ============ BASE RING PLAN ============ */
-  var bsvg = document.getElementById('basePlan');
-  var ring = DATA.base_ring_plan;
-  var bcx=170, bcy=170, bR=130;
-  var maxR = Math.max.apply(null, ring.map(function(r){return r.radius_m;}));
-  var s = '';
-
-  // grid circle + cross
-  s += '<circle cx="'+bcx+'" cy="'+bcy+'" r="'+bR+'" fill="none" stroke="var(--grid)" stroke-width="1"/>';
-  s += '<circle cx="'+bcx+'" cy="'+bcy+'" r="'+(bR*ring.filter(function(r){return r.type==='H5';})[0].radius_m/maxR)+'" fill="none" stroke="var(--grid)" stroke-width="1" stroke-dasharray="2,3"/>';
-
-  function bpt(angleDeg, rNorm){
-    var rad = (angleDeg-90)*Math.PI/180;
-    return [bcx + rNorm*bR*Math.cos(rad), bcy + rNorm*bR*Math.sin(rad)];
-  }
-
-  // polygon path through ring in order
-  var path = ring.map(function(r,i){
-    var p = bpt(r.angle_deg, r.radius_m/maxR);
-    return (i===0?'M ':'L ')+p[0].toFixed(1)+' '+p[1].toFixed(1);
-  }).join(' ')+' Z';
-  s += '<path d="'+path+'" fill="color-mix(in srgb, var(--accent) 6%, transparent)" stroke="var(--ink-2)" stroke-width="1.4"/>';
-
-  ring.forEach(function(r){
-    var p = bpt(r.angle_deg, r.radius_m/maxR);
-    var isHigh = r.type==='H5';
-    s += '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(isHigh?6:4.5)+'" fill="'+(isHigh?'var(--accent)':'var(--ink)')+'" stroke="var(--surface)" stroke-width="1.5"/>';
-    if(isHigh){
-      var lp = bpt(r.angle_deg, r.radius_m/maxR + 0.13);
-      s += '<text x="'+lp[0].toFixed(1)+'" y="'+lp[1].toFixed(1)+'" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="700" fill="var(--accent)">+'+r.height_cm.toFixed(1)+'cm<\/text>';
-    }
-  });
-
-  s += '<text x="'+bcx+'" y="'+(bcy+4)+'" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="var(--muted)">⌀6.00 m<\/text>';
-  bsvg.innerHTML = s;
-
+"use strict";
+var DATA={"v":[[2.2035,0.8392,1.601],[2.5371,1.0453,0.6144],[2.5371,1.0453,-0.6144],null,[2.7368,0.0,1.2289],[2.9911,0.0486,-0.0],[2.7368,0.0,-1.2289],[-2.7237,0.8392,-0.0],[-2.9364,0.0,-0.6144],[-2.4137,1.0453,-0.9942],[-2.4199,0.0486,-1.7581],[-1.6914,1.0453,-1.9884],[-1.4918,0.0,-2.6028],[-0.8417,0.8392,-2.5904],[2.0144,0.0,-2.2231],[0.9243,0.0486,-2.8447],[1.3684,1.0453,-2.2231],[-0.323,0.0,-2.9826],[0.1996,1.0453,-2.6028],[-0.323,0.0,2.9826],[-0.8417,0.8392,2.5904],[0.9243,0.0486,2.8447],[0.1996,1.0453,2.6028],[2.0144,0.0,2.2231],[1.3684,1.0453,2.2231],[0.0,2.5225,-0.0],[0.8457,2.3375,-0.6144],null,[-0.323,2.3375,-0.9942],[0.5713,1.8972,-1.7581],[-0.6461,1.6914,-1.9884],[-0.323,2.3375,0.9942],[-0.6461,1.6914,1.9884],[0.8457,2.3375,0.6144],[0.5713,1.8972,1.7581],[1.6914,1.6914,1.2289],[1.8486,1.8972,-0.0],[-1.0453,2.3375,-0.0],[-1.4956,1.8972,-1.0866],[-2.0907,1.6914,-0.0],[-1.4956,1.8972,1.0866],[-1.6914,1.0453,1.9884],[-2.4137,1.0453,0.9942],[-2.9364,0.0,0.6144],[-1.4918,0.0,2.6028],[-2.4199,0.0486,1.7581],[2.7368,2.1,-1.2289],[2.0144,2.1,-2.2231]],"e":[[0,1,"C"],[0,4,"C"],[0,23,"C"],[0,24,"C"],[0,35,"C"],[1,2,"B"],[1,4,"B"],[1,5,"A"],[1,35,"B"],[1,36,"A"],[2,5,"A"],[2,6,"B"],[2,36,"A"],[2,46,"K1"],[4,5,"A"],[4,23,"B"],[5,6,"A"],[6,14,"B"],[6,46,"P"],[7,8,"C"],[7,9,"C"],[7,39,"C"],[7,42,"C"],[7,43,"C"],[8,9,"B"],[8,10,"A"],[8,43,"B"],[9,10,"A"],[9,11,"B"],[9,38,"A"],[9,39,"B"],[10,11,"A"],[10,12,"A"],[11,12,"B"],[11,13,"C"],[11,30,"B"],[11,38,"A"],[12,13,"C"],[12,17,"B"],[13,17,"C"],[13,18,"C"],[13,30,"C"],[14,15,"A"],[14,16,"B"],[14,47,"P"],[15,16,"A"],[15,17,"A"],[15,18,"A"],[16,18,"B"],[16,29,"A"],[16,47,"K1"],[17,18,"B"],[18,29,"A"],[18,30,"B"],[19,20,"C"],[19,21,"A"],[19,22,"B"],[19,44,"B"],[20,22,"C"],[20,32,"C"],[20,41,"C"],[20,44,"C"],[21,22,"A"],[21,23,"A"],[21,24,"A"],[22,24,"B"],[22,32,"B"],[22,34,"A"],[23,24,"B"],[24,34,"A"],[24,35,"B"],[25,26,"C"],[25,28,"C"],[25,31,"C"],[25,33,"C"],[25,37,"C"],[26,28,"B"],[26,29,"A"],[26,33,"B"],[26,36,"A"],[26,46,"V"],[26,47,"V"],[28,29,"A"],[28,30,"B"],[28,37,"B"],[28,38,"A"],[29,30,"A"],[29,47,"K2"],[30,38,"A"],[31,32,"B"],[31,33,"B"],[31,34,"A"],[31,37,"B"],[31,40,"A"],[32,34,"A"],[32,40,"A"],[32,41,"B"],[33,34,"A"],[33,35,"B"],[33,36,"A"],[34,35,"A"],[35,36,"A"],[36,46,"K2"],[37,38,"A"],[37,39,"B"],[37,40,"A"],[38,39,"A"],[39,40,"A"],[39,42,"B"],[40,41,"A"],[40,42,"A"],[41,42,"B"],[41,44,"B"],[41,45,"A"],[42,43,"B"],[42,45,"A"],[43,45,"A"],[44,45,"A"],[46,47,"D"]],"t":[[0,4,1],[4,5,1],[1,5,2],[5,6,2],[7,9,8],[9,10,8],[9,11,10],[11,12,10],[11,13,12],[15,16,14],[17,18,15],[15,18,16],[17,13,18],[17,13,12],[21,22,19],[19,22,20],[23,24,21],[21,24,22],[23,0,24],[23,0,4],[25,28,26],[28,29,26],[28,30,29],[30,18,29],[29,18,16],[30,13,18],[25,33,31],[33,34,31],[31,34,32],[34,22,32],[32,22,20],[33,35,34],[35,24,34],[34,24,22],[35,0,24],[25,33,26],[33,36,26],[33,35,36],[35,1,36],[36,1,2],[35,0,1],[25,37,28],[37,38,28],[28,38,30],[38,11,30],[30,11,13],[37,39,38],[39,9,38],[38,9,11],[39,7,9],[25,37,31],[37,40,31],[31,40,32],[40,41,32],[32,41,20],[37,39,40],[39,42,40],[40,42,41],[39,7,42],[43,7,8],[45,41,44],[44,41,20],[43,42,45],[45,42,41],[43,7,42],[44,19,20],[6,2,46],[2,36,46],[36,26,46],[14,16,47],[16,29,47],[29,26,47],[46,47,26]],"type":{"0":"H3","1":"H1","2":"PB-izq","4":"H4","5":"H5","6":"PA-izq","7":"H3","8":"H4","9":"H1","10":"H5","11":"H1","12":"H4","13":"H3","14":"PA-der","15":"H5","16":"PB-der","17":"H4","18":"H1","19":"H4","20":"H3","21":"H5","22":"H1","23":"H4","24":"H1","25":"H3","26":"PD","28":"H1","29":"PC-der","30":"H1","31":"H1","32":"H1","33":"H1","34":"H2","35":"H1","36":"PC-izq","37":"H1","38":"H2","39":"H1","40":"H2","41":"H1","42":"H1","43":"H4","44":"H4","45":"H5","46":"PE-izq","47":"PE-der"},"deg":{"0":5,"1":6,"2":5,"4":4,"5":4,"6":4,"7":5,"8":4,"9":6,"10":4,"11":6,"12":4,"13":5,"14":4,"15":4,"16":5,"17":4,"18":6,"19":4,"20":5,"21":4,"22":6,"23":4,"24":6,"25":5,"26":7,"28":6,"29":6,"30":6,"31":6,"32":6,"33":6,"34":6,"35":6,"36":6,"37":6,"38":6,"39":6,"40":6,"41":6,"42":6,"43":4,"44":4,"45":4,"46":5,"47":5},"door":[6,14,47,46],"dir":[0.809,-0.5878]};
+var TH0=Math.atan2(-DATA.dir[0],DATA.dir[1])+0.5;   /* puerta de frente, girada un poco */
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+/* ---- selector de retiro ---- */
+var btns=document.querySelectorAll('.segbtn');
+btns.forEach(function(b){b.addEventListener('click',function(){
+  btns.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+  document.querySelectorAll('.cutblock').forEach(function(blk){blk.hidden=blk.getAttribute('data-sb')!==b.getAttribute('data-sb');});
+  try{localStorage.setItem('retiro',b.getAttribute('data-sb'));}catch(e){}
+});});
+try{var saved=localStorage.getItem('retiro'); if(saved){var sb=document.querySelector('.segbtn[data-sb="'+saved+'"]'); if(sb) sb.click();}}catch(e){}
+/* ---- tooltips de los dibujos ---- */
+var tip=document.getElementById('tip');
+function showTip(e){var t=e.target.closest&&e.target.closest('[data-tip]'); if(!t){tip.hidden=true;return;}
+  tip.textContent=t.getAttribute('data-tip'); tip.hidden=false; var x=e.clientX+14,y=e.clientY+12,w=tip.offsetWidth;
+  if(x+w>window.innerWidth-8)x=e.clientX-w-14; tip.style.left=x+'px'; tip.style.top=y+'px';}
+document.addEventListener('pointermove',showTip); document.addEventListener('pointerdown',showTip);
+document.addEventListener('scroll',function(){tip.hidden=true;},{passive:true});
+/* ---- vista 3D ---- */
+var cv=document.getElementById('c3d'), ctx=cv.getContext('2d');
+var V=DATA.v, E=DATA.e, T=DATA.t, act=[];
+V.forEach(function(p,i){if(p)act.push(i);});
+var mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+act.forEach(function(i){for(var k=0;k<3;k++){mn[k]=Math.min(mn[k],V[i][k]);mx[k]=Math.max(mx[k],V[i][k]);}});
+var ctr=[(mn[0]+mx[0])/2,(mn[1]+mx[1])/2,(mn[2]+mx[2])/2];
+var st={th:TH0,ph:0.32,zoom:1}, dpr=Math.min(window.devicePixelRatio||1,2), showMem=false, proj=[];
+function cam(p){var x=p[0]-ctr[0],y=p[1]-ctr[1],z=p[2]-ctr[2];var c=Math.cos(st.th),s=Math.sin(st.th);
+  var x1=x*c+z*s,z1=-x*s+z*c;var cp=Math.cos(st.ph),sp=Math.sin(st.ph);var y2=y*cp-z1*sp,z2=y*sp+z1*cp;var f=22/(22-z2);return [x1*f,y2*f,z2];}
+function colorOf(l){return {A:cssv('--sA'),B:cssv('--sB'),C:cssv('--sC')}[l]||cssv('--door');}
+function draw(){var W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+  var cs={};act.forEach(function(i){cs[i]=cam(V[i]);});
+  var sc=Math.min(W,H)/5.6*st.zoom;
+  act.forEach(function(i){var c=cs[i];proj[i]=[W/2+c[0]*sc,H/2-c[1]*sc+H*0.02,c[2]];});
+  if(showMem){T.map(function(t){return {t:t,d:(proj[t[0]][2]+proj[t[1]][2]+proj[t[2]][2])/3};}).sort(function(a,b){return a.d-b.d;}).forEach(function(o){
+    var t=o.t;ctx.beginPath();ctx.moveTo(proj[t[0]][0],proj[t[0]][1]);ctx.lineTo(proj[t[1]][0],proj[t[1]][1]);ctx.lineTo(proj[t[2]][0],proj[t[2]][1]);ctx.closePath();
+    ctx.fillStyle='color-mix(in srgb, '+cssv('--ink-2')+' 9%, transparent)';ctx.fill();});
+    var d=DATA.door;ctx.beginPath();ctx.moveTo(proj[d[0]][0],proj[d[0]][1]);for(var k=1;k<4;k++)ctx.lineTo(proj[d[k]][0],proj[d[k]][1]);ctx.closePath();
+    ctx.fillStyle='color-mix(in srgb, '+cssv('--sA')+' 22%, transparent)';ctx.fill();}
+  var zs=act.map(function(i){return proj[i][2];}),zmin=Math.min.apply(null,zs),zmax=Math.max.apply(null,zs);
+  function dep(z){return (z-zmin)/((zmax-zmin)||1);}
+  E.map(function(e){return {e:e,d:(proj[e[0]][2]+proj[e[1]][2])/2};}).sort(function(a,b){return a.d-b.d;}).forEach(function(o){
+    var e=o.e,a=proj[e[0]],b=proj[e[1]],dd=dep(o.d),door=!/^[ABC]$/.test(e[2]);
+    ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.strokeStyle=colorOf(e[2]);ctx.globalAlpha=0.35+dd*0.65;
+    ctx.lineWidth=((door?2.4:1.1)+dd*1.6)*dpr;ctx.lineCap='round';ctx.stroke();ctx.globalAlpha=1;});
+  act.slice().sort(function(a,b){return proj[a][2]-proj[b][2];}).forEach(function(i){var p=proj[i],dd=dep(p[2]);
+    ctx.beginPath();ctx.arc(p[0],p[1],(1.8+DATA.deg[i]*0.55)*(0.6+dd*0.5)*dpr,0,Math.PI*2);ctx.fillStyle=cssv('--ink-2');ctx.globalAlpha=0.35+dd*0.6;ctx.fill();ctx.globalAlpha=1;});}
+function resize(){cv.width=Math.round(cv.clientWidth*dpr);cv.height=Math.round(cv.clientHeight*dpr);draw();}
+var drag=false,lx=0,ly=0,ht=document.getElementById('hubTip');
+cv.addEventListener('pointerdown',function(e){drag=true;lx=e.clientX;ly=e.clientY;cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointerup',function(){drag=false;}); cv.addEventListener('pointercancel',function(){drag=false;});
+cv.addEventListener('pointermove',function(e){if(drag){st.th+=(e.clientX-lx)*0.008;st.ph=Math.max(-1.4,Math.min(1.4,st.ph+(e.clientY-ly)*0.008));lx=e.clientX;ly=e.clientY;ht.hidden=true;draw();return;}
+  var r=cv.getBoundingClientRect(),mx=(e.clientX-r.left)*dpr,my=(e.clientY-r.top)*dpr,best=-1,bd=22*dpr;
+  act.forEach(function(i){var d=Math.hypot(proj[i][0]-mx,proj[i][1]-my);if(d<bd){bd=d;best=i;}});
+  if(best<0){ht.hidden=true;return;}
+  var labs=E.filter(function(x){return x[0]===best||x[1]===best;}).map(function(x){return x[2];}).sort().join(' ');
+  ht.textContent='#'+best+' · '+DATA.type[best]+' · '+labs;ht.hidden=false;ht.style.left=(e.clientX-r.left+14)+'px';ht.style.top=(e.clientY-r.top+10)+'px';});
+cv.addEventListener('pointerleave',function(){ht.hidden=true;});
+cv.addEventListener('wheel',function(e){e.preventDefault();st.zoom=Math.max(0.5,Math.min(3,st.zoom*(1-e.deltaY*0.001)));draw();},{passive:false});
+document.getElementById('mem').addEventListener('change',function(e){showMem=e.target.checked;draw();});
+document.getElementById('reset').addEventListener('click',function(){st.th=TH0;st.ph=0.32;st.zoom=1;draw();});
+var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(resize,120);});
+if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+resize();
 })();
 </script>

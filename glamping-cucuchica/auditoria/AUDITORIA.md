@@ -19,6 +19,12 @@ python3 auditoria_independiente.py     # Python estándar, sin instalar nada, ~2
 python3 reporte_visual.py              # regenera reporte_auditoria.html (reporte visual)
 ```
 
+> **Actualización (mismo día):** después de la auditoría se **diseñó la puerta**
+> (`../dome_door.py`, §11 del documento) y se **rehízo el plano de taller**
+> (`../domo-3v-cucuchica.html`, generado con `../dome_viewer.py`) con todas las
+> correcciones y la puerta incluida. El jacuzzi va en la terraza exterior con fundación
+> propia. Los hallazgos de abajo describen el domo tal como estaba publicado, sin puerta.
+
 ---
 
 ## Veredicto en una línea
@@ -310,18 +316,21 @@ secuencia.
 
 Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**:
 
-1. **Puerta y altura útil.** El domo mide 2.52 m en el centro. A 1.5 m del centro el
-   techo está a 2.13 m, a 2.0 m está a 1.77 m y a 2.5 m está a 1.22 m. Solo **9.1 m²
-   (32% del piso) tienen 2.0 m o más de altura libre.** Una puerta de 2 m **no cabe** en
-   la superficie del domo: requiere un portal o vestíbulo que corta barras de la
-   triangulación, y eso hay que diseñarlo y recalcularlo. Para un producto de hotel
-   (cama, baño, jacuzzi en la unidad "signature") conviene evaluar un domo más alto
-   (5/8 de esfera, 4V, o 3/8 sobre un muro de arranque de 0.8–1.0 m). Es una decisión
-   de negocio, no un detalle.
+1. **Puerta** — ✅ **resuelto después de la auditoría.** Portal con marco de 50×50×2
+   sobre los anclajes existentes #6 y #14, techo de vestíbulo hasta el nodo #26 y vano
+   libre de 117.9 × 207.5 cm. Se quitan los nodos #3 y #27 (10 barras) y se agregan 9
+   piezas. Está verificado en `../dome_door.py`: paso libre, estabilidad, y armadura con
+   viento en 12 direcciones y puerta abierta o cerrada. La barra más exigida trabaja al 9%.
+   El corte en los anclajes de los postes sube de 59 a 94 kgf y el perno M12 sigue
+   sobrando. **Altura útil:** sin cambios. Solo 9.1 m² (32% del piso) tienen 2.0 m o más.
+   Si hiciera falta más espacio de pie, las opciones siguen siendo 5/8, 4V o un muro de
+   arranque.
 2. **Plataforma y pilotes.** §9 dimensiona los pilotes solo con el peso del domo
-   (0.28 t). La plataforma carga huéspedes, muebles, cama y un **jacuzzi con agua (1–2
-   t)**, varias veces más que el domo. Con pilotes solo en el perímetro, las vigas del
-   piso salvarían unos 6 m: casi seguro hacen falta pilotes interiores.
+   (0.28 t). La plataforma carga huéspedes, cama y muebles: unos 200 kgf/m², cerca de
+   **6 t** sobre 28 m², unas 20 veces el domo. Con pilotes solo en el perímetro, las
+   vigas del piso salvarían unos 6 m: casi seguro hacen falta pilotes interiores. El
+   **jacuzzi va afuera**, en la terraza, con fundación propia (1–2 t con agua), sin
+   cargar la viga de anillo ni los pilotes del domo.
 3. **Arranque de pilotes.** Hay que verificar el levantamiento neto de viento con
    presión interna (1.3–1.5 t, E7) contra el peso de pilotes y viga más la fricción del
    suelo.
@@ -356,7 +365,10 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
 | `dome_build_sequence.py` | Alturas desde el piso; estabilidad 3D (3 barras no coplanares); ordinal correcto ("1ª de 2"); tabla de replanteo en el Paso 0; aviso de no pisar barras. |
 | `secuencia_de_armado.md` | Regenerado con lo anterior. |
 | `domo-3v-cucuchica.md` | Recuadro de auditoría al inicio y correcciones marcadas en el texto (§2, §2.1, §3, §4, §5, §6, §6.2, §8, §8.3, §9.2, §9.3, §9.4, §10). |
-| `domo-3v-cucuchica.html` | Aviso de auditoría; diagramas de nodo con azimuts; notas de pandeo, galvanizado, retiro de corte y membrana corregidas. |
+| `domo-3v-cucuchica.html` | **Rehecho como plano de taller** y generado por `dome_viewer.py`: vista 3D con puerta, piezas y plan de corte para 3 retiros, plantillas de todos los discos de nodo (estándar y de puerta), dibujos de la puerta, replanteo, armado, cubierta, cargas y notas. |
+| `dome_door.py` | **Nuevo.** Diseño y verificación de la puerta (portal de acceso). |
+| `dome_viewer.py` | **Nuevo.** Generador del plano de taller. |
+| `dome_build_sequence.py` (2ª pasada) | Arma el domo con puerta por defecto (`--sin-puerta` para el cerrado). Distingue si un nodo bisagra se sujeta hasta el paso siguiente o solo hasta soldar las barras del mismo paso. |
 
 No se tocó `dome_model.py`: su geometría es correcta. `dome_verify.py` y
 `reporte_verificacion.txt` quedan igual y siguen pasando.

@@ -143,7 +143,7 @@ footer{padding-block:28px; color:var(--muted); font-size:13px}
     <div class="vcell"><span class="chip good">✓ Correcto</span><span class="n">100%</span><span class="t">de la geometría y la aritmética de cargas</span></div>
     <div class="vcell"><span class="chip crit">▲ Alto</span><span class="n">4</span><span class="t">errores que bloqueaban la fabricación o el armado seguro, ya corregidos</span></div>
     <div class="vcell"><span class="chip serious">◆ Medio</span><span class="n">5</span><span class="t">errores de dinero o de riesgo, corregidos o anotados</span></div>
-    <div class="vcell"><span class="chip neutral">○ Sin calcular</span><span class="n">8</span><span class="t">temas que cuestan dinero y todavía no tienen cálculo</span></div>
+    <div class="vcell"><span class="chip neutral">○ Sin calcular</span><span class="n">7</span><span class="t">temas que cuestan dinero y todavía no tienen cálculo</span></div>
   </div>
 </header>
 
@@ -596,11 +596,11 @@ footer{padding-block:28px; color:var(--muted); font-size:13px}
 </svg></div>
     <div>
       <p>El domo mide 2.52 m en el centro. A 2.0 m del centro el techo está a 1.77 m, y a 2.5 m está a 1.22 m. Una puerta de 2 m pegada a la pared queda cortada por el domo.</p>
-      <p>Para un producto de hotel (cama, baño, jacuzzi) conviene evaluar un domo 5/8, un 4V o un 3/8 sobre un muro de arranque de 0.8–1.0 m. Es una decisión de negocio que cambia toda la lista de materiales, así que va antes de comprar.</p>
+      <p><b>Actualización:</b> la puerta ya está resuelta con un portal: el marco se apoya en el borde y un techo de vestíbulo entra al domo hasta donde el techo pasa de 2 m (ver el plano de taller). La altura útil del resto del domo no cambia: si hiciera falta más espacio de pie, las opciones siguen siendo un domo 5/8, un 4V o un muro de arranque.</p>
     </div>
   </div>
-  <ul class="misslist"><li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Puerta y altura útil</b><p>El domo mide 2.52 m. Solo el 32% del piso tiene 2 m de altura libre y una puerta de 2 m no cabe en la superficie. Hace falta un portal, que corta barras y hay que calcular.</p></div></li>
-<li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Plataforma y pilotes</b><p>§9 dimensiona los pilotes con el domo (0.28 t). El piso, la gente y un jacuzzi con agua (1–2 t) pesan varias veces más. Probablemente hacen falta pilotes interiores.</p></div></li>
+  <ul class="misslist"><li class='miss'><span class='chip good'>✓ Resuelto</span><div><b>Puerta</b><p>Ya diseñada y verificada: portal con marco de 50×50 sobre dos anclajes existentes, techo de vestíbulo y vano libre de 117.9 × 207.5 cm (dome_door.py y §11 del documento). Sube el corte en los anclajes de los postes de 59 a 94 kgf: el perno sigue sobrando.</p></div></li>
+<li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Plataforma y pilotes</b><p>§9 dimensiona los pilotes con el domo (0.28 t). El piso con personas, cama y muebles (unos 200 kgf/m², cerca de 6 t) pesa unas 20 veces más. Probablemente hacen falta pilotes interiores. El jacuzzi va afuera, con fundación propia.</p></div></li>
 <li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Arranque de pilotes</b><p>Levantamiento neto de viento con presión interna: 1.3–1.5 t, contra ≈1.95 t de peso de pilotes. Casi sin margen.</p></div></li>
 <li class='miss'><span class='chip serious'>◆ Medio</span><div><b>Diseño del conector (hub)</b><p>De él dependen el retiro de corte, la lista de corte, el galvanizado y la resistencia de las uniones.</p></div></li>
 <li class='miss'><span class='chip serious'>◆ Medio</span><div><b>Lista de materiales incompleta</b><p>Pestañas (~0.77 m² de plancha), pernos, soldadura, anclajes, tacos, concreto, deck, aislante, forro, ventanas, puerta, faldón.</p></div></li>
@@ -610,6 +610,7 @@ footer{padding-block:28px; color:var(--muted); font-size:13px}
 </section>
 
 <footer>
+  <p><b>Actualización 24 sep 2026:</b> después de esta auditoría se diseñó la puerta y se rehízo el plano de taller (<span class="mono">domo-3v-cucuchica.html</span>) con todas las correcciones. El jacuzzi va en la terraza exterior con fundación propia. Esta página describe el domo tal como estaba publicado, sin puerta: por eso el paso 1 tiene 5 nodos bisagra; con la puerta son 4, más 2 en el paso 2 que se amarran dentro del mismo paso.</p>
   <p>Todo se reproduce con <span class="mono">python3 auditoria_independiente.py</span> y <span class="mono">python3 reporte_visual.py</span> en <a href="https://github.com/luiscruces-dev/Claude/tree/claude/google-chica-glamping-review-veyz64/glamping-cucuchica/auditoria">glamping-cucuchica/auditoria</a>. Informe completo: <a href="https://github.com/luiscruces-dev/Claude/tree/claude/google-chica-glamping-review-veyz64/glamping-cucuchica/auditoria/AUDITORIA.md">AUDITORIA.md</a>. El análisis de barras supone nodos articulados, y el viento es el valor ilustrativo del documento: esto no reemplaza la firma de un ingeniero estructural.</p>
 </footer>
 </div>

@@ -8,13 +8,21 @@ Corre: `python3 auditoria_independiente.py && python3 reporte_visual.py`
 
 import html
 import json
+import sys
 import math
 import os
 import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = json.load(open(os.path.join(HERE, "auditoria_datos.json"), encoding="utf-8"))
-SEQ = open(os.path.join(HERE, "..", "secuencia_de_armado.md"), encoding="utf-8").read()
+# numeracion de taller: la del modelo original (la misma de secuencia_de_armado.md). La
+# auditoria describe el domo tal como se publico, sin puerta, asi que la secuencia se
+# calcula aqui sobre el domo cerrado en vez de leer el .md (que ahora trae la puerta).
+sys.path.insert(0, os.path.join(HERE, ".."))
+import dome_build_sequence as _seq  # noqa: E402
+from dome_model import build_dome as _build_dome  # noqa: E402
+_DOME = _build_dome()
+_STEPS, _ = _seq.build_sequence(_DOME)
 REPO = "https://github.com/luiscruces-dev/Claude/tree/claude/google-chica-glamping-review-veyz64/glamping-cucuchica"
 
 
@@ -193,19 +201,18 @@ def heights_rows():
 # ------------------------------------------------------------------ E4/E5 planta
 
 def parse_anchors():
-    blk = SEQ.split("## Paso 0")[1].split("**Barras del anillo base")[0]
     rows = []
-    for m in re.finditer(r"\| #(\d+) \| (H\d) \| ([\d.]+)° \| ([\d.]+) m \| ([+-][\d.]+) \| ([+-][\d.]+) \| ([+-][\d.]+) m \|", blk):
-        rows.append({"node": int(m.group(1)), "type": m.group(2), "az": float(m.group(3)), "r": float(m.group(4)),
-                     "x": float(m.group(5)), "y": float(m.group(6)), "dz": float(m.group(7))})
+    for r in _seq.setting_out(_DOME):
+        rows.append(dict(r, type=_seq.hub_type_of(_DOME, r["node"])))
     return rows
 
 
 def parse_step1():
-    blk = SEQ.split("## Paso 1")[1].split("## Paso 2")[0]
+    step = _STEPS[1]
     sup = {}
-    for m in re.finditer(r"\| \d+ \| #(\d+) \(H4\) \| #(\d+) \(H3\) \|", blk):
-        sup.setdefault(int(m.group(2)), []).append(int(m.group(1)))
+    for e in step["edges"]:
+        new = e["a"] if e["a"] in step["new_hubs"] else e["b"]
+        sup.setdefault(new, []).append(e["b"] if new == e["a"] else e["a"])
     return sup
 
 
@@ -437,8 +444,8 @@ def page():
     conf_rows = "\n".join(f"<tr><td>{a}</td><td class='num'>{b}</td><td class='num ok'>{c}</td><td class='ok'>✓</td></tr>" for a, b, c in confirmed)
 
     missing = [
-        ("crit", "Alto", "Puerta y altura útil", "El domo mide 2.52 m. Solo el 32% del piso tiene 2 m de altura libre y una puerta de 2 m no cabe en la superficie. Hace falta un portal, que corta barras y hay que calcular."),
-        ("crit", "Alto", "Plataforma y pilotes", "§9 dimensiona los pilotes con el domo (0.28 t). El piso, la gente y un jacuzzi con agua (1–2 t) pesan varias veces más. Probablemente hacen falta pilotes interiores."),
+        ("good", "Resuelto", "Puerta", "Ya diseñada y verificada: portal con marco de 50×50 sobre dos anclajes existentes, techo de vestíbulo y vano libre de 117.9 × 207.5 cm (dome_door.py y §11 del documento). Sube el corte en los anclajes de los postes de 59 a 94 kgf: el perno sigue sobrando."),
+        ("crit", "Alto", "Plataforma y pilotes", "§9 dimensiona los pilotes con el domo (0.28 t). El piso con personas, cama y muebles (unos 200 kgf/m², cerca de 6 t) pesa unas 20 veces más. Probablemente hacen falta pilotes interiores. El jacuzzi va afuera, con fundación propia."),
         ("crit", "Alto", "Arranque de pilotes", "Levantamiento neto de viento con presión interna: 1.3–1.5 t, contra ≈1.95 t de peso de pilotes. Casi sin margen."),
         ("serious", "Medio", "Diseño del conector (hub)", "De él dependen el retiro de corte, la lista de corte, el galvanizado y la resistencia de las uniones."),
         ("serious", "Medio", "Lista de materiales incompleta", "Pestañas (~0.77 m² de plancha), pernos, soldadura, anclajes, tacos, concreto, deck, aislante, forro, ventanas, puerta, faldón."),
@@ -446,7 +453,8 @@ def page():
         ("warn", "Bajo", "Datos oficiales de viento y sismo", "COVENIN-MINDUR 2003 y COVENIN 1756 para Tovar, incluida la topografía de montaña."),
         ("warn", "Bajo", "Firma de un ingeniero", "Esta auditoría corrige números. No reemplaza la firma de un ingeniero matriculado."),
     ]
-    miss_html = "\n".join(f"<li class='miss'><span class='chip {c}'>{'▲' if c == 'crit' else '◆' if c == 'serious' else '●'} {lab}</span>"
+    pending_n = sum(1 for m in missing if m[0] != "good")
+    miss_html = "\n".join(f"<li class='miss'><span class='chip {c}'>{'✓' if c == 'good' else '▲' if c == 'crit' else '◆' if c == 'serious' else '●'} {lab}</span>"
                           f"<div><b>{t}</b><p>{d}</p></div></li>" for c, lab, t, d in missing)
 
     body = f"""<title>Auditoría Domo Cucuchica</title>
@@ -594,7 +602,7 @@ footer{{padding-block:28px; color:var(--muted); font-size:13px}}
     <div class="vcell"><span class="chip good">✓ Correcto</span><span class="n">100%</span><span class="t">de la geometría y la aritmética de cargas</span></div>
     <div class="vcell"><span class="chip crit">▲ Alto</span><span class="n">4</span><span class="t">errores que bloqueaban la fabricación o el armado seguro, ya corregidos</span></div>
     <div class="vcell"><span class="chip serious">◆ Medio</span><span class="n">5</span><span class="t">errores de dinero o de riesgo, corregidos o anotados</span></div>
-    <div class="vcell"><span class="chip neutral">○ Sin calcular</span><span class="n">8</span><span class="t">temas que cuestan dinero y todavía no tienen cálculo</span></div>
+    <div class="vcell"><span class="chip neutral">○ Sin calcular</span><span class="n">{pending_n}</span><span class="t">temas que cuestan dinero y todavía no tienen cálculo</span></div>
   </div>
 </header>
 
@@ -699,13 +707,14 @@ footer{{padding-block:28px; color:var(--muted); font-size:13px}}
     <div class="panel"><h3>Altura libre y puerta</h3>{headroom_svg()}</div>
     <div>
       <p>El domo mide 2.52 m en el centro. A 2.0 m del centro el techo está a 1.77 m, y a 2.5 m está a 1.22 m. Una puerta de 2 m pegada a la pared queda cortada por el domo.</p>
-      <p>Para un producto de hotel (cama, baño, jacuzzi) conviene evaluar un domo 5/8, un 4V o un 3/8 sobre un muro de arranque de 0.8–1.0 m. Es una decisión de negocio que cambia toda la lista de materiales, así que va antes de comprar.</p>
+      <p><b>Actualización:</b> la puerta ya está resuelta con un portal: el marco se apoya en el borde y un techo de vestíbulo entra al domo hasta donde el techo pasa de 2 m (ver el plano de taller). La altura útil del resto del domo no cambia: si hiciera falta más espacio de pie, las opciones siguen siendo un domo 5/8, un 4V o un muro de arranque.</p>
     </div>
   </div>
   <ul class="misslist">{miss_html}</ul>
 </section>
 
 <footer>
+  <p><b>Actualización 24 sep 2026:</b> después de esta auditoría se diseñó la puerta y se rehízo el plano de taller (<span class="mono">domo-3v-cucuchica.html</span>) con todas las correcciones. El jacuzzi va en la terraza exterior con fundación propia. Esta página describe el domo tal como estaba publicado, sin puerta: por eso el paso 1 tiene 5 nodos bisagra; con la puerta son 4, más 2 en el paso 2 que se amarran dentro del mismo paso.</p>
   <p>Todo se reproduce con <span class="mono">python3 auditoria_independiente.py</span> y <span class="mono">python3 reporte_visual.py</span> en <a href="{REPO}/auditoria">glamping-cucuchica/auditoria</a>. Informe completo: <a href="{REPO}/auditoria/AUDITORIA.md">AUDITORIA.md</a>. El análisis de barras supone nodos articulados, y el viento es el valor ilustrativo del documento: esto no reemplaza la firma de un ingeniero estructural.</p>
 </footer>
 </div>

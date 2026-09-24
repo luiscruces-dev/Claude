@@ -5,8 +5,9 @@ de Cucuchica (municipio Tovar, estado Mérida, Venezuela). Este documento reúne
 las medidas, ángulos y cálculos derivados de la geometría real del domo — no de tablas
 genéricas de fabricantes.
 
-Visor 3D interactivo (mismo contenido, en formato navegable con vista 3D rotable y
-diagramas de nodo): [`domo-3v-cucuchica.html`](./domo-3v-cucuchica.html)
+**Plano de taller** con vista 3D, piezas y plan de corte, plantillas de nodo, puerta,
+replanteo y armado: [`domo-3v-cucuchica.html`](./domo-3v-cucuchica.html), generado con
+`python3 dome_viewer.py` a partir de los mismos módulos que este documento.
 
 > **⚠ Auditoría independiente (2026-09-24) — leer antes de cortar, soldar o comprar.**
 > La geometría (R, barras, nodos, paneles, áreas, perímetro, zigzag) se reprodujo con un
@@ -23,6 +24,9 @@ diagramas de nodo): [`domo-3v-cucuchica.html`](./domo-3v-cucuchica.html)
 >    3D, los 5 nodos del paso 1 quedan como bisagra y necesitan puntal.
 > 5. **Replanteo de anclajes (§9.2):** decía que las posiciones angulares estaban en la
 >    secuencia y no estaban. Ya están (azimut, radio, X, Y).
+> 6. **Puerta (§11, nuevo):** ya está diseñada y verificada. Es un portal con marco de
+>    50×50 sobre dos anclajes existentes y vano libre de 117.9 × 207.5 cm. Con la puerta,
+>    las cantidades de §2 cambian a A 48, B 37 y C 25, más 9 piezas de la puerta.
 >
 > Riesgos de dinero o de seguridad que **no estaban calculados** (membrana con costuras,
 > reparto real del viento por anclaje, presión interna, puerta, plataforma y pilotes, lista
@@ -39,7 +43,8 @@ La ventaja central frente a un glamping construido desde cero es que el terreno,
 atractivo turístico, los accesos y la demanda ya existen — el domo añade una fuente de
 ingresos por alojamiento sobre una operación que ya funciona.
 
-Fase inicial propuesta: 2 unidades (una estándar, una "signature" con jacuzzi), con
+Fase inicial propuesta: 2 unidades (una estándar, una "signature" con jacuzzi en la
+terraza exterior, no dentro de la habitación), con
 escalamiento a 4, 6 y 10 unidades según la ocupación real observada. El padre del
 promotor es soldador con más de 20 años de experiencia (incluye trabajo en soldadura
 submarina), lo que abre la posibilidad de fabricar la estructura de acero localmente
@@ -318,9 +323,9 @@ liviana como esta se comporta más como una vela que como una losa pesada, así 
 succión/empuje de viento sobre el anclaje puede superar varias veces el peso propio).
 Por eso el chequeo de viento de abajo no es opcional.
 
-*(Este peso es solo el de la estructura del domo — cama, muebles, jacuzzi y el
-huésped cargan sobre la plataforma/deck, no sobre los nodos del domo, y se calculan
-aparte cuando se diseñe esa plataforma.)*
+*(Este peso es solo el de la estructura del domo. La cama, los muebles y el huésped
+cargan sobre la plataforma, no sobre los nodos del domo, y se calculan aparte cuando se
+diseñe esa plataforma. El jacuzzi va afuera, en la terraza, con fundación propia.)*
 
 ## 6.2 Viento — estimación ilustrativa (⚠ NO reemplaza COVENIN-MINDUR 2003)
 
@@ -539,14 +544,17 @@ secuencia estaban medidas desde el centro de la esfera, no desde el piso: todas 
 
 El checklist completo, barra por barra, con qué nodo va a qué nodo y con qué queda
 fijado cada uno, está en **`secuencia_de_armado.md`** (generado automáticamente,
-120 barras + 15 anclajes de fundación, listo para imprimir y llevar al taller).
+con los 15 anclajes de fundación, listo para imprimir y llevar al taller). Con la puerta
+de §11 son 119 piezas en 8 pasos; con `--sin-puerta`, 120 barras en 7 pasos.
 
 ### 8.4 Cómo correr esto
 
 ```bash
 cd glamping-cucuchica
 python3 dome_verify.py               # imprime el reporte de verificación
-python3 dome_build_sequence.py       # regenera secuencia_de_armado.md
+python3 dome_door.py                 # verifica la puerta (§11)
+python3 dome_build_sequence.py       # regenera secuencia_de_armado.md (con puerta; --sin-puerta para el domo cerrado)
+python3 dome_viewer.py               # regenera el plano de taller domo-3v-cucuchica.html
 ```
 
 Sin instalar nada — los 3 scripts son Python estándar. Si en algún momento cambia
@@ -598,9 +606,10 @@ los ángulos ya calculados).
 ### 9.3 Pilotes
 
 *(Auditoría: este dimensionamiento considera solo el domo, ≈0.28 t. Pero los pilotes y
-las vigas también cargan el piso: huéspedes, muebles, cama y, en la unidad "signature",
-un jacuzzi con agua de 1–2 t. Esa carga es varias veces mayor que la del domo y no está
-calculada. Con pilotes solo en el perímetro, las vigas del piso tendrían que salvar unos
+las vigas también cargan el piso: huéspedes, muebles y cama, unos 200 kgf/m², o sea
+cerca de 6 t sobre los 28 m². Esa carga es unas 20 veces la del domo y no está
+calculada. El jacuzzi va afuera, en la terraza: 1–2 t de agua con su propia fundación,
+sin cargar la viga de anillo ni los pilotes del domo, y con el desagüe lejos de ellos. Con pilotes solo en el perímetro, las vigas del piso tendrían que salvar unos
 6 m. Casi seguro hacen falta pilotes interiores. Además, el arranque neto de viento (hasta
 ≈1.3–1.5 t con presión interna) tiene que resistirse con el peso de pilotes y viga más la
 fricción del suelo, y eso tampoco está verificado.)*
@@ -685,22 +694,125 @@ sitio oficiales + decisiones de diseño + verificación profesional:
 - [ ] Verificación estructural final por ingeniero matriculado (incluye combinación de cargas viento+sismo+peso propio, y el anclaje a tensión de §9.4)
 
 **Detectado en la auditoría — no estaba en ninguna lista (ver `auditoria/AUDITORIA.md`):**
-- [ ] **Puerta.** El domo mide 2.52 m en el centro y el techo baja a 1.22 m a 50 cm de la
-      pared. Una puerta de 2.0 m no cabe en la superficie del domo: hace falta un portal,
-      vestíbulo o muro de arranque, y eso interrumpe la triangulación. Hay que diseñarlo y
-      calcularlo.
+- [x] **Puerta.** Diseñada y verificada en §11: portal con techo de vestíbulo, vano
+      libre de 117.9 × 207.5 cm.
 - [ ] **Altura útil.** Solo el 32% del piso (9.1 m²) tiene 2.0 m o más de altura libre.
       Los domos comerciales de glamping de 6 m suelen ser más altos (5/8 de esfera o
       montados sobre un muro).
-- [ ] **Carga de la plataforma** (piso, personas, muebles, jacuzzi) y pilotes interiores.
+- [ ] **Carga de la plataforma** (personas, cama y muebles, unos 200 kgf/m², cerca de 6 t) y
+      pilotes interiores. El jacuzzi va afuera, con fundación propia.
 - [ ] **Arranque de pilotes** frente al levantamiento neto de viento con presión interna.
 
 **Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
+- [ ] En cuál de los 5 tramos iguales va la puerta (hacia la terraza; §11.1)
 - [ ] Diseño físico del hub plate (diámetro de disco, patrón de pernos o muñones, espesor final — los ángulos ya están en §3)
 - [ ] Altura del riser/taco en los 5 nodos altos (H5) — el desnivel exacto (4.86 cm) ya está calculado en §4 y el concepto de pilote+taco en §9.4, falta solo la decisión final de detalle de fijación
 
 **No es cálculo — investigación de mercado:**
 - [ ] Cotización real de tubo galvanizado 32×2mm y de la membrana (PVC/poliéster) en talleres venezolanos
+
+## 11. Puerta — portal de acceso (diseño)
+
+Diseño completo en `dome_door.py`, que además lo verifica (`python3 dome_door.py`). El
+plano de taller (`domo-3v-cucuchica.html`, generado con `python3 dome_viewer.py`) tiene
+los dibujos, las plantillas de nodo y el plan de corte con la puerta incluida.
+
+### 11.1 Concepto
+
+El domo mide 2.52 m en el centro y baja hasta el piso en el borde, así que una puerta de
+2 m no cabe en la superficie. La solución es un **marco de puerta vertical** con un
+pequeño **techo de vestíbulo** que entra al domo hasta donde el techo ya pasa de 2 m:
+
+- **Ubicación:** centrada sobre uno de los 5 nodos H3 del primer anillo. Los 5 lugares
+  son idénticos por simetría. En los planos va a 36°, sobre el nodo #3.
+  Elegir el que mire a la terraza del jacuzzi y, si se puede, que no quede de frente al
+  viento dominante.
+- **Postes:** verticales, sobre los anclajes **#6 y #14 que ya existen**. No hay anclajes
+  nuevos. Entre ejes quedan 122.89 cm, el largo de una barra B.
+- **Dintel:** eje a 210 cm del piso. El marco (2 postes y dintel) es de
+  **tubo cuadrado 50×50×2**, soldado en taller como una sola pieza.
+- **Umbral:** la barra B del piso entre #6 y #14 se conserva. Amarra la base de los postes.
+- **Se quitan** los nodos #3 (H3) y #27 (H1) y sus 10 barras (2 A, 3 B, 5 C).
+- **Se agregan** 2 vigas V del techo, desde las esquinas del marco hasta el nodo
+  #26, y 4 amarres (K1 al nodo lateral bajo y K2 al lateral alto, de cada lado),
+  en tubo 32×2.
+- **Vano libre** entre caras del marco: **117.9 × 207.5 cm**. Entra una puerta de 100 × 200 cm con
+  su marco y un fijo lateral de unos 15 cm, o una puerta a medida de unos 115 × 205 cm.
+- **Techo del vestíbulo:** cae 13% hacia la puerta. Lleva gotero o canalito sobre el dintel.
+
+### 11.2 Todas las piezas con la puerta (centro a centro, y corte con 5 cm de retiro como ejemplo)
+
+| Pieza | Qué es | Tubo | Cant. | Centro a centro (cm) | Corte (cm) |
+|---|---|---|---|---|---|
+| A | barra A del domo | tubo redondo 32x2 | 48 | 125.59 | 115.59 |
+| B | barra B del domo | tubo redondo 32x2 | 37 | 122.89 | 112.89 |
+| C | barra C del domo | tubo redondo 32x2 | 25 | 106.16 | 96.16 |
+| V | viga del techo del vestíbulo | tubo redondo 32x2 | 2 | 200.25 | 190.25 |
+| K1 | amarre marco–nodo lateral bajo | tubo redondo 32x2 | 2 | 123.68 | 113.68 |
+| K2 | amarre marco–nodo lateral alto | tubo redondo 32x2 | 2 | 152.97 | 142.97 |
+| P | poste del marco | tubo cuadrado 50x50x2 | 2 | 210.00 | 212.50 |
+| D | dintel del marco | tubo cuadrado 50x50x2 | 1 | 122.89 | 117.89 |
+
+El poste se mide desde el eje del nodo de anclaje hasta el tope del marco: hay que restar
+el detalle de la placa base. El dintel va entre las caras interiores de los postes.
+
+**Tubo necesario con la puerta** (barras de 6 m, 3 mm de disco, al menos 20 mm de
+sobra en cada barra): 24 barras de 32×2 con 3.5 cm de retiro,
+23 con 5.0 cm y 23 con 6.5 cm, más **1 barra de 50×50×2** para el marco. El
+plan barra por barra está en el plano de taller.
+
+### 11.3 Nodos especiales
+
+Con la puerta, 7 nodos del domo cambian y aparecen 2 esquinas de marco. Quedan H1 ×16,
+H2 ×3, H3 ×5, H4 ×8 y H5 ×5. Los especiales se hacen de a pares: el "-der" es la imagen
+espejo del "-izq", mirando la puerta desde afuera. Inclinación positiva = la pestaña sale
+hacia afuera del disco.
+
+| Tipo | Nodos | Barras en orden alrededor del disco (inclinación) | Azimut a marcar entre pestañas |
+|---|---|---|---|
+| PA | #6-izq, #14-der | B (-11.6°) · P (+9.9°) · B (-11.6°) · A (-11.9°) | 87.94° · 23.44° · 62.15° (+ abierto) |
+| PB | #2-izq, #16-der | K1 (+42.4°) · A (-11.9°) · B (-11.6°) · A (-11.9°) · B (-11.6°) | 57.75° · 62.15° · 62.15° · 62.15° · 115.78° |
+| PC | #29-der, #36-izq | K2 (+27.2°) · A (-11.9°) · A (-11.9°) · A (-11.9°) · A (-11.9°) · A (-11.9°) | 34.63° · 60.00° · 60.00° · 60.00° · 60.00° · 85.37° |
+| PD | #26 | V (+12.3°) · V (+12.3°) · A (-11.9°) · B (-11.6°) · C (-10.0°) · B (-11.6°) · A (-11.9°) | 36.60° · 43.85° · 62.15° · 55.69° · 55.69° · 62.15° · 43.85° |
+
+**PE, esquinas del marco (#46-izq, #47-der).** No llevan disco: las pestañas se
+sueldan a la esquina del marco. El ángulo en planta se mide desde el dintel, girando
+hacia adentro del domo; la pendiente, respecto a la horizontal.
+
+| Pieza | Va a | Largo c-c (cm) | En planta | Pendiente |
+|---|---|---|---|---|
+| K1 | #2 | 123.68 | 126.0° | -58.5° |
+| P | #6 | 210.00 | vertical | -90.0° |
+| V | #26 | 200.25 | 72.0° | +6.8° |
+| K2 | #36 | 152.97 | 108.1° | -7.6° |
+| D | #47 | 122.89 | 0.0° | +0.0° |
+
+### 11.4 Verificación (`python3 dome_door.py`)
+
+- **Paso libre:** se revisó barra por barra (como tubos) y panel por panel. Nada invade
+  el paso de 117 cm × 207 cm desde la puerta hasta donde el domo ya da esa altura.
+- **Membrana:** queda cerrada. Se quitan 9 paneles (5.35 m²) y se agregan 7 del vestíbulo
+  (5.95 m²), en total 46.84 m² netos. El plano de taller trae los lados de cada panel nuevo.
+- **Estabilidad:** cada nodo no anclado tiene 3 barras o más no coplanares, y la matriz de
+  rigidez no es singular.
+- **Armadura espacial:** peso propio, 100 kg en el ápice o colgados del dintel, y viento
+  ilustrativo de 100 km/h desde 12 direcciones, con la puerta cerrada (interna ±0.18) y
+  abierta (interna = 0.9 × la externa en el vano). La barra más exigida llega al
+  **9% de su capacidad**. El desplazamiento máximo es de 0.6 mm.
+- **Anclajes:** con la puerta, el arranque máximo pasa de 113 a **128 kgf** y el corte
+  máximo de 59 a **94 kgf**, en los anclajes de los postes. El perno M12 sigue
+  sobrando unas 8 veces por acero. El embebido y el peso de los pilotes los define el
+  ingeniero.
+- **Flexión del marco** por viento sobre la puerta cerrada: 23 MPa en los postes de
+  50×50. En tubo redondo 32×2 serían unos 104 MPa: por eso el marco va en tubo cuadrado.
+
+### 11.5 Armado
+
+La secuencia (`secuencia_de_armado.md`) ya incluye la puerta. En el paso 5, a
+2.10 m, se presenta el marco soldado en taller, se aploma y se amarra con K1 y K2.
+Las vigas V entran en el paso 6. Con la puerta, los nodos #2 y #16 del paso 2 aparecen como
+bisagra hasta que se suelda la barra hacia su vecino del mismo anillo: hay que sujetarlos
+mientras tanto.
 
 ---
 

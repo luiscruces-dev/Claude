@@ -15,11 +15,16 @@ ayudante) hasta que el paso siguiente lo triangule.
 Alturas: se miden desde el nivel de los 10 nodos bajos (el piso), no desde
 el centro de la esfera.
 
+Por defecto arma el domo CON la puerta (dome_door.py): se omiten los 2 nodos
+y 10 barras que ocupa el vano, y se agregan el marco y sus amarres. Con
+`--sin-puerta` genera la secuencia del domo cerrado.
+
 Escribe el checklist pieza por pieza en secuencia_de_armado.md, listo para
 imprimir y usar en taller.
 """
 
 import math
+import sys
 from collections import defaultdict
 from dome_model import build_dome, v_sub, v_cross, v_norm, v_dot, v_normalize, v_scale
 
@@ -45,7 +50,8 @@ def build_sequence(dome):
 
     # anillos siguientes: por nivel de altura ascendente (excluyendo el borde)
     floor_h = min(dome.heights[b] for b in boundary)
-    heights_by_hub = {v: round(dome.heights[v] - floor_h, 4) for v in range(len(dome.verts)) if v not in boundary}
+    nodes = getattr(dome, "active", range(len(dome.verts)))
+    heights_by_hub = {v: round(dome.heights[v] - floor_h, 4) for v in nodes if v not in boundary}
     levels = sorted(set(heights_by_hub.values()))
 
     adj = defaultdict(list)
@@ -65,8 +71,9 @@ def build_sequence(dome):
                 WARNINGS.append(f"Nodo {v} (anillo {ring_i}) no tiene NINGUNA barra hacia estructura ya fija — error de secuencia.")
             elif not _fixed_in_3d(dome, v, support_nbrs):
                 WARNINGS.append(f"Nodo {v} (anillo {ring_i}) solo tiene {len(support_nbrs)} barra(s) hacia estructura ya fija — "
-                                f"queda como bisagra, necesita sujecion temporal hasta el paso siguiente.")
+                                f"queda como bisagra, necesita sujecion temporal.")
 
+        placed_before = set(placed)
         placed |= set(new_hubs)
 
         # instalar toda arista que ahora tiene sus 2 extremos ya colocados y no se ha instalado
@@ -83,9 +90,19 @@ def build_sequence(dome):
                 ring_edges.append(_edge_record(dome, e, rigid_support=rigid))
                 installed.add(e)
 
+        # al terminar el paso: que nodos nuevos ya quedaron fijos (iterando, porque un
+        # nodo recien fijado puede fijar a su vecino del mismo anillo)
+        fixed = set(placed_before)
+        changed = True
+        while changed:
+            changed = False
+            for v in new_hubs:
+                if v not in fixed and _fixed_in_3d(dome, v, [u for u in adj[v] if u in fixed]):
+                    fixed.add(v); changed = True
         steps.append({"ring": ring_i, "kind": "anillo", "new_hubs": new_hubs,
                       "edges": ring_edges, "height_m": lv,
-                      "needs_bracing": [v for v, s in rigidity.items() if not _fixed_in_3d(dome, v, s)]})
+                      "needs_bracing": [v for v, s in rigidity.items() if not _fixed_in_3d(dome, v, s)],
+                      "unfixed_at_end": [v for v in new_hubs if v not in fixed]})
 
     missing = set(dome.edges) - installed
     return steps, missing
@@ -134,19 +151,32 @@ def _edge_record(dome, e, rigid_support):
             "length_cm": dome.edge_len[e]*100, "rigid_support": rigid_support}
 
 
+PIECE_NAMES = {"P": "P · poste del marco", "D": "D · dintel del marco", "V": "V · viga del techo",
+               "K1": "K1 · amarre bajo", "K2": "K2 · amarre alto"}
+
+
 def hub_type_of(dome, v):
+    side = getattr(dome, "side", {}).get(v)
     for t in dome.hub_types:
         if v in t["hub_ids"]:
-            return t["name"]
+            return t["name"] + (f"-{side}" if side else "")
     return "?"
 
 
 def write_markdown(dome, steps, missing, path):
     lines = []
-    lines.append("# Secuencia de armado paso a paso — domo 3V Cucuchica\n")
+    door = getattr(dome, "door", None)
+    lines.append("# Secuencia de armado paso a paso — domo 3V Cucuchica" + (" (con puerta)" if door else "") + "\n")
     lines.append("Generado por `dome_build_sequence.py` a partir de la geometria de "
-                  "`dome_model.py`. Orden: de la base hacia el apice, anillo por anillo, "
+                  "`dome_model.py`" + (" y `dome_door.py`" if door else "") + ". Orden: de la base hacia el apice, anillo por anillo, "
                   "para que cada pieza nueva siempre se apoye en estructura ya fija.\n")
+    if door:
+        lines.append(f"**Puerta** centrada a {door['azimuth_deg']:.1f}° (donde estaba el nodo #{door['hub']}). Postes sobre los "
+                     f"anclajes #{door['a']} (izquierda, mirando la puerta desde afuera) y #{door['b']} (derecha). Los nodos "
+                     f"#{door['removed_nodes'][0]} y #{door['removed_nodes'][1]} **no existen** en esta versión. Códigos de "
+                     "pieza: A/B/C barras del domo · P poste del marco (50×50×2) · D dintel (50×50×2) · V viga del techo "
+                     "del vestíbulo · K1 amarre bajo · K2 amarre alto (32×2). Tipos de nodo PA–PE: nodos especiales "
+                     "alrededor de la puerta; la versión \"-der\" es la imagen espejo de la \"-izq\".\n")
     total_pieces = sum(len(s["edges"]) for s in steps)
     lines.append(f"**{len(steps)} anillos · {total_pieces} barras · {sum(len(s['new_hubs']) for s in steps)} nodos**\n")
     lines.append("Todas las alturas se miden **desde el piso** (nivel de los 10 nodos bajos H4), no desde "
@@ -155,8 +185,9 @@ def write_markdown(dome, steps, missing, path):
         lines.append(f"\n> ⚠ {len(WARNINGS)} nodo(s) quedan como **bisagra** en el momento en que aparecen: tienen "
                       "menos de 3 barras no coplanares hacia estructura ya fija, así que pueden girar alrededor "
                       "de la línea entre sus apoyos. Necesitan sujeción temporal (puntal, cuerda, un ayudante) "
-                      "hasta que el paso siguiente los triangule. Es normal en un armado anillo por anillo, "
-                      "pero hay que preverlo en la logística del día de armado. Detalle abajo.\n")
+                      "hasta que quedan triangulados: cada paso indica si es en ese mismo paso o en el siguiente. "
+                      "Es normal en un armado anillo por anillo, pero hay que preverlo en la logística del día de "
+                      "armado.\n")
     lines.append("\n> ⚠ No caminar ni pararse sobre las barras: una persona de 100 kg a media barra lleva el "
                  "tubo de 32×2 mm al límite de fluencia. Armar y cubrir desde andamio o escalera.\n")
 
@@ -177,10 +208,23 @@ def write_markdown(dome, steps, missing, path):
                 lines.append(f"| #{e['a']} | #{e['b']} | {e['label']} | {e['length_cm']:.2f} cm |")
         else:
             nn = len(s['new_hubs'])
-            lines.append(f"\n## Paso {s['ring']} — Anillo a {s['height_m']:.3f} m sobre el piso ({nn} nodo{'s' if nn != 1 else ''} nuevo{'s' if nn != 1 else ''})\n")
-            if s["needs_bracing"]:
-                names = ", ".join(f"#{v} ({hub_type_of(dome,v)})" for v in s["needs_bracing"])
-                lines.append(f"⚠ Sujetar temporalmente hasta el paso siguiente (quedan como bisagra): {names}\n")
+            frame = door and set(s["new_hubs"]) == {door["Ta"], door["Tb"]}
+            title = "Marco de la puerta" if frame else "Anillo"
+            lines.append(f"\n## Paso {s['ring']} — {title} a {s['height_m']:.3f} m sobre el piso ({nn} nodo{'s' if nn != 1 else ''} nuevo{'s' if nn != 1 else ''})\n")
+            if frame:
+                lines.append("El marco (2 postes P + dintel D) se suelda **en taller** como una sola pieza, a escuadra y "
+                             "con el vano libre medido. En obra se presenta sobre los anclajes "
+                             f"#{door['a']} y #{door['b']}, se aploma y se amarra al domo con las barras K1 y K2 de este "
+                             "paso. Las vigas V del techo del vestíbulo entran en el paso siguiente.\n")
+            later = [v for v in s["needs_bracing"] if v in s["unfixed_at_end"]]
+            within = [v for v in s["needs_bracing"] if v not in s["unfixed_at_end"]]
+            if later:
+                names = ", ".join(f"#{v} ({hub_type_of(dome,v)})" for v in later)
+                lines.append(f"⚠ Sujetar temporalmente **hasta el paso siguiente** (quedan como bisagra): {names}\n")
+            if within:
+                names = ", ".join(f"#{v} ({hub_type_of(dome,v)})" for v in within)
+                lines.append(f"⚠ Sujetar temporalmente **hasta soldar todas las barras de este paso** (aparecen como "
+                             f"bisagra y las amarra un vecino del mismo anillo): {names}\n")
             lines.append("| Barra | De | A | Tipo | Longitud | Fijación |\n|---|---|---|---|---|---|")
             nth = defaultdict(int)
             for i, e in enumerate(s["edges"], start=1):
@@ -200,7 +244,8 @@ def write_markdown(dome, steps, missing, path):
                 else:
                     end1, end2 = a, b
                     fix = "arriostre (ambos extremos ya estaban fijos)"
-                lines.append(f"| {i} | #{end1} ({hub_type_of(dome,end1)}) | #{end2} ({hub_type_of(dome,end2)}) | {e['label']} | {e['length_cm']:.2f} cm | {fix} |")
+                lab = PIECE_NAMES.get(e["label"], e["label"])
+                lines.append(f"| {i} | #{end1} ({hub_type_of(dome,end1)}) | #{end2} ({hub_type_of(dome,end2)}) | {lab} | {e['length_cm']:.2f} cm | {fix} |")
 
     lines.append(f"\n\n## Verificación de cobertura\n")
     lines.append(f"- Barras totales en el modelo: {len(dome.edges)}\n"
@@ -214,7 +259,11 @@ def write_markdown(dome, steps, missing, path):
 
 
 if __name__ == "__main__":
-    dome = build_dome()
+    if "--sin-puerta" in sys.argv:
+        dome = build_dome()
+    else:
+        from dome_door import build_dome_with_door
+        dome = build_dome_with_door()
     steps, missing = build_sequence(dome)
 
     total_edges_in_seq = sum(len(s["edges"]) for s in steps)
