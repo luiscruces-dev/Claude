@@ -1,0 +1,628 @@
+<title>Auditoría Domo Cucuchica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --page:#f1f3f1; --surface:#fbfbf9; --surface-2:#e9ece9; --ink:#15181b; --ink-2:#4b5257; --muted:#7c8388;
+  --grid:#dde1dd; --line:#bfc5c1; --accent:#2b5a78;
+  --crit:#d03b3b; --crit-text:#b3302f; --crit-wash:rgba(208,59,59,.12); --serious:#ec835a; --warn:#fab219;
+  --good:#0ca30c; --good-text:#006300; --good-wash:rgba(12,163,12,.10);
+  --sA:#2a78d6; --sB:#eb6834; --sC:#1baf7a; --o1:#86b6ef; --o2:#1c5cab; --seq:#2a78d6; --band:rgba(42,120,214,.10);
+  --tube:rgba(75,82,87,.22);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --page:#0f1112; --surface:#1b1d1f; --surface-2:#24272a; --ink:#f1f2f0; --ink-2:#c1c6c3; --muted:#8b9296;
+    --grid:#2b2f31; --line:#3b4043; --accent:#86b5d6;
+    --crit-text:#ec7070; --crit-wash:rgba(208,59,59,.20); --good-text:#2fc12f; --good-wash:rgba(12,163,12,.16);
+    --sA:#3987e5; --sB:#d95926; --sC:#199e70; --o1:#5598e7; --o2:#9ec5f4; --seq:#3987e5; --band:rgba(57,135,229,.16);
+    --tube:rgba(193,198,195,.22);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --page:#0f1112; --surface:#1b1d1f; --surface-2:#24272a; --ink:#f1f2f0; --ink-2:#c1c6c3; --muted:#8b9296;
+  --grid:#2b2f31; --line:#3b4043; --accent:#86b5d6;
+  --crit-text:#ec7070; --crit-wash:rgba(208,59,59,.20); --good-text:#2fc12f; --good-wash:rgba(12,163,12,.16);
+  --sA:#3987e5; --sB:#d95926; --sC:#199e70; --o1:#5598e7; --o2:#9ec5f4; --seq:#3987e5; --band:rgba(57,135,229,.16);
+  --tube:rgba(193,198,195,.22);
+}
+*{box-sizing:border-box}
+body{background:var(--page); color:var(--ink); font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; padding-inline:16px; padding-block:0 56px}
+.wrap{max-width:980px; margin:0 auto}
+h1,h2,h3{font-family:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif; text-wrap:balance; letter-spacing:-.005em}
+h1{font-size:clamp(30px,5vw,44px); line-height:1.05; margin:0 0 12px}
+h2{font-size:24px; margin:0 0 6px}
+h3{font-size:17px; margin:0 0 6px}
+p{margin:0 0 10px; max-width:70ch}
+.mono,.num,.tab{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace; font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+header.top{padding-block:34px 26px; border-bottom:1px solid var(--grid)}
+.eyebrow{font:600 12px/1 "IBM Plex Mono",monospace; letter-spacing:.09em; text-transform:uppercase; color:var(--accent); margin-bottom:12px}
+.lede{font-size:17px; color:var(--ink-2); max-width:64ch}
+.verdict{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-top:22px}
+.vcell{background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:12px 14px; display:flex; flex-direction:column; gap:4px}
+.vcell .n{font:600 26px/1 "IBM Plex Mono",monospace}
+.vcell .t{font-size:13px; color:var(--ink-2)}
+.chip{display:inline-flex; align-items:center; gap:6px; font:600 12px/1 "IBM Plex Mono",monospace; padding:5px 8px; border-radius:4px; white-space:nowrap; align-self:flex-start}
+.chip.crit{background:var(--crit-wash); color:var(--crit-text)}
+.chip.serious{background:rgba(236,131,90,.16); color:var(--ink)}
+.chip.warn{background:rgba(250,178,25,.18); color:var(--ink)}
+.chip.good{background:var(--good-wash); color:var(--good-text)}
+.chip.neutral{background:var(--surface-2); color:var(--ink-2)}
+section.f{padding-block:34px; border-bottom:1px solid var(--grid); display:grid; gap:14px}
+.fhead{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap}
+.fid{font:600 13px/1 "IBM Plex Mono",monospace; color:var(--muted)}
+.twocol{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:22px; align-items:start}
+@media (max-width:760px){ .twocol{grid-template-columns:minmax(0,1fr)} }
+.panel{background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:14px}
+.panel svg{width:100%; height:auto; display:block}
+.discs{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px}
+@media (max-width:620px){ .discs{grid-template-columns:repeat(2,minmax(0,1fr))} }
+.disc-fig{margin:0; background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:8px 8px 10px; text-align:center}
+.disc-fig svg{width:100%; height:auto; display:block}
+.disc-fig figcaption{font-size:13px; color:var(--ink-2)}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:var(--ink-2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.sw{width:14px; height:3px; border-radius:2px; display:inline-block}
+.swb{width:12px; height:12px; border-radius:3px; display:inline-block}
+.tbl{overflow-x:auto; border:1px solid var(--grid); border-radius:8px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; font-size:13.5px}
+th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--grid); vertical-align:top}
+th{font:600 11px/1.3 "IBM Plex Mono",monospace; letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
+tr:last-child td{border-bottom:none}
+td.num{white-space:nowrap}
+.bad{color:var(--crit-text)} .ok{color:var(--good-text)}
+.callout{border-left:3px solid var(--crit); background:var(--crit-wash); padding:10px 14px; border-radius:0 6px 6px 0}
+.callout p{margin:0}
+/* svg */
+.disc{fill:var(--surface-2); stroke:var(--line); stroke-width:1}
+.ray-ok{stroke:var(--good); stroke-width:2.5; stroke-linecap:round}
+.ray-bad{stroke:var(--crit); stroke-width:2; stroke-linecap:round}
+.gapwedge{fill:var(--crit-wash); stroke:var(--crit); stroke-width:1}
+.hubdot{fill:var(--ink)}
+.lbl-crit{fill:var(--crit-text); font:600 11.5px "IBM Plex Mono",monospace}
+.lbl-ink{fill:var(--ink); font:500 11.5px "IBM Plex Mono",monospace}
+.lbl-muted{fill:var(--muted); font:11px "IBM Plex Mono",monospace}
+.halo{paint-order:stroke; stroke:var(--surface); stroke-width:4px; stroke-linejoin:round}
+.small{font-size:9.5px}
+.tube{fill:var(--tube); stroke:var(--ink-2); stroke-width:1}
+.clash{fill:var(--crit-wash); stroke:var(--crit); stroke-width:1.5}
+.axis-line{stroke:var(--ink-2); stroke-width:1}
+.tick-bad{stroke:var(--crit); stroke-width:2}
+.tick-ink{stroke:var(--ink); stroke-width:2}
+.disc-edge{fill:none; stroke:var(--line); stroke-width:1.5}
+.grid{stroke:var(--grid); stroke-width:1}
+.floor,.baseline{stroke:var(--line); stroke-width:1.5}
+.dome-line{fill:none; stroke:var(--ink-2); stroke-width:2}
+.connector{stroke:var(--crit); stroke-width:1.5}
+.pt-bad{fill:var(--surface); stroke:var(--crit); stroke-width:2}
+.pt-ok{fill:var(--good); stroke:var(--surface); stroke-width:2}
+.pt-crit{fill:var(--crit); stroke:var(--surface); stroke-width:2}
+.ring-guide{fill:none; stroke:var(--grid); stroke-width:1}
+.ring-poly{fill:var(--band); stroke:var(--ink-2); stroke-width:1.2}
+.flap{fill:var(--crit-wash); stroke:var(--crit); stroke-width:1.5}
+.hinge{stroke:var(--crit); stroke-width:3.5; stroke-linecap:round}
+.anc-low{fill:var(--ink); stroke:var(--surface); stroke-width:2}
+.anc-high{fill:var(--sA); stroke:var(--surface); stroke-width:2}
+.bar-seq{fill:var(--seq)}
+.band{fill:var(--band)}
+.ref-bad{stroke:var(--crit); stroke-width:2}
+.bar-o1{fill:var(--o1)} .bar-o2{fill:var(--o2)}
+.stock{fill:var(--surface-2); stroke:var(--line); stroke-width:1}
+.seg-A{fill:var(--sA)} .seg-B{fill:var(--sB)} .seg-C{fill:var(--sC)}
+.seglbl{fill:#fff; font:600 10.5px "IBM Plex Mono",monospace}
+.head-zone{fill:var(--band); stroke:var(--seq); stroke-width:1}
+.door{fill:none; stroke:var(--crit); stroke-width:2}
+[data-tip]{cursor:default}
+[data-tip]:hover{opacity:.8}
+.cutrow{display:grid; grid-template-columns:190px minmax(0,1fr) 110px; gap:10px; align-items:center}
+@media (max-width:620px){ .cutrow{grid-template-columns:minmax(0,1fr)} }
+.cutrow svg{width:100%; height:auto; display:block}
+.cutlabel{font-size:13px}
+.cutnote{font:600 12.5px "IBM Plex Mono",monospace}
+.cutnote.bad{color:var(--crit-text)} .cutnote.ok{color:var(--good-text)}
+.cuts{display:grid; gap:8px}
+ul.misslist{list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr)); gap:10px}
+li.miss{display:grid; grid-template-columns:110px minmax(0,1fr); gap:12px; background:var(--surface); border:1px solid var(--grid); border-radius:8px; padding:12px 14px}
+@media (max-width:520px){ li.miss{grid-template-columns:minmax(0,1fr)} }
+li.miss p{margin:2px 0 0; color:var(--ink-2); font-size:14px}
+#tip{position:fixed; pointer-events:none; z-index:10; background:var(--ink); color:var(--page); font:12px/1.4 "IBM Plex Mono",monospace; padding:6px 8px; border-radius:5px; max-width:280px}
+footer{padding-block:28px; color:var(--muted); font-size:13px}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Glamping Cucuchica · Domo geodésico 3V ⌀6 m · 24 sep 2026</div>
+  <h1>Auditoría del domo: qué está bien, qué estaba mal y qué falta calcular</h1>
+  <p class="lede">La geometría es correcta: 120 barras, 46 nodos y 75 paneles, reproducidos con un cálculo independiente. Pero con los documentos anteriores el domo no se podía fabricar ni armar sin errores: los ángulos del disco de nodo, el retiro de corte y las alturas de armado estaban mal, y la membrana no alcanzaba. Ya está corregido en el repositorio. Antes de comprometer dinero falta diseñar la puerta, la plataforma y los pilotes.</p>
+  <div class="verdict">
+    <div class="vcell"><span class="chip good">✓ Correcto</span><span class="n">100%</span><span class="t">de la geometría y la aritmética de cargas</span></div>
+    <div class="vcell"><span class="chip crit">▲ Alto</span><span class="n">4</span><span class="t">errores que bloqueaban la fabricación o el armado seguro, ya corregidos</span></div>
+    <div class="vcell"><span class="chip serious">◆ Medio</span><span class="n">5</span><span class="t">errores de dinero o de riesgo, corregidos o anotados</span></div>
+    <div class="vcell"><span class="chip neutral">○ Sin calcular</span><span class="n">8</span><span class="t">temas que cuestan dinero y todavía no tienen cálculo</span></div>
+  </div>
+</header>
+
+<section class="f" id="ok">
+  <div class="fhead"><h2>Lo que está bien</h2><span class="chip good">✓ confirmado</span></div>
+  <p>Un programa nuevo que no usa el modelo original (construye el icosaedro por otro camino) llegó a los mismos números. También coinciden con las tablas estándar de un domo 3V de 3/8 de esfera.</p>
+  <div class="tbl"><table><thead><tr><th>Dato</th><th>Publicado</th><th>Recalculado</th><th></th></tr></thead><tbody><tr><td>Radio de la esfera</td><td class='num'>3.0452 m</td><td class='num ok'>3.0452 m</td><td class='ok'>✓</td></tr>
+<tr><td>Altura del ápice</td><td class='num'>2.5225 m</td><td class='num ok'>2.5225 m</td><td class='ok'>✓</td></tr>
+<tr><td>Barras A / B / C</td><td class='num'>125.59 · 122.89 · 106.16 cm</td><td class='num ok'>125.59 · 122.89 · 106.16 cm</td><td class='ok'>✓</td></tr>
+<tr><td>Cantidades A / B / C</td><td class='num'>50 · 40 · 30</td><td class='num ok'>50 · 40 · 30</td><td class='ok'>✓</td></tr>
+<tr><td>Tubo total</td><td class='num'>143.80 m</td><td class='num ok'>143.80 m</td><td class='ok'>✓</td></tr>
+<tr><td>Nodos H1–H5</td><td class='num'>20 · 5 · 6 · 10 · 5</td><td class='num ok'>20 · 5 · 6 · 10 · 5</td><td class='ok'>✓</td></tr>
+<tr><td>Área de membrana</td><td class='num'>46.24 m²</td><td class='num ok'>46.24 m²</td><td class='ok'>✓</td></tr>
+<tr><td>Desnivel del zigzag</td><td class='num'>4.86 cm</td><td class='num ok'>4.858 cm</td><td class='ok'>✓</td></tr>
+<tr><td>Peso del domo</td><td class='num'>278 kg</td><td class='num ok'>278.4 kg</td><td class='ok'>✓</td></tr>
+<tr><td>Empuje lateral de viento</td><td class='num'>330 kgf</td><td class='num ok'>330.8 kgf</td><td class='ok'>✓</td></tr>
+<tr><td>Barras en 12 m</td><td class='num'>13 barras</td><td class='num ok'>13 barras (óptimo)</td><td class='ok'>✓</td></tr></tbody></table></div>
+</section>
+
+<section class="f" id="e1">
+  <div class="fhead"><span class="fid">E1</span><h2>Ángulos para marcar el disco del nodo</h2><span class="chip crit">▲ Alto · corregido</span></div>
+  <p>El documento decía que los ángulos entre barras (54.63°, 60.71°, 58.58°, 70.73°) se marcan directamente alrededor del disco. Son ángulos 3D entre tubos que bajan 10–12° respecto al disco, y suman menos de 360°. En el disco se marca el <b>azimut</b>: el ángulo proyectado sobre el plano del disco, que sí cierra en 360°.</p>
+  <div class="legend"><span><i class="sw" style="background:var(--crit)"></i>✕ publicado (ángulo 3D acumulado)</span><span><i class="sw" style="background:var(--good)"></i>✓ correcto (azimut)</span></div>
+  <div class="discs"><figure class="disc-fig"><svg viewBox="0 0 210 230" role="img" aria-label="Disco del nodo H1: ángulos publicados contra azimuts correctos">
+<circle cx="105.0" cy="115.0" r="90.0" class="disc"/>
+<path d="M 105.0 115.0 L 97.8 63.4 A 52.1 52.1 0 0 1 105.0 62.9 Z" class="gapwedge" data-tip="Hueco que deja marcar el ángulo 3D: 7.90°"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="31.0" class="ray-ok" data-tip="Correcto: pestaña 1 a 0.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="179.3" y2="75.8" class="ray-ok" data-tip="Correcto: pestaña 2 a 62.15° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="174.4" y2="162.3" class="ray-ok" data-tip="Correcto: pestaña 3 a 124.31° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="95.5" y2="198.5" class="ray-ok" data-tip="Correcto: pestaña 4 a 186.46° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="26.8" y2="145.6" class="ray-ok" data-tip="Correcto: pestaña 5 a 248.62° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="35.6" y2="67.7" class="ray-ok" data-tip="Correcto: pestaña 6 a 304.31° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="36.9" class="ray-bad" data-tip="Publicado: pestaña 1 a 0.00° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="173.1" y2="76.8" class="ray-bad" data-tip="Publicado: pestaña 2 a 60.71° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="171.7" y2="155.7" class="ray-bad" data-tip="Publicado: pestaña 3 a 121.42° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="102.1" y2="193.1" class="ray-bad" data-tip="Publicado: pestaña 4 a 182.13° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="35.5" y2="150.7" class="ray-bad" data-tip="Publicado: pestaña 5 a 242.83° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="35.7" y2="79.0" class="ray-bad" data-tip="Publicado: pestaña 6 a 297.47° (ángulo 3D acumulado)"/>
+<circle cx="105.0" cy="115.0" r="3.5" class="hubdot"/>
+<text x="105.0" y="17.0" class="lbl-crit" text-anchor="middle">faltan 7.90°</text>
+</svg><figcaption><b>H1</b> · 20 nodos</figcaption></figure><figure class="disc-fig"><svg viewBox="0 0 210 230" role="img" aria-label="Disco del nodo H2: ángulos publicados contra azimuts correctos">
+<circle cx="105.0" cy="115.0" r="90.0" class="disc"/>
+<path d="M 105.0 115.0 L 97.3 63.5 A 52.1 52.1 0 0 1 105.0 62.9 Z" class="gapwedge" data-tip="Hueco que deja marcar el ángulo 3D: 8.50°"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="31.0" class="ray-ok" data-tip="Correcto: pestaña 1 a 0.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="177.7" y2="73.0" class="ray-ok" data-tip="Correcto: pestaña 2 a 60.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="177.7" y2="157.0" class="ray-ok" data-tip="Correcto: pestaña 3 a 120.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="199.0" class="ray-ok" data-tip="Correcto: pestaña 4 a 180.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="32.3" y2="157.0" class="ray-ok" data-tip="Correcto: pestaña 5 a 240.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="32.3" y2="73.0" class="ray-ok" data-tip="Correcto: pestaña 6 a 300.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="36.9" class="ray-bad" data-tip="Publicado: pestaña 1 a 0.00° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="171.7" y2="74.3" class="ray-bad" data-tip="Publicado: pestaña 2 a 58.58° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="174.5" y2="150.7" class="ray-bad" data-tip="Publicado: pestaña 3 a 117.17° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="110.8" y2="192.9" class="ray-bad" data-tip="Publicado: pestaña 4 a 175.75° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="41.5" y2="160.6" class="ray-bad" data-tip="Publicado: pestaña 5 a 234.33° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="33.0" y2="84.6" class="ray-bad" data-tip="Publicado: pestaña 6 a 292.92° (ángulo 3D acumulado)"/>
+<circle cx="105.0" cy="115.0" r="3.5" class="hubdot"/>
+<text x="105.0" y="17.0" class="lbl-crit" text-anchor="middle">faltan 8.50°</text>
+</svg><figcaption><b>H2</b> · 5 nodos</figcaption></figure><figure class="disc-fig"><svg viewBox="0 0 210 230" role="img" aria-label="Disco del nodo H3: ángulos publicados contra azimuts correctos">
+<circle cx="105.0" cy="115.0" r="90.0" class="disc"/>
+<path d="M 105.0 115.0 L 99.2 63.2 A 52.1 52.1 0 0 1 105.0 62.9 Z" class="gapwedge" data-tip="Hueco que deja marcar el ángulo 3D: 6.35°"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="31.0" class="ray-ok" data-tip="Correcto: pestaña 1 a 0.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="184.9" y2="89.0" class="ray-ok" data-tip="Correcto: pestaña 2 a 72.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="154.4" y2="183.0" class="ray-ok" data-tip="Correcto: pestaña 3 a 144.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="55.6" y2="183.0" class="ray-ok" data-tip="Correcto: pestaña 4 a 216.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="25.1" y2="89.0" class="ray-ok" data-tip="Correcto: pestaña 5 a 288.00° (azimut)"/>
+<line x1="105.0" y1="115.0" x2="105.0" y2="36.9" class="ray-bad" data-tip="Publicado: pestaña 1 a 0.00° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="178.7" y2="89.2" class="ray-bad" data-tip="Publicado: pestaña 2 a 70.73° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="153.7" y2="176.1" class="ray-bad" data-tip="Publicado: pestaña 3 a 141.46° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="63.4" y2="181.1" class="ray-bad" data-tip="Publicado: pestaña 4 a 212.19° (ángulo 3D acumulado)"/>
+<line x1="105.0" y1="115.0" x2="28.9" y2="97.5" class="ray-bad" data-tip="Publicado: pestaña 5 a 282.92° (ángulo 3D acumulado)"/>
+<circle cx="105.0" cy="115.0" r="3.5" class="hubdot"/>
+<text x="105.0" y="17.0" class="lbl-crit" text-anchor="middle">faltan 6.35°</text>
+</svg><figcaption><b>H3</b> · 6 nodos</figcaption></figure></div>
+  <div class="callout"><p>Con 1.45° de error, la otra punta de una barra A queda unos <b>3.2 cm</b> fuera de lugar. Con 46 discos marcados así, el domo no cierra.</p></div>
+  <div class="tbl"><table><thead><tr><th>Nodo</th><th>✕ Publicado (3D)</th><th>✓ Marcar en el disco</th><th>Diferencia</th><th>Inclinación de la pestaña</th></tr></thead><tbody><tr><td><b>H1</b> <span class='muted'>×20</span></td><td class='num bad'>54.63° / 60.71°</td><td class='num ok'><b>55.69° / 62.15°</b></td><td class='num'>+1.06° / +1.44°</td><td class='num'>10.04° / 11.64° / 11.90°</td></tr>
+<tr><td><b>H2</b> <span class='muted'>×5</span></td><td class='num bad'>58.58°</td><td class='num ok'><b>60.00°</b></td><td class='num'>+1.42°</td><td class='num'>11.90°</td></tr>
+<tr><td><b>H3</b> <span class='muted'>×6</span></td><td class='num bad'>70.73°</td><td class='num ok'><b>72.00°</b></td><td class='num'>+1.27°</td><td class='num'>10.04°</td></tr>
+<tr><td><b>H4</b> <span class='muted'>×10</span></td><td class='num bad'>54.63° / 60.71°</td><td class='num ok'><b>55.69° / 62.15°</b></td><td class='num'>+1.06° / +1.44°</td><td class='num'>10.04° / 11.64° / 11.90°</td></tr>
+<tr><td><b>H5</b> <span class='muted'>×5</span></td><td class='num bad'>58.58°</td><td class='num ok'><b>60.00°</b></td><td class='num'>+1.42°</td><td class='num'>11.90°</td></tr></tbody></table></div>
+</section>
+
+<section class="f" id="e2">
+  <div class="fhead"><span class="fid">E2</span><h2>Retiro de corte en cada extremo del tubo</h2><span class="chip crit">▲ Alto · corregido</span></div>
+  <div class="twocol">
+    <div>
+      <p>El documento decía que al largo de centro a centro se le restan "entre 1 y 3 cm por extremo". Con tubo de 32 mm, donde dos barras forman 54.63° los tubos ocupan el mismo espacio hasta <b>3.1 cm</b> del centro del nodo. Con el disco de ⌀13 cm propuesto, el tubo arranca en el borde, a unos 6.5 cm.</p>
+      <p>Hay que definir el conector antes de cortar un solo tubo.</p>
+      <div class="tbl"><table><thead><tr><th>Retiro por extremo</th><th>Corte A</th><th>Corte B</th><th>Corte C</th></tr></thead><tbody>
+      <tr><td class='num'>3.5 cm</td><td class='num'>118.59</td><td class='num'>115.89</td><td class='num'>99.16</td></tr><tr><td class='num'>5.0 cm</td><td class='num'>115.59</td><td class='num'>112.89</td><td class='num'>96.16</td></tr><tr><td class='num'>6.5 cm</td><td class='num'>112.59</td><td class='num'>109.89</td><td class='num'>93.16</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="panel"><svg viewBox="0 0 440 350" role="img" aria-label="Dos tubos de 32 mm que llegan a un nodo formando 54.63 grados">
+<polygon points="193.6,209.1 406.9,99.0 371.6,30.7 158.4,140.9" class="tube"/>
+<polygon points="158.4,209.1 371.6,319.3 406.9,251.0 193.6,140.9" class="tube"/>
+<polygon points="193.6,209.1 259.7,175.0 193.6,140.9 176.0,175.0" class="clash" data-tip="Zona donde los dos tubos ocupan el mismo espacio"/>
+<line x1="176.0" y1="175.0" x2="389.2" y2="64.9" class="axis-line"/>
+<line x1="176.0" y1="175.0" x2="389.2" y2="285.1" class="axis-line"/>
+<line x1="175.3" y1="228.7" x2="159.9" y2="258.5" class="tick-bad"/>
+<text x="151.1" y="279.6" text-anchor="middle" class="lbl-crit">1 cm</text>
+<line x1="217.9" y1="250.7" x2="202.5" y2="280.5" class="tick-bad"/>
+<text x="193.7" y="301.6" text-anchor="middle" class="lbl-crit">3 cm</text>
+<line x1="220.0" y1="98.2" x2="204.6" y2="68.4" class="tick-ink"/>
+<text x="195.8" y="55.3" text-anchor="middle" class="lbl-ink">3.1 cm</text>
+<line x1="292.6" y1="60.8" x2="277.2" y2="30.9" class="tick-ink"/>
+<text x="268.3" y="17.9" text-anchor="middle" class="lbl-ink">6.5 cm</text>
+<circle cx="176.0" cy="175.0" r="156.0" class="disc-edge"/>
+<circle cx="176.0" cy="175.0" r="3.5" class="hubdot"/>
+<text x="170.0" y="179.0" text-anchor="end" class="lbl-ink">nodo</text>
+<text x="389.2" y="325.1" class="lbl-muted" text-anchor="end">tubo ⌀32 mm</text>
+<text x="106.0" y="83.0" class="lbl-muted" text-anchor="middle">borde del disco</text>
+<text x="106.0" y="97.0" class="lbl-muted" text-anchor="middle">⌀13 cm</text>
+</svg></div>
+  </div>
+</section>
+
+<section class="f" id="e3">
+  <div class="fhead"><span class="fid">E3</span><h2>Alturas de armado 52.3 cm más altas</h2><span class="chip crit">▲ Alto · corregido</span></div>
+  <div class="twocol">
+    <div class="panel"><svg viewBox="0 0 560 300" role="img" aria-label="Corte del domo con las alturas de armado publicadas y las reales">
+<line x1="59.599999999999994" y1="266.0" x2="531.2" y2="266.0" class="grid"/>
+<text x="56.0" y="270.0" text-anchor="end" class="lbl-muted tab">0.0 m</text>
+<line x1="59.599999999999994" y1="230.0" x2="531.2" y2="230.0" class="grid"/>
+<text x="56.0" y="234.0" text-anchor="end" class="lbl-muted tab">0.5 m</text>
+<line x1="59.599999999999994" y1="194.0" x2="531.2" y2="194.0" class="grid"/>
+<text x="56.0" y="198.0" text-anchor="end" class="lbl-muted tab">1.0 m</text>
+<line x1="59.599999999999994" y1="158.0" x2="531.2" y2="158.0" class="grid"/>
+<text x="56.0" y="162.0" text-anchor="end" class="lbl-muted tab">1.5 m</text>
+<line x1="59.599999999999994" y1="122.0" x2="531.2" y2="122.0" class="grid"/>
+<text x="56.0" y="126.0" text-anchor="end" class="lbl-muted tab">2.0 m</text>
+<line x1="59.599999999999994" y1="86.0" x2="531.2" y2="86.0" class="grid"/>
+<text x="56.0" y="90.0" text-anchor="end" class="lbl-muted tab">2.5 m</text>
+<line x1="59.599999999999994" y1="50.0" x2="531.2" y2="50.0" class="grid"/>
+<text x="56.0" y="54.0" text-anchor="end" class="lbl-muted tab">3.0 m</text>
+<polyline points="74.0,266.0 77.6,249.2 81.2,236.7 84.8,226.4 88.4,217.4 92.0,209.5 95.6,202.2 99.2,195.6 102.8,189.5 106.4,183.8 110.0,178.4 113.6,173.4 117.2,168.7 120.8,164.2 124.4,159.9 128.0,155.9 131.6,152.0 135.2,148.4 138.8,144.9 142.4,141.5 146.0,138.3 149.6,135.2 153.2,132.3 156.8,129.5 160.4,126.8 164.0,124.2 167.6,121.7 171.2,119.4 174.8,117.1 178.4,114.9 182.0,112.8 185.6,110.8 189.2,108.9 192.8,107.1 196.4,105.4 200.0,103.7 203.6,102.1 207.2,100.6 210.8,99.2 214.4,97.8 218.0,96.5 221.6,95.3 225.2,94.2 228.8,93.1 232.4,92.1 236.0,91.1 239.6,90.3 243.2,89.4 246.8,88.7 250.4,88.0 254.0,87.4 257.6,86.8 261.2,86.3 264.8,85.8 268.4,85.4 272.0,85.1 275.6,84.9 279.2,84.6 282.8,84.5 286.4,84.4 290.0,84.4 293.6,84.4 297.2,84.5 300.8,84.6 304.4,84.9 308.0,85.1 311.6,85.4 315.2,85.8 318.8,86.3 322.4,86.8 326.0,87.4 329.6,88.0 333.2,88.7 336.8,89.4 340.4,90.3 344.0,91.1 347.6,92.1 351.2,93.1 354.8,94.2 358.4,95.3 362.0,96.5 365.6,97.8 369.2,99.2 372.8,100.6 376.4,102.1 380.0,103.7 383.6,105.4 387.2,107.1 390.8,108.9 394.4,110.8 398.0,112.8 401.6,114.9 405.2,117.1 408.8,119.4 412.4,121.7 416.0,124.2 419.6,126.8 423.2,129.5 426.8,132.3 430.4,135.2 434.0,138.3 437.6,141.5 441.2,144.9 444.8,148.4 448.4,152.0 452.0,155.9 455.6,159.9 459.2,164.2 462.8,168.7 466.4,173.4 470.0,178.4 473.6,183.8 477.2,189.5 480.8,195.6 484.4,202.2 488.0,209.5 491.6,217.4 495.2,226.4 498.8,236.7 502.4,249.2 506.0,266.0" class="dome-line"/>
+<line x1="59.599999999999994" y1="266" x2="531.2" y2="266" class="floor"/>
+<text x="74.0" y="284" class="lbl-muted">piso (nodos bajos)</text>
+<line x1="486.1" y1="205.6" x2="486.1" y2="167.9" class="connector"/>
+<circle cx="486.1" cy="167.9" r="5" class="pt-bad" data-tip="Paso 1: el .md decía 1.362 m"/>
+<circle cx="486.1" cy="205.6" r="5" class="pt-ok" data-tip="Paso 1: altura real 0.839 m sobre el piso"/>
+<text x="495.1" y="171.9" class="lbl-ink tab">P1</text>
+<line x1="478.0" y1="190.7" x2="478.0" y2="153.1" class="connector"/>
+<circle cx="478.0" cy="153.1" r="5" class="pt-bad" data-tip="Paso 2: el .md decía 1.568 m"/>
+<circle cx="478.0" cy="190.7" r="5" class="pt-ok" data-tip="Paso 2: altura real 1.045 m sobre el piso"/>
+<text x="487.0" y="157.1" class="lbl-ink tab">P2</text>
+<line x1="440.5" y1="144.2" x2="440.5" y2="106.6" class="connector"/>
+<circle cx="440.5" cy="106.6" r="5" class="pt-bad" data-tip="Paso 3: el .md decía 2.214 m"/>
+<circle cx="440.5" cy="144.2" r="5" class="pt-ok" data-tip="Paso 3: altura real 1.691 m sobre el piso"/>
+<text x="449.5" y="110.6" class="lbl-ink tab">P3</text>
+<line x1="423.1" y1="129.4" x2="423.1" y2="91.8" class="connector"/>
+<circle cx="423.1" cy="91.8" r="5" class="pt-bad" data-tip="Paso 4: el .md decía 2.420 m"/>
+<circle cx="423.1" cy="129.4" r="5" class="pt-ok" data-tip="Paso 4: altura real 1.897 m sobre el piso"/>
+<text x="432.1" y="95.8" class="lbl-ink tab">P4</text>
+<line x1="365.3" y1="97.7" x2="365.3" y2="60.1" class="connector"/>
+<circle cx="365.3" cy="60.1" r="5" class="pt-bad" data-tip="Paso 5: el .md decía 2.860 m"/>
+<circle cx="365.3" cy="97.7" r="5" class="pt-ok" data-tip="Paso 5: altura real 2.337 m sobre el piso"/>
+<text x="374.3" y="64.1" class="lbl-ink tab">P5</text>
+<line x1="290.0" y1="84.4" x2="290.0" y2="46.7" class="connector"/>
+<circle cx="290.0" cy="46.7" r="5" class="pt-bad" data-tip="Paso 6: el .md decía 3.045 m"/>
+<circle cx="290.0" cy="84.4" r="5" class="pt-ok" data-tip="Paso 6: altura real 2.523 m sobre el piso"/>
+<text x="299.0" y="50.7" class="lbl-ink tab">P6</text>
+</svg>
+      <div class="legend"><span><i class="swb" style="border:2px solid var(--crit)"></i>✕ lo que decía la secuencia</span><span><i class="swb" style="background:var(--good)"></i>✓ altura real sobre el piso</span></div>
+    </div>
+    <div>
+      <p>La secuencia de armado medía desde el <b>centro de la esfera</b>, que está 52.3 cm por debajo del piso. Por eso el ápice aparecía a 3.045 m, fuera del domo, cuando el documento principal dice 2.52 m.</p>
+      <div class="tbl"><table><thead><tr><th>Paso</th><th>✕ Decía</th><th>✓ Real</th></tr></thead><tbody><tr><td>Paso 1</td><td class='num bad'>1.362 m</td><td class='num ok'><b>0.839 m</b></td></tr>
+<tr><td>Paso 2</td><td class='num bad'>1.568 m</td><td class='num ok'><b>1.045 m</b></td></tr>
+<tr><td>Paso 3</td><td class='num bad'>2.214 m</td><td class='num ok'><b>1.691 m</b></td></tr>
+<tr><td>Paso 4</td><td class='num bad'>2.420 m</td><td class='num ok'><b>1.897 m</b></td></tr>
+<tr><td>Paso 5</td><td class='num bad'>2.860 m</td><td class='num ok'><b>2.337 m</b></td></tr>
+<tr><td>Paso 6</td><td class='num bad'>3.045 m</td><td class='num ok'><b>2.523 m</b></td></tr></tbody></table></div>
+    </div>
+  </div>
+</section>
+
+<section class="f" id="e4">
+  <div class="fhead"><span class="fid">E4 · E5</span><h2>Nodos sin arriostrar en el paso 1 y replanteo de anclajes</h2><span class="chip crit">▲ Alto · corregido</span></div>
+  <div class="twocol">
+    <div class="panel"><svg viewBox="0 0 360 360" role="img" aria-label="Planta de los 15 anclajes y de los 5 nodos que quedan como bisagra en el paso 1">
+<circle cx="180.0" cy="180.0" r="132" class="ring-guide"/>
+<line x1="180.0" y1="180.0" x2="338.4" y2="180.0" class="grid"/>
+<text x="339.3" y="166.0" class="lbl-muted" text-anchor="end">0°</text>
+<polygon points="311.6,180.0 300.4,125.9 268.6,82.2 220.7,54.8 165.8,48.8 114.4,65.5 73.5,102.6 50.8,153.0 50.8,207.0 73.5,257.4 114.4,294.5 165.8,311.2 220.7,305.2 268.6,277.8 300.4,234.1" class="ring-poly"/>
+<polygon points="300.4,234.1 268.6,277.8 277.0,250.4" class="flap" data-tip="Nodo #0 (H3): sostenido solo por #4 y #23 — gira sobre esa línea hasta el paso 2"/>
+<line x1="300.4" y1="234.1" x2="268.6" y2="277.8" class="hinge"/>
+<circle cx="277.0" cy="250.4" r="5" class="pt-crit"/>
+<text x="255.6" y="238.9" class="lbl-crit" text-anchor="middle">#0</text>
+<polygon points="300.4,125.9 268.6,82.2 277.0,109.6" class="flap" data-tip="Nodo #3 (H3): sostenido solo por #6 y #14 — gira sobre esa línea hasta el paso 2"/>
+<line x1="300.4" y1="125.9" x2="268.6" y2="82.2" class="hinge"/>
+<circle cx="277.0" cy="109.6" r="5" class="pt-crit"/>
+<text x="255.6" y="129.1" class="lbl-crit" text-anchor="middle">#3</text>
+<polygon points="50.8,153.0 50.8,207.0 60.2,180.0" class="flap" data-tip="Nodo #7 (H3): sostenido solo por #8 y #43 — gira sobre esa línea hasta el paso 2"/>
+<line x1="50.8" y1="153.0" x2="50.8" y2="207.0" class="hinge"/>
+<circle cx="60.2" cy="180.0" r="5" class="pt-crit"/>
+<text x="86.5" y="184.0" class="lbl-crit" text-anchor="middle">#7</text>
+<polygon points="114.4,65.5 165.8,48.8 143.0,66.0" class="flap" data-tip="Nodo #13 (H3): sostenido solo por #12 y #17 — gira sobre esa línea hasta el paso 2"/>
+<line x1="114.4" y1="65.5" x2="165.8" y2="48.8" class="hinge"/>
+<circle cx="143.0" cy="66.0" r="5" class="pt-crit"/>
+<text x="151.1" y="95.1" class="lbl-crit" text-anchor="middle">#13</text>
+<polygon points="165.8,311.2 114.4,294.5 143.0,294.0" class="flap" data-tip="Nodo #20 (H3): sostenido solo por #19 y #44 — gira sobre esa línea hasta el paso 2"/>
+<line x1="165.8" y1="311.2" x2="114.4" y2="294.5" class="hinge"/>
+<circle cx="143.0" cy="294.0" r="5" class="pt-crit"/>
+<text x="151.1" y="272.9" class="lbl-crit" text-anchor="middle">#20</text>
+<circle cx="311.6" cy="180.0" r="6" class="anc-high" data-tip="#5 H5 · azimut 0.000° · radio 2.9911 m · X +2.9911 · Y +0.0000"/>
+<text x="328.7" y="184.0" text-anchor="middle" class="lbl-ink tab">#5</text>
+<circle cx="300.4" cy="125.9" r="4.5" class="anc-low" data-tip="#6 H4 · azimut 24.181° · radio 3.0000 m · X +2.7368 · Y +1.2289"/>
+<text x="316.1" y="122.9" text-anchor="middle" class="lbl-ink tab">#6</text>
+<circle cx="268.6" cy="82.2" r="4.5" class="anc-low" data-tip="#14 H4 · azimut 47.819° · radio 3.0000 m · X +2.0144 · Y +2.2231"/>
+<text x="280.2" y="73.5" text-anchor="middle" class="lbl-ink tab">#14</text>
+<circle cx="220.7" cy="54.8" r="6" class="anc-high" data-tip="#15 H5 · azimut 72.000° · radio 2.9911 m · X +0.9243 · Y +2.8447"/>
+<text x="226.0" y="42.6" text-anchor="middle" class="lbl-ink tab">#15</text>
+<circle cx="165.8" cy="48.8" r="4.5" class="anc-low" data-tip="#17 H4 · azimut 96.181° · radio 3.0000 m · X -0.3230 · Y +2.9826"/>
+<text x="163.9" y="35.7" text-anchor="middle" class="lbl-ink tab">#17</text>
+<circle cx="114.4" cy="65.5" r="4.5" class="anc-low" data-tip="#12 H4 · azimut 119.819° · radio 3.0000 m · X -1.4918 · Y +2.6028"/>
+<text x="105.8" y="54.6" text-anchor="middle" class="lbl-ink tab">#12</text>
+<circle cx="73.5" cy="102.6" r="6" class="anc-high" data-tip="#10 H5 · azimut 144.000° · radio 2.9911 m · X -2.4199 · Y +1.7581"/>
+<text x="59.7" y="96.6" text-anchor="middle" class="lbl-ink tab">#10</text>
+<circle cx="50.8" cy="153.0" r="4.5" class="anc-low" data-tip="#8 H4 · azimut 168.181° · radio 3.0000 m · X -2.9364 · Y +0.6144"/>
+<text x="34.0" y="153.5" text-anchor="middle" class="lbl-ink tab">#8</text>
+<circle cx="50.8" cy="207.0" r="4.5" class="anc-low" data-tip="#43 H4 · azimut 191.819° · radio 3.0000 m · X -2.9364 · Y -0.6144"/>
+<text x="34.0" y="214.5" text-anchor="middle" class="lbl-ink tab">#43</text>
+<circle cx="73.5" cy="257.4" r="6" class="anc-high" data-tip="#45 H5 · azimut 216.000° · radio 2.9911 m · X -2.4199 · Y -1.7581"/>
+<text x="59.7" y="271.4" text-anchor="middle" class="lbl-ink tab">#45</text>
+<circle cx="114.4" cy="294.5" r="4.5" class="anc-low" data-tip="#44 H4 · azimut 240.181° · radio 3.0000 m · X -1.4918 · Y -2.6028"/>
+<text x="105.8" y="313.4" text-anchor="middle" class="lbl-ink tab">#44</text>
+<circle cx="165.8" cy="311.2" r="4.5" class="anc-low" data-tip="#19 H4 · azimut 263.819° · radio 3.0000 m · X -0.3230 · Y -2.9826"/>
+<text x="163.9" y="332.3" text-anchor="middle" class="lbl-ink tab">#19</text>
+<circle cx="220.7" cy="305.2" r="6" class="anc-high" data-tip="#21 H5 · azimut 288.000° · radio 2.9911 m · X +0.9243 · Y -2.8447"/>
+<text x="226.0" y="325.4" text-anchor="middle" class="lbl-ink tab">#21</text>
+<circle cx="268.6" cy="277.8" r="4.5" class="anc-low" data-tip="#23 H4 · azimut 312.181° · radio 3.0000 m · X +2.0144 · Y -2.2231"/>
+<text x="280.2" y="294.5" text-anchor="middle" class="lbl-ink tab">#23</text>
+<circle cx="300.4" cy="234.1" r="4.5" class="anc-low" data-tip="#4 H4 · azimut 335.819° · radio 3.0000 m · X +2.7368 · Y -1.2289"/>
+<text x="316.1" y="245.1" text-anchor="middle" class="lbl-ink tab">#4</text>
+<text x="180.0" y="184.0" text-anchor="middle" class="lbl-muted">⌀ 6.00 m</text>
+</svg>
+      <div class="legend"><span><i class="swb" style="background:var(--ink)"></i>anclaje bajo H4</span><span><i class="swb" style="background:var(--sA)"></i>anclaje alto H5 (+4.86 cm)</span><span><i class="swb" style="background:var(--crit)"></i>▲ nodo bisagra: puntal</span></div>
+    </div>
+    <div>
+      <p>La secuencia decía que "0 nodos necesitan sujeción temporal". Un nodo con 2 barras está fijo en un plano, pero en el espacio es una <b>bisagra</b> y gira sobre la línea entre sus apoyos. Los 5 triángulos del paso 1 (<span class="mono">#0, #3, #7, #13, #20</span>) quedan como aletas hasta que el paso 2 los amarra. Hacen falta 5 puntales o cuerdas, y nadie debe estar debajo.</p>
+      <p>El documento también decía que las posiciones de los anclajes estaban en la secuencia, y no estaban. Ya están: azimut, radio y coordenadas desde el centro.</p>
+    </div>
+  </div>
+  <div class="tbl"><table><thead><tr><th>Nodo</th><th>Tipo</th><th>Azimut</th><th>Radio (m)</th><th>X (m)</th><th>Y (m)</th><th>Sobre el piso</th></tr></thead><tbody><tr><td class='num'>#5</td><td>H5</td><td class='num'>0.000°</td><td class='num'>2.9911</td><td class='num'>+2.9911</td><td class='num'>+0.0000</td><td class='num'>+4.86 cm</td></tr>
+<tr><td class='num'>#6</td><td>H4</td><td class='num'>24.181°</td><td class='num'>3.0000</td><td class='num'>+2.7368</td><td class='num'>+1.2289</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#14</td><td>H4</td><td class='num'>47.819°</td><td class='num'>3.0000</td><td class='num'>+2.0144</td><td class='num'>+2.2231</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#15</td><td>H5</td><td class='num'>72.000°</td><td class='num'>2.9911</td><td class='num'>+0.9243</td><td class='num'>+2.8447</td><td class='num'>+4.86 cm</td></tr>
+<tr><td class='num'>#17</td><td>H4</td><td class='num'>96.181°</td><td class='num'>3.0000</td><td class='num'>-0.3230</td><td class='num'>+2.9826</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#12</td><td>H4</td><td class='num'>119.819°</td><td class='num'>3.0000</td><td class='num'>-1.4918</td><td class='num'>+2.6028</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#10</td><td>H5</td><td class='num'>144.000°</td><td class='num'>2.9911</td><td class='num'>-2.4199</td><td class='num'>+1.7581</td><td class='num'>+4.86 cm</td></tr>
+<tr><td class='num'>#8</td><td>H4</td><td class='num'>168.181°</td><td class='num'>3.0000</td><td class='num'>-2.9364</td><td class='num'>+0.6144</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#43</td><td>H4</td><td class='num'>191.819°</td><td class='num'>3.0000</td><td class='num'>-2.9364</td><td class='num'>-0.6144</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#45</td><td>H5</td><td class='num'>216.000°</td><td class='num'>2.9911</td><td class='num'>-2.4199</td><td class='num'>-1.7581</td><td class='num'>+4.86 cm</td></tr>
+<tr><td class='num'>#44</td><td>H4</td><td class='num'>240.181°</td><td class='num'>3.0000</td><td class='num'>-1.4918</td><td class='num'>-2.6028</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#19</td><td>H4</td><td class='num'>263.819°</td><td class='num'>3.0000</td><td class='num'>-0.3230</td><td class='num'>-2.9826</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#21</td><td>H5</td><td class='num'>288.000°</td><td class='num'>2.9911</td><td class='num'>+0.9243</td><td class='num'>-2.8447</td><td class='num'>+4.86 cm</td></tr>
+<tr><td class='num'>#23</td><td>H4</td><td class='num'>312.181°</td><td class='num'>3.0000</td><td class='num'>+2.0144</td><td class='num'>-2.2231</td><td class='num'>+0.00 cm</td></tr>
+<tr><td class='num'>#4</td><td>H4</td><td class='num'>335.819°</td><td class='num'>3.0000</td><td class='num'>+2.7368</td><td class='num'>-1.2289</td><td class='num'>+0.00 cm</td></tr></tbody></table></div>
+</section>
+
+<section class="f" id="e6">
+  <div class="fhead"><span class="fid">E6</span><h2>La membrana no alcanza</h2><span class="chip serious">◆ Medio · dinero</span></div>
+  <p>Se presupuestaron 46.24 m² + 12% = 51.8 m², cortando 75 paneles. Cada panel mide unos 3.5 m de perímetro y el solape de costura se suma en todo ese borde. Con 3–5 cm de solape, las piezas solas ya superan lo presupuestado, antes de contar el desperdicio del rollo.</p>
+  <div class="panel"><svg viewBox="0 0 920 210" role="img" aria-label="Área de membrana necesaria según el solape, contra lo presupuestado">
+<line x1="170.0" y1="22" x2="170.0" y2="164" class="grid"/>
+<text x="170.0" y="178" text-anchor="middle" class="lbl-muted tab">0</text>
+<line x1="268.6" y1="22" x2="268.6" y2="164" class="grid"/>
+<text x="268.6" y="178" text-anchor="middle" class="lbl-muted tab">10</text>
+<line x1="367.1" y1="22" x2="367.1" y2="164" class="grid"/>
+<text x="367.1" y="178" text-anchor="middle" class="lbl-muted tab">20</text>
+<line x1="465.7" y1="22" x2="465.7" y2="164" class="grid"/>
+<text x="465.7" y="178" text-anchor="middle" class="lbl-muted tab">30</text>
+<line x1="564.3" y1="22" x2="564.3" y2="164" class="grid"/>
+<text x="564.3" y="178" text-anchor="middle" class="lbl-muted tab">40</text>
+<line x1="662.9" y1="22" x2="662.9" y2="164" class="grid"/>
+<text x="662.9" y="178" text-anchor="middle" class="lbl-muted tab">50</text>
+<line x1="761.4" y1="22" x2="761.4" y2="164" class="grid"/>
+<text x="761.4" y="178" text-anchor="middle" class="lbl-muted tab">60</text>
+<line x1="860.0" y1="22" x2="860.0" y2="164" class="grid"/>
+<text x="860.0" y="178" text-anchor="middle" class="lbl-muted tab">70</text>
+<rect x="761.4" y="22" width="69.0" height="142" class="band" data-tip="Rango recomendado para presupuestar: 60–67 m²"/>
+<text x="160" y="43.0" text-anchor="end" class="lbl-ink">Solape 0 cm/lado</text>
+<path d="M 170 28 H 621.8 a 4 4 0 0 1 4 4 V 46 a 4 4 0 0 1 -4 4 H 170 Z" class="bar-seq" data-tip="Solape 0 cm por lado: 46.2 m² de piezas (89% de lo presupuestado)"/>
+<text x="631.8" y="43.0" class="lbl-ink tab">46.2 m²</text>
+<text x="160" y="77.0" text-anchor="end" class="lbl-ink">Solape 2 cm/lado</text>
+<path d="M 170 62 H 676.4 a 4 4 0 0 1 4 4 V 80 a 4 4 0 0 1 -4 4 H 170 Z" class="bar-seq" data-tip="Solape 2 cm por lado: 51.8 m² de piezas (100% de lo presupuestado)"/>
+<text x="686.4" y="77.0" class="lbl-ink tab">51.8 m²</text>
+<text x="160" y="111.0" text-anchor="end" class="lbl-ink">Solape 3 cm/lado</text>
+<path d="M 170 96 H 704.8 a 4 4 0 0 1 4 4 V 114 a 4 4 0 0 1 -4 4 H 170 Z" class="bar-seq" data-tip="Solape 3 cm por lado: 54.7 m² de piezas (106% de lo presupuestado)"/>
+<text x="714.8" y="111.0" class="lbl-ink tab">54.7 m²</text>
+<text x="160" y="145.0" text-anchor="end" class="lbl-ink">Solape 5 cm/lado</text>
+<path d="M 170 130 H 764.0 a 4 4 0 0 1 4 4 V 148 a 4 4 0 0 1 -4 4 H 170 Z" class="bar-seq" data-tip="Solape 5 cm por lado: 60.7 m² de piezas (117% de lo presupuestado)"/>
+<text x="774.0" y="145.0" class="lbl-ink tab">60.7 m²</text>
+<line x1="680.5" y1="18" x2="680.5" y2="164" class="ref-bad"/>
+<text x="674.5" y="16" text-anchor="end" class="lbl-crit">✕ comprado según el .md: 51.8 m²</text>
+<text x="765.4" y="16" class="lbl-ink">✓ presupuestar 60–67 m²</text>
+<text x="860" y="206" text-anchor="end" class="lbl-muted">m² de tela en piezas cortadas, sin desperdicio de rollo</text>
+</svg></div>
+  <p class="muted">Tampoco están en la lista: aislante, forro interior, ventanas, puerta y el faldón que tapa el hueco de 4.86 cm bajo el zigzag.</p>
+</section>
+
+<section class="f" id="e7">
+  <div class="fhead"><span class="fid">E7</span><h2>Viento: el reparto por anclaje no es parejo</h2><span class="chip serious">◆ Medio · riesgo</span></div>
+  <p>La auditoría resolvió el domo como armadura espacial con el mismo viento de 100 km/h. El patrón de presiones usado da exactamente el empuje total del documento (331 kgf), pero repartido: algunos anclajes cargan mucho más que el promedio. Además, si una puerta abierta presuriza el interior, el arranque crece. El documento no consideraba la presión interna.</p>
+  <div class="legend"><span><i class="swb" style="background:var(--o1)"></i>sin presión interna</span><span><i class="swb" style="background:var(--o2)"></i>con presión interna (puerta abierta al viento)</span><span><i class="sw" style="background:var(--crit)"></i>✕ promedio del .md</span></div>
+  <div class="twocol">
+    <div class="panel"><h3>Arranque por anclaje (kgf)</h3><svg viewBox="0 0 480 230" role="img" aria-label="Arranque por anclaje">
+<line x1="40" y1="190.0" x2="470" y2="190.0" class="grid"/>
+<text x="34" y="194.0" text-anchor="end" class="lbl-muted tab">0</text>
+<line x1="40" y1="134.0" x2="470" y2="134.0" class="grid"/>
+<text x="34" y="138.0" text-anchor="end" class="lbl-muted tab">50</text>
+<line x1="40" y1="78.0" x2="470" y2="78.0" class="grid"/>
+<text x="34" y="82.0" text-anchor="end" class="lbl-muted tab">100</text>
+<line x1="40" y1="22.0" x2="470" y2="22.0" class="grid"/>
+<text x="34" y="26.0" text-anchor="end" class="lbl-muted tab">150</text>
+<path d="M 42.0 190 V 161.8 a 4.0 4.0 0 0 1 4.0 -4.0 H 49.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 0° del barlovento · sin presión interna: 28.7 kgf"/>
+<path d="M 55.3 190 V 107.5 a 4.0 4.0 0 0 1 4.0 -4.0 H 62.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 0° del barlovento · con presión interna +0.55: 77.2 kgf"/>
+<text x="54.3" y="204" text-anchor="middle" class="lbl-muted tab small">0°</text>
+<path d="M 70.7 190 V 154.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 78.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 24° del barlovento · sin presión interna: 35.4 kgf"/>
+<path d="M 84.0 190 V 100.2 a 4.0 4.0 0 0 1 4.0 -4.0 H 91.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 24° del barlovento · con presión interna +0.55: 83.8 kgf"/>
+<text x="83.0" y="204" text-anchor="middle" class="lbl-muted tab small">24°</text>
+<path d="M 99.3 190 V 148.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 106.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 48° del barlovento · sin presión interna: 40.8 kgf"/>
+<path d="M 112.7 190 V 94.1 a 4.0 4.0 0 0 1 4.0 -4.0 H 120.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 48° del barlovento · con presión interna +0.55: 89.2 kgf"/>
+<text x="111.7" y="204" text-anchor="middle" class="lbl-muted tab small">48°</text>
+<path d="M 128.0 190 V 120.0 a 4.0 4.0 0 0 1 4.0 -4.0 H 135.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 72° del barlovento · sin presión interna: 66.1 kgf"/>
+<path d="M 141.3 190 V 65.7 a 4.0 4.0 0 0 1 4.0 -4.0 H 148.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 72° del barlovento · con presión interna +0.55: 114.6 kgf"/>
+<text x="140.3" y="204" text-anchor="middle" class="lbl-muted tab small">72°</text>
+<path d="M 156.7 190 V 103.9 a 4.0 4.0 0 0 1 4.0 -4.0 H 164.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 96° del barlovento · sin presión interna: 80.5 kgf"/>
+<path d="M 170.0 190 V 49.6 a 4.0 4.0 0 0 1 4.0 -4.0 H 177.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 96° del barlovento · con presión interna +0.55: 128.9 kgf"/>
+<text x="169.0" y="204" text-anchor="middle" class="lbl-muted tab small">96°</text>
+<path d="M 185.3 190 V 122.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 192.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 120° del barlovento · sin presión interna: 63.9 kgf"/>
+<path d="M 198.7 190 V 68.2 a 4.0 4.0 0 0 1 4.0 -4.0 H 206.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 120° del barlovento · con presión interna +0.55: 112.3 kgf"/>
+<text x="197.7" y="204" text-anchor="middle" class="lbl-muted tab small">120°</text>
+<path d="M 214.0 190 V 137.1 a 4.0 4.0 0 0 1 4.0 -4.0 H 221.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 144° del barlovento · sin presión interna: 50.8 kgf"/>
+<path d="M 227.3 190 V 82.8 a 4.0 4.0 0 0 1 4.0 -4.0 H 234.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 144° del barlovento · con presión interna +0.55: 99.3 kgf"/>
+<text x="226.3" y="204" text-anchor="middle" class="lbl-muted tab small">144°</text>
+<path d="M 242.7 190 V 145.2 a 4.0 4.0 0 0 1 4.0 -4.0 H 250.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 168° del barlovento · sin presión interna: 43.6 kgf"/>
+<path d="M 256.0 190 V 91.0 a 4.0 4.0 0 0 1 4.0 -4.0 H 263.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 168° del barlovento · con presión interna +0.55: 92.0 kgf"/>
+<text x="255.0" y="204" text-anchor="middle" class="lbl-muted tab small">168°</text>
+<path d="M 271.3 190 V 145.2 a 4.0 4.0 0 0 1 4.0 -4.0 H 278.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 192° del barlovento · sin presión interna: 43.6 kgf"/>
+<path d="M 284.7 190 V 91.0 a 4.0 4.0 0 0 1 4.0 -4.0 H 292.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 192° del barlovento · con presión interna +0.55: 92.0 kgf"/>
+<text x="283.7" y="204" text-anchor="middle" class="lbl-muted tab small">192°</text>
+<path d="M 300.0 190 V 137.1 a 4.0 4.0 0 0 1 4.0 -4.0 H 307.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 216° del barlovento · sin presión interna: 50.8 kgf"/>
+<path d="M 313.3 190 V 82.8 a 4.0 4.0 0 0 1 4.0 -4.0 H 320.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 216° del barlovento · con presión interna +0.55: 99.3 kgf"/>
+<text x="312.3" y="204" text-anchor="middle" class="lbl-muted tab small">216°</text>
+<path d="M 328.7 190 V 122.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 336.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 240° del barlovento · sin presión interna: 63.9 kgf"/>
+<path d="M 342.0 190 V 68.2 a 4.0 4.0 0 0 1 4.0 -4.0 H 349.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 240° del barlovento · con presión interna +0.55: 112.3 kgf"/>
+<text x="341.0" y="204" text-anchor="middle" class="lbl-muted tab small">240°</text>
+<path d="M 357.3 190 V 103.9 a 4.0 4.0 0 0 1 4.0 -4.0 H 364.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 264° del barlovento · sin presión interna: 80.5 kgf"/>
+<path d="M 370.7 190 V 49.6 a 4.0 4.0 0 0 1 4.0 -4.0 H 378.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 264° del barlovento · con presión interna +0.55: 128.9 kgf"/>
+<text x="369.7" y="204" text-anchor="middle" class="lbl-muted tab small">264°</text>
+<path d="M 386.0 190 V 120.0 a 4.0 4.0 0 0 1 4.0 -4.0 H 393.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 288° del barlovento · sin presión interna: 66.1 kgf"/>
+<path d="M 399.3 190 V 65.7 a 4.0 4.0 0 0 1 4.0 -4.0 H 406.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 288° del barlovento · con presión interna +0.55: 114.6 kgf"/>
+<text x="398.3" y="204" text-anchor="middle" class="lbl-muted tab small">288°</text>
+<path d="M 414.7 190 V 148.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 422.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 312° del barlovento · sin presión interna: 40.8 kgf"/>
+<path d="M 428.0 190 V 94.1 a 4.0 4.0 0 0 1 4.0 -4.0 H 435.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 312° del barlovento · con presión interna +0.55: 89.2 kgf"/>
+<text x="427.0" y="204" text-anchor="middle" class="lbl-muted tab small">312°</text>
+<path d="M 443.3 190 V 154.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 450.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o1" data-tip="Anclaje a 336° del barlovento · sin presión interna: 35.4 kgf"/>
+<path d="M 456.7 190 V 100.2 a 4.0 4.0 0 0 1 4.0 -4.0 H 464.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 336° del barlovento · con presión interna +0.55: 83.8 kgf"/>
+<text x="455.7" y="204" text-anchor="middle" class="lbl-muted tab small">336°</text>
+<line x1="40" y1="190" x2="470" y2="190" class="baseline"/>
+<line x1="40" y1="108.2" x2="470" y2="108.2" class="ref-bad"/>
+<text x="44" y="102.2" class="lbl-crit halo">promedio usado en el .md: 73 kgf</text>
+<text x="40" y="224" class="lbl-muted">grados desde barlovento (0° = de frente al viento)</text>
+</svg></div>
+    <div class="panel"><h3>Corte horizontal por anclaje (kgf)</h3><svg viewBox="0 0 480 230" role="img" aria-label="Corte horizontal por anclaje">
+<line x1="40" y1="190.0" x2="470" y2="190.0" class="grid"/>
+<text x="34" y="194.0" text-anchor="end" class="lbl-muted tab">0</text>
+<line x1="40" y1="134.0" x2="470" y2="134.0" class="grid"/>
+<text x="34" y="138.0" text-anchor="end" class="lbl-muted tab">20</text>
+<line x1="40" y1="78.0" x2="470" y2="78.0" class="grid"/>
+<text x="34" y="82.0" text-anchor="end" class="lbl-muted tab">40</text>
+<line x1="40" y1="22.0" x2="470" y2="22.0" class="grid"/>
+<text x="34" y="26.0" text-anchor="end" class="lbl-muted tab">60</text>
+<path d="M 48.3 190 V 103.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 56.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 0° del barlovento · corte horizontal: 32.4 kgf"/>
+<text x="54.3" y="204" text-anchor="middle" class="lbl-muted tab small">0°</text>
+<path d="M 77.0 190 V 81.7 a 4.0 4.0 0 0 1 4.0 -4.0 H 85.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 24° del barlovento · corte horizontal: 40.1 kgf"/>
+<text x="83.0" y="204" text-anchor="middle" class="lbl-muted tab small">24°</text>
+<path d="M 105.7 190 V 53.7 a 4.0 4.0 0 0 1 4.0 -4.0 H 113.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 48° del barlovento · corte horizontal: 50.1 kgf"/>
+<text x="111.7" y="204" text-anchor="middle" class="lbl-muted tab small">48°</text>
+<path d="M 134.3 190 V 34.6 a 4.0 4.0 0 0 1 4.0 -4.0 H 142.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 72° del barlovento · corte horizontal: 56.9 kgf"/>
+<text x="140.3" y="204" text-anchor="middle" class="lbl-muted tab small">72°</text>
+<path d="M 163.0 190 V 111.3 a 4.0 4.0 0 0 1 4.0 -4.0 H 171.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 96° del barlovento · corte horizontal: 29.5 kgf"/>
+<text x="169.0" y="204" text-anchor="middle" class="lbl-muted tab small">96°</text>
+<path d="M 191.7 190 V 171.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 199.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 120° del barlovento · corte horizontal: 8.1 kgf"/>
+<text x="197.7" y="204" text-anchor="middle" class="lbl-muted tab small">120°</text>
+<path d="M 220.3 190 V 176.9 a 4.0 4.0 0 0 1 4.0 -4.0 H 228.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 144° del barlovento · corte horizontal: 6.1 kgf"/>
+<text x="226.3" y="204" text-anchor="middle" class="lbl-muted tab small">144°</text>
+<path d="M 249.0 190 V 169.6 a 4.0 4.0 0 0 1 4.0 -4.0 H 257.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 168° del barlovento · corte horizontal: 8.7 kgf"/>
+<text x="255.0" y="204" text-anchor="middle" class="lbl-muted tab small">168°</text>
+<path d="M 277.7 190 V 169.6 a 4.0 4.0 0 0 1 4.0 -4.0 H 285.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 192° del barlovento · corte horizontal: 8.7 kgf"/>
+<text x="283.7" y="204" text-anchor="middle" class="lbl-muted tab small">192°</text>
+<path d="M 306.3 190 V 176.9 a 4.0 4.0 0 0 1 4.0 -4.0 H 314.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 216° del barlovento · corte horizontal: 6.1 kgf"/>
+<text x="312.3" y="204" text-anchor="middle" class="lbl-muted tab small">216°</text>
+<path d="M 335.0 190 V 171.4 a 4.0 4.0 0 0 1 4.0 -4.0 H 343.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 240° del barlovento · corte horizontal: 8.1 kgf"/>
+<text x="341.0" y="204" text-anchor="middle" class="lbl-muted tab small">240°</text>
+<path d="M 363.7 190 V 111.3 a 4.0 4.0 0 0 1 4.0 -4.0 H 371.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 264° del barlovento · corte horizontal: 29.5 kgf"/>
+<text x="369.7" y="204" text-anchor="middle" class="lbl-muted tab small">264°</text>
+<path d="M 392.3 190 V 34.6 a 4.0 4.0 0 0 1 4.0 -4.0 H 400.3 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 288° del barlovento · corte horizontal: 56.9 kgf"/>
+<text x="398.3" y="204" text-anchor="middle" class="lbl-muted tab small">288°</text>
+<path d="M 421.0 190 V 53.7 a 4.0 4.0 0 0 1 4.0 -4.0 H 429.0 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 312° del barlovento · corte horizontal: 50.1 kgf"/>
+<text x="427.0" y="204" text-anchor="middle" class="lbl-muted tab small">312°</text>
+<path d="M 449.7 190 V 81.7 a 4.0 4.0 0 0 1 4.0 -4.0 H 457.7 a 4.0 4.0 0 0 1 4.0 4.0 V 190 Z" class="bar-o2" data-tip="Anclaje a 336° del barlovento · corte horizontal: 40.1 kgf"/>
+<text x="455.7" y="204" text-anchor="middle" class="lbl-muted tab small">336°</text>
+<line x1="40" y1="190" x2="470" y2="190" class="baseline"/>
+<line x1="40" y1="128.4" x2="470" y2="128.4" class="ref-bad"/>
+<text x="44" y="122.4" class="lbl-crit halo">promedio usado en el .md: 22 kgf</text>
+<text x="40" y="224" class="lbl-muted">grados desde barlovento (0° = de frente al viento)</text>
+</svg></div>
+  </div>
+  <div class="tbl"><table><thead><tr><th>Base de diseño por perno (§9.4)</th><th>✕ El .md decía</th><th>✓ Con reparto real y presión interna</th></tr></thead><tbody>
+    <tr><td>Arranque (FS 2.5)</td><td class="num bad">274 kgf</td><td class="num ok"><b>≈322 kgf</b></td></tr>
+    <tr><td>Corte (FS 2.0)</td><td class="num bad">66 kgf</td><td class="num ok"><b>≈114 kgf</b></td></tr>
+  </tbody></table></div>
+  <p class="muted">El perno M12 sigue sobrando por acero (≈2000 kgf). Lo que cambia es el embebido en el concreto y el peso que necesitan los pilotes para no levantarse.</p>
+</section>
+
+<section class="f" id="e8">
+  <div class="fhead"><span class="fid">E8</span><h2>Lista de corte en barras de 6 m</h2><span class="chip serious">◆ Medio · dinero</span></div>
+  <p>El patrón publicado deja <b>7.9 mm</b> de sobra: una barra de 5.99 m o un extremo dañado arruinan la quinta pieza. Con el largo real de corte (3.5 cm de retiro por extremo), bastan <b>23 barras en lugar de 27</b>, con al menos 20 mm de holgura en cada una. Hay que recalcularlo cuando esté definido el conector.</p>
+  <div class="legend"><span><i class="swb" style="background:var(--sA)"></i>A</span><span><i class="swb" style="background:var(--sB)"></i>B</span><span><i class="swb" style="background:var(--sC)"></i>C</span><span class="muted">largos en cm · barra comercial de 6.00 m a escala</span></div>
+  <div class="panel cuts"><div class="cutrow"><div class="cutlabel">✕ Publicado · 9 barras así</div><svg viewBox="0 0 600 30" class="cutbar" role="img" aria-label="✕ Publicado · 9 barras así"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="120.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 122.89 cm"/><text x="61.4" y="19" text-anchor="middle" class="seglbl">B · 122.9</text><rect x="123.2" y="4" width="120.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 122.89 cm"/><text x="184.6" y="19" text-anchor="middle" class="seglbl">B · 122.9</text><rect x="246.4" y="4" width="120.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 122.89 cm"/><text x="307.8" y="19" text-anchor="middle" class="seglbl">B · 122.9</text><rect x="369.6" y="4" width="120.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 122.89 cm"/><text x="431.0" y="19" text-anchor="middle" class="seglbl">B · 122.9</text><rect x="492.8" y="4" width="104.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 106.16 cm"/><text x="545.8" y="19" text-anchor="middle" class="seglbl">C · 106.2</text></svg><div class="cutnote bad">sobran 7.9 mm</div></div>
+<div class="cutrow"><div class="cutlabel">✓ Corregido · 10 barras así</div><svg viewBox="0 0 600 30" class="cutbar" role="img" aria-label="✓ Corregido · 10 barras así"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="Pieza A: 118.59 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 115.89 cm"/><text x="176.8" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="235.1" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 115.89 cm"/><text x="293.0" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="351.3" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 115.89 cm"/><text x="409.2" y="19" text-anchor="middle" class="seglbl">B · 115.9</text><rect x="467.5" y="4" width="113.9" height="22" rx="3" class="seg-B" data-tip="Pieza B: 115.89 cm"/><text x="525.4" y="19" text-anchor="middle" class="seglbl">B · 115.9</text></svg><div class="cutnote ok">sobran 164 mm</div></div>
+<div class="cutrow"><div class="cutlabel">✓ Corregido · 8 barras así</div><svg viewBox="0 0 600 30" class="cutbar" role="img" aria-label="✓ Corregido · 8 barras así"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="Pieza A: 118.59 cm"/><text x="59.3" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="118.9" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="Pieza A: 118.59 cm"/><text x="178.2" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="237.8" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="Pieza A: 118.59 cm"/><text x="297.1" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="356.7" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="Pieza A: 118.59 cm"/><text x="416.0" y="19" text-anchor="middle" class="seglbl">A · 118.6</text><rect x="475.5" y="4" width="116.6" height="22" rx="3" class="seg-A" data-tip="Pieza A: 118.59 cm"/><text x="534.8" y="19" text-anchor="middle" class="seglbl">A · 118.6</text></svg><div class="cutnote ok">sobran 56 mm</div></div>
+<div class="cutrow"><div class="cutlabel">✓ Corregido · 5 barras así</div><svg viewBox="0 0 600 30" class="cutbar" role="img" aria-label="✓ Corregido · 5 barras así"><rect x="0" y="4" width="600" height="22" rx="4" class="stock"/><rect x="0.0" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 99.16 cm"/><text x="49.6" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="99.5" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 99.16 cm"/><text x="149.0" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="198.9" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 99.16 cm"/><text x="248.5" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="298.4" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 99.16 cm"/><text x="348.0" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="397.8" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 99.16 cm"/><text x="447.4" y="19" text-anchor="middle" class="seglbl">C · 99.2</text><rect x="497.3" y="4" width="97.2" height="22" rx="3" class="seg-C" data-tip="Pieza C: 99.16 cm"/><text x="546.9" y="19" text-anchor="middle" class="seglbl">C · 99.2</text></svg><div class="cutnote ok">sobran 32 mm</div></div></div>
+</section>
+
+<section class="f" id="e9">
+  <div class="fhead"><span class="fid">E9–E12</span><h2>Otros hallazgos</h2><span class="chip warn">● Bajo / Medio</span></div>
+  <div class="tbl"><table><thead><tr><th>Hallazgo</th><th>Detalle</th></tr></thead><tbody>
+    <tr><td>Galvanizado contra soldadura en sitio</td><td>"Galvanizar después de soldar" choca con "soldar en sitio". Hay que elegir entre uniones empernadas o reparación en frío. Los tubos cerrados necesitan venteo para el baño en caliente.</td></tr>
+    <tr><td>"2.7 t" de pandeo</td><td>Es la carga elástica de Euler. La capacidad de diseño es ≈1.3–2.1 t. La barra más cargada llega a ≈121 kgf, un 5%, así que la sección alcanza. Pero <b>100 kg parados a media barra la llevan a ≈231 MPa, en fluencia</b>: nadie camina sobre las barras.</td></tr>
+    <tr><td>Verificador "independiente"</td><td><span class="mono">dome_verify.py</span> usa el mismo modelo y no lee el .md, aunque el documento dice lo contrario.</td></tr>
+    <tr><td>Textos</td><td>"12–19 cm" entre barras: en realidad 2.7–19.4 cm. Volumen: 44.07 m³ es el de la esfera; el poliedro encierra 41.2 m³.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section class="f" id="falta">
+  <div class="fhead"><h2>Lo que no está calculado y cuesta dinero</h2><span class="chip neutral">○ antes de comprar</span></div>
+  <div class="twocol">
+    <div class="panel"><h3>Altura libre y puerta</h3><svg viewBox="0 0 520 250" role="img" aria-label="Corte del domo: zona con 2 m de altura libre y una puerta de 2 m">
+<polygon points="137.2,220.0 137.2,76.0 141.3,73.3 145.4,70.7 149.5,68.3 153.6,65.9 157.7,63.7 161.8,61.6 165.8,59.6 169.9,57.7 174.0,55.9 178.1,54.2 182.2,52.6 186.3,51.1 190.4,49.7 194.5,48.4 198.6,47.2 202.7,46.0 206.8,44.9 210.9,44.0 215.0,43.1 219.1,42.2 223.2,41.5 227.3,40.8 231.3,40.3 235.4,39.8 239.5,39.3 243.6,39.0 247.7,38.7 251.8,38.5 255.9,38.4 260.0,38.4 264.1,38.4 268.2,38.5 272.3,38.7 276.4,39.0 280.5,39.3 284.6,39.8 288.7,40.3 292.7,40.8 296.8,41.5 300.9,42.2 305.0,43.1 309.1,44.0 313.2,44.9 317.3,46.0 321.4,47.2 325.5,48.4 329.6,49.7 333.7,51.1 337.8,52.6 341.9,54.2 346.0,55.9 350.1,57.7 354.2,59.6 358.2,61.6 362.3,63.7 366.4,65.9 370.5,68.3 374.6,70.7 378.7,73.3 382.8,76.0 382.8,220.0" class="head-zone" data-tip="Solo aquí hay 2.0 m o más de altura: 3.41 m de ancho, 9.1 m² de piso"/>
+<polyline points="44.0,220.0 47.6,203.2 51.2,190.7 54.8,180.4 58.4,171.4 62.0,163.5 65.6,156.2 69.2,149.6 72.8,143.5 76.4,137.8 80.0,132.4 83.6,127.4 87.2,122.7 90.8,118.2 94.4,113.9 98.0,109.9 101.6,106.0 105.2,102.4 108.8,98.9 112.4,95.5 116.0,92.3 119.6,89.2 123.2,86.3 126.8,83.5 130.4,80.8 134.0,78.2 137.6,75.7 141.2,73.4 144.8,71.1 148.4,68.9 152.0,66.8 155.6,64.8 159.2,62.9 162.8,61.1 166.4,59.4 170.0,57.7 173.6,56.1 177.2,54.6 180.8,53.2 184.4,51.8 188.0,50.5 191.6,49.3 195.2,48.2 198.8,47.1 202.4,46.1 206.0,45.1 209.6,44.3 213.2,43.4 216.8,42.7 220.4,42.0 224.0,41.4 227.6,40.8 231.2,40.3 234.8,39.8 238.4,39.4 242.0,39.1 245.6,38.9 249.2,38.6 252.8,38.5 256.4,38.4 260.0,38.4 263.6,38.4 267.2,38.5 270.8,38.6 274.4,38.9 278.0,39.1 281.6,39.4 285.2,39.8 288.8,40.3 292.4,40.8 296.0,41.4 299.6,42.0 303.2,42.7 306.8,43.4 310.4,44.3 314.0,45.1 317.6,46.1 321.2,47.1 324.8,48.2 328.4,49.3 332.0,50.5 335.6,51.8 339.2,53.2 342.8,54.6 346.4,56.1 350.0,57.7 353.6,59.4 357.2,61.1 360.8,62.9 364.4,64.8 368.0,66.8 371.6,68.9 375.2,71.1 378.8,73.4 382.4,75.7 386.0,78.2 389.6,80.8 393.2,83.5 396.8,86.3 400.4,89.2 404.0,92.3 407.6,95.5 411.2,98.9 414.8,102.4 418.4,106.0 422.0,109.9 425.6,113.9 429.2,118.2 432.8,122.7 436.4,127.4 440.0,132.4 443.6,137.8 447.2,143.5 450.8,149.6 454.4,156.2 458.0,163.5 461.6,171.4 465.2,180.4 468.8,190.7 472.4,203.2 476.0,220.0" class="dome-line"/>
+<line x1="22.400000000000006" y1="220" x2="497.6" y2="220" class="floor"/>
+<line x1="22.400000000000006" y1="76.0" x2="497.6" y2="76.0" class="grid"/>
+<text x="22.400000000000006" y="71.0" class="lbl-muted">2.0 m</text>
+<rect x="411.2" y="76.0" width="64.8" height="144.0" class="door" data-tip="Puerta de 0.90 × 2.00 m junto a la pared: el domo la corta"/>
+<text x="443.6" y="70.0" text-anchor="middle" class="lbl-crit">✕ puerta 2.0 m</text>
+<text x="260.0" y="133.6" text-anchor="middle" class="lbl-ink">≥ 2.0 m: 9.1 m² (32% del piso)</text>
+<text x="260.0" y="30.6" text-anchor="middle" class="lbl-muted">ápice 2.52 m</text>
+</svg></div>
+    <div>
+      <p>El domo mide 2.52 m en el centro. A 2.0 m del centro el techo está a 1.77 m, y a 2.5 m está a 1.22 m. Una puerta de 2 m pegada a la pared queda cortada por el domo.</p>
+      <p>Para un producto de hotel (cama, baño, jacuzzi) conviene evaluar un domo 5/8, un 4V o un 3/8 sobre un muro de arranque de 0.8–1.0 m. Es una decisión de negocio que cambia toda la lista de materiales, así que va antes de comprar.</p>
+    </div>
+  </div>
+  <ul class="misslist"><li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Puerta y altura útil</b><p>El domo mide 2.52 m. Solo el 32% del piso tiene 2 m de altura libre y una puerta de 2 m no cabe en la superficie. Hace falta un portal, que corta barras y hay que calcular.</p></div></li>
+<li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Plataforma y pilotes</b><p>§9 dimensiona los pilotes con el domo (0.28 t). El piso, la gente y un jacuzzi con agua (1–2 t) pesan varias veces más. Probablemente hacen falta pilotes interiores.</p></div></li>
+<li class='miss'><span class='chip crit'>▲ Alto</span><div><b>Arranque de pilotes</b><p>Levantamiento neto de viento con presión interna: 1.3–1.5 t, contra ≈1.95 t de peso de pilotes. Casi sin margen.</p></div></li>
+<li class='miss'><span class='chip serious'>◆ Medio</span><div><b>Diseño del conector (hub)</b><p>De él dependen el retiro de corte, la lista de corte, el galvanizado y la resistencia de las uniones.</p></div></li>
+<li class='miss'><span class='chip serious'>◆ Medio</span><div><b>Lista de materiales incompleta</b><p>Pestañas (~0.77 m² de plancha), pernos, soldadura, anclajes, tacos, concreto, deck, aislante, forro, ventanas, puerta, faldón.</p></div></li>
+<li class='miss'><span class='chip serious'>◆ Medio</span><div><b>Grado real del tubo local</b><p>Confirmar Fy, espesor real y diámetro disponible (1¼" = 31.75 mm).</p></div></li>
+<li class='miss'><span class='chip warn'>● Bajo</span><div><b>Datos oficiales de viento y sismo</b><p>COVENIN-MINDUR 2003 y COVENIN 1756 para Tovar, incluida la topografía de montaña.</p></div></li>
+<li class='miss'><span class='chip warn'>● Bajo</span><div><b>Firma de un ingeniero</b><p>Esta auditoría corrige números. No reemplaza la firma de un ingeniero matriculado.</p></div></li></ul>
+</section>
+
+<footer>
+  <p>Todo se reproduce con <span class="mono">python3 auditoria_independiente.py</span> y <span class="mono">python3 reporte_visual.py</span> en <a href="https://github.com/luiscruces-dev/Claude/tree/claude/google-chica-glamping-review-veyz64/glamping-cucuchica/auditoria">glamping-cucuchica/auditoria</a>. Informe completo: <a href="https://github.com/luiscruces-dev/Claude/tree/claude/google-chica-glamping-review-veyz64/glamping-cucuchica/auditoria/AUDITORIA.md">AUDITORIA.md</a>. El análisis de barras supone nodos articulados, y el viento es el valor ilustrativo del documento: esto no reemplaza la firma de un ingeniero estructural.</p>
+</footer>
+</div>
+<div id="tip" hidden></div>
+<script>
+(function(){
+  var tip=document.getElementById('tip');
+  function show(e){ var t=e.target.closest('[data-tip]'); if(!t){tip.hidden=true;return;}
+    tip.textContent=t.getAttribute('data-tip'); tip.hidden=false;
+    var x=e.clientX+14, y=e.clientY+12; var w=tip.offsetWidth;
+    if(x+w>window.innerWidth-8) x=e.clientX-w-14; tip.style.left=x+'px'; tip.style.top=y+'px'; }
+  document.addEventListener('pointermove',show);
+  document.addEventListener('pointerdown',show);
+  document.addEventListener('scroll',function(){tip.hidden=true;},{passive:true});
+})();
+</script>

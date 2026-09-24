@@ -16,6 +16,7 @@ ilustrativas del documento. La salida completa está en
 ```bash
 cd glamping-cucuchica/auditoria
 python3 auditoria_independiente.py     # Python estándar, sin instalar nada, ~2 s
+python3 reporte_visual.py              # regenera reporte_auditoria.html (reporte visual)
 ```
 
 ---
@@ -351,6 +352,7 @@ Esta es la lista de lo que el proyecto **todavía no ha calculado ni diseñado**
 | `auditoria/auditoria_independiente.py` | **Nuevo.** Verificación independiente, armadura espacial, azimuts, corte óptimo, replanteo, membrana, altura útil. |
 | `auditoria/AUDITORIA.md` | **Nuevo.** Este informe. |
 | `auditoria/auditoria_salida.txt`, `auditoria_datos.json` | **Nuevos.** Salida del programa. |
+| `auditoria/reporte_visual.py`, `reporte_auditoria.html` | **Nuevos.** Reporte visual con diagramas a escala (discos de nodo, choque de tubos, alturas, planta de anclajes, membrana, viento por anclaje, lista de corte, altura libre), generado a partir de los datos. |
 | `dome_build_sequence.py` | Alturas desde el piso; estabilidad 3D (3 barras no coplanares); ordinal correcto ("1ª de 2"); tabla de replanteo en el Paso 0; aviso de no pisar barras. |
 | `secuencia_de_armado.md` | Regenerado con lo anterior. |
 | `domo-3v-cucuchica.md` | Recuadro de auditoría al inicio y correcciones marcadas en el texto (§2, §2.1, §3, §4, §5, §6, §6.2, §8, §8.3, §9.2, §9.3, §9.4, §10). |
