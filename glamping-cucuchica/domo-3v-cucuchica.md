@@ -174,9 +174,20 @@ geodésico real — es la manera en que la triangulación cierra el casquete esf
 | Con 12% de merma de corte/costura | **51.79 m²** a comprar |
 | Material de referencia | poliéster de alta resistencia recubierto en PVC, ~850–950 GSM, resistente a UV, desgarro y moho |
 
-Cada uno de los 75 triángulos tiene un patrón ligeramente distinto (varía con el tipo
-de barra en sus 3 lados) — el patronaje detallado de cada panel es un cálculo
-pendiente, no incluido en esta primera pasada.
+### 5.1 Patronaje de los paneles
+
+Aunque hay 75 triángulos, cada uno queda totalmente definido por sus 3 lados (A/B/C),
+así que **solo existen 2 formas de panel distintas** en todo el domo:
+
+| Panel | Lados | Ángulos (opuestos a cada lado) | Área | Cantidad | Área total |
+|---|---|---|---|---|---|
+| **P1** | A · A · B = 125.59 · 125.59 · 122.89 cm | 60.71° · 60.71° · 58.58° | 0.6730 m² | 45 | 30.29 m² |
+| **P2** | B · C · C = 122.89 · 106.16 · 106.16 cm | 70.73° · 54.63° · 54.63° | 0.5319 m² | 30 | 15.96 m² |
+| **Total** | | | | **75** | **46.24 m²** ✓ (coincide con el área de superficie de §5) |
+
+Ambos paneles son triángulos isósceles. Con solo 2 plantillas de corte (más el margen
+de costura/pegado en cada borde) se cubren los 75 paneles del domo — no hace falta
+un patrón distinto para cada uno.
 
 ---
 
@@ -206,6 +217,53 @@ pero **no reemplaza un chequeo de viento específico para Tovar/Mérida** según
 código venezolano (COVENIN-MINDUR 2003, "Acciones del viento sobre las
 construcciones"). Se recomienda que un ingeniero estructural con matrícula revise el
 diseño final antes de construir la unidad definitiva, dado que va a alojar personas.
+
+---
+
+## 6.1 Peso de la estructura y carga sobre la fundación
+
+Cálculo de peso propio (dead load) — este sí es 100% calculable con lo que ya
+tenemos, sin datos externos:
+
+| Componente | Cálculo | Peso |
+|---|---|---|
+| 120 barras de tubo (32mm×2mm, 143.80 m) | sección 188.5 mm² × 7850 kg/m³ = 1.480 kg/m | **212.8 kg** |
+| 46 discos de nodo (⌀13cm × 5mm, supuesto de diseño) | 0.521 kg c/u × 46 | **24.0 kg** |
+| **Subtotal estructura de acero** | | **236.7 kg** |
+| Membrana (46.24 m² × 900 g/m², punto medio del rango 850–950 GSM) | | **41.6 kg** |
+| **PESO TOTAL DEL DOMO** | | **≈ 278 kg (0.28 t)** |
+
+Repartido entre los 15 nodos de fundación (§4): **≈18.6 kg (182 N) por nodo en
+promedio**, solo por peso propio. Este número es deliberadamente pequeño — para una
+estructura ligera de tubo + membrana como esta, el **peso propio casi nunca es la
+carga que gobierna el diseño de la fundación**; el viento sí lo es (una cubierta
+liviana como esta se comporta más como una vela que como una losa pesada, así que la
+succión/empuje de viento sobre el anclaje puede superar varias veces el peso propio).
+Por eso el chequeo de viento de abajo no es opcional.
+
+*(Este peso es solo el de la estructura del domo — cama, muebles, jacuzzi y el
+huésped cargan sobre la plataforma/deck, no sobre los nodos del domo, y se calculan
+aparte cuando se diseñe esa plataforma.)*
+
+## 6.2 Cargas pendientes de calcular (necesitan un dato de sitio)
+
+Dos cálculos de carga siguen pendientes — no porque falte trabajo, sino porque
+ambos dependen de un valor específico del sitio que **no se debe inventar**:
+
+- **Viento:** para calcular la presión de viento (y de ahí la fuerza sobre cada nodo
+  de anclaje) hace falta la velocidad básica de diseño para Tovar/Mérida según el
+  mapa de zonificación de COVENIN-MINDUR 2003, o un registro histórico confiable de
+  la zona. Con ese único dato puedo calcular la presión y el reparto de fuerza sobre
+  el domo en minutos — la geometría y las áreas ya están listas.
+- **Sismo:** Mérida está en una región de actividad sísmica real (proximidad a la
+  falla de Boconó). Un domo geodésico es estructuralmente favorable para sismo (poca
+  masa, muy triangulado, múltiples trayectorias de carga), pero el anclaje a la
+  fundación sí debe revisarse. Para esto hace falta el factor de zona sísmica de la
+  norma venezolana (COVENIN 1756) correspondiente a Tovar.
+
+Si tienes esos dos valores (o me autorizas a usar un valor ilustrativo conservador
+solo para tener un orden de magnitud mientras se consigue el dato real), lo calculo
+en la siguiente vuelta.
 
 ---
 
@@ -243,12 +301,22 @@ ellos.
 
 ## 8. Pendientes / próximos pasos
 
-- [ ] Verificación de viento (COVENIN-MINDUR 2003) por ingeniero estructural matriculado
-- [ ] Diseño físico del hub plate (diámetro de disco, patrón de pernos o muñones, espesor final)
+**Cálculo puro — resuelto en este documento:**
+- [x] Peso total de la estructura y carga por nodo de fundación (§6.1)
+- [x] Patronaje de los paneles de membrana — solo 2 formas distintas (§5.1)
+
+**Cálculo pendiente — bloqueado por un dato de sitio, no por falta de trabajo:**
+- [ ] Fuerza y presión de viento sobre el domo (necesita velocidad básica de diseño, COVENIN-MINDUR 2003 — §6.2)
+- [ ] Fuerza sísmica sobre el anclaje (necesita factor de zona, COVENIN 1756 — §6.2)
+- [ ] Verificación estructural final por ingeniero matriculado, una vez resueltos los dos puntos anteriores
+
+**Decisión de diseño — no es cálculo, requiere elegir entre opciones:**
+- [ ] Diseño físico del hub plate (diámetro de disco, patrón de pernos o muñones, espesor final — los ángulos ya están en §3)
 - [ ] Diseño de la plataforma/deck y anillo de fundación (incluye estudio de suelo — ver riesgo de escorrentías/agua mencionado en el análisis de ubicación)
-- [ ] Patronaje individual de los 75 paneles de membrana para corte y costura
+- [ ] Altura del riser/taco en los 5 nodos altos (H5) — el desnivel exacto (4.86 cm) ya está calculado en §4, falta decidir si se resuelve con muro de arranque, taco soldado o pies regulables
+
+**No es cálculo — investigación de mercado:**
 - [ ] Cotización real de tubo galvanizado 32×2mm y de la membrana (PVC/poliéster) en talleres venezolanos
-- [ ] Decisión de altura del riser/taco en los 5 nodos altos (H5) — o alternativa de pies regulables
 
 ---
 
