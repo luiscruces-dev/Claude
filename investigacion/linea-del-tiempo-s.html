@@ -17,8 +17,8 @@
   .ico { position: absolute; transform: translate(-50%, -50%); font-family: "Noto Color Emoji"; line-height: 1; }
   .defs { position: absolute; left: 90px; right: 90px; top: 1660px; display: flex; gap: 24px; }
   .defs div { flex: 1; border-radius: 14px; padding: 16px 22px; font-size: 22px; line-height: 1.35; background: #fff; box-shadow: 0 2px 10px rgba(30,40,60,.08); }
-  .defs .e { border-left: 8px solid #6a4ff0; }
-  .defs .a { border-left: 8px solid #f07a1c; }
+  .defs .e { border-left: 8px solid var(--e, #6a4ff0); }
+  .defs .a { border-left: 8px solid var(--a, #f07a1c); }
 </style>
 </head>
 <body>
@@ -27,8 +27,8 @@
   <h1 id="title"></h1>
   <div class="sub" id="sub"></div>
   <div class="defs">
-    <div class="e"><b>Curva de la experiencia:</b> mientras más veces hacemos algo, menos tiempo y dinero nos cuesta.</div>
-    <div class="a"><b>Antigüedad:</b> el tiempo que llevamos en un trabajo; nos da derechos como vacaciones y prima.</div>
+    <div class="e" id="defE"></div>
+    <div class="a" id="defA"></div>
   </div>
 </div>
 
@@ -39,6 +39,10 @@
       title: 'Curva de la experiencia y antigüedad',
       sub: 'Línea de tiempo · María Alejandra · Trabajo individual',
       curves: ['⚙️', '📈'],
+      colors: ['#8e3fd6', '#6a4ff0', '#2f7de1', '#139fc0', '#3fb96a', '#97c93a', '#e8bb22', '#f39221', '#f07a1c', '#ea4f3a', '#e0336b'],
+      curveColors: ['#13a5a5', '#f5a623'],
+      defE: '<b>Curva de la experiencia:</b> mientras más veces hacemos algo, menos tiempo y dinero nos cuesta.',
+      defA: '<b>Antigüedad:</b> el tiempo que llevamos en un trabajo; nos da derechos como vacaciones y prima.',
       ev: [
         ['1885', '🧠', 'Ebbinghaus', 'Demuestra que aprendemos con la repetición.'],
         ['1935', '⚖️', 'Ley Wagner', 'La antigüedad entra a los contratos sindicales (EE. UU.).'],
@@ -56,25 +60,33 @@
     amigo: {
       title: 'Curva de la experiencia y antigüedad',
       sub: 'Línea de tiempo · Nombre: ______________________ · Trabajo individual',
-      curves: ['🔧', '📊'],
+      curves: ['⏱️', '🎯'],
+      colors: ['#0f766e', '#0e8f8a', '#0ea5a4', '#0891b2', '#2563eb', '#4f46e5', '#7c3aed', '#a21caf', '#c026d3', '#db2777', '#e11d48'],
+      curveColors: ['#1676c9', '#8f28c8'],
+      defE: '<b>Curva de la experiencia:</b> gráfica que muestra cómo bajan el tiempo y el costo de una tarea al acumular práctica.',
+      defA: '<b>Antigüedad:</b> años de servicio que la ley reconoce; sirven para calcular cesantías e indemnizaciones.',
       ev: [
-        ['1776', '📌', 'Adam Smith', 'La división del trabajo: repetir una sola tarea hace más hábil al trabajador.'],
-        ['1908', '🚗', 'Ford Modelo T', 'Al fabricar más autos, el precio bajó de 850 a 260 dólares (1925).'],
-        ['1917', '📜', 'Artículo 123', 'La Constitución mexicana sienta las bases de los derechos laborales.'],
-        ['1936', '✈️', 'Curva de aprendizaje', 'T. P. Wright: cada vez que se duplica la producción, baja el tiempo.'],
-        ['1942', '🚢', 'Barcos Liberty', 'Con experiencia, construir un barco pasó de meses a pocas semanas.'],
-        ['1964', '⚖️', 'Derechos civiles', 'La ley de EE. UU. protege los sistemas de antigüedad legítimos.'],
-        ['1965', '💻', 'Ley de Moore', 'Los chips se vuelven más potentes y baratos año con año.'],
-        ['1986', '🔁', 'Kaizen', 'Mejora continua japonesa: pequeñas mejoras con la práctica diaria.'],
-        ['1997', '🧾', 'Semanas cotizadas', 'En México la pensión depende del tiempo cotizado al IMSS (reforma 2020).'],
-        ['2000', '💡', 'Ley de Haitz', 'Los focos LED se vuelven mucho más baratos y eficientes.'],
-        ['2021–hoy', '🏠', 'Teletrabajo', 'La gente cambia más de empleo; se valoran las habilidades.'],
+        ['1883', '🏛️', 'Ley Pendleton', 'EE. UU. crea el servicio civil de carrera: los puestos públicos ya no se regalan.'],
+        ['1911', '⏱️', 'Frederick Taylor', 'Administración científica: medir tiempos para hacer el trabajo más rápido.'],
+        ['1919', '🧮', 'Louis Thurstone', 'Escribe la primera ecuación matemática de la curva de aprendizaje.'],
+        ['1934', '🇨🇴', 'Cesantías (Colombia)', 'La Ley 10 crea el auxilio de cesantía; en 1950, un mes de salario por año.'],
+        ['1940–45', '🛠️', 'Training Within Industry', 'EE. UU. capacita rápido a trabajadores nuevos para producir en la guerra.'],
+        ['1956', '🛩️', 'Harold Asher (RAND)', 'Estudia aviones militares y usa la curva para calcular costos.'],
+        ['1977', '⚖️', 'Teamsters vs. EE. UU.', 'La Corte Suprema protege los sistemas de antigüedad de los sindicatos.'],
+        ['1980', '🏆', 'Michael Porter', 'Estrategia competitiva: la experiencia da ventaja en costos.'],
+        ['1990', '🇨🇱', 'Chile: años de servicio', 'Ley 19.010: 30 días de sueldo por año trabajado, con tope de 11 años.'],
+        ['1993', '🎸', 'Anders Ericsson', 'Práctica deliberada: no basta el tiempo, importa cómo practicas.'],
+        ['2024', '🔄', 'Menos años por empleo', 'En EE. UU. la antigüedad típica baja a 3,9 años: la gente cambia más de trabajo.'],
       ],
     },
   };
   const v = DATA[new URLSearchParams(location.search).get('v') || 'maria'];
   document.getElementById('title').textContent = v.title.toUpperCase();
   document.getElementById('sub').textContent = v.sub;
+  document.getElementById('defE').innerHTML = v.defE;
+  document.getElementById('defA').innerHTML = v.defA;
+  document.body.style.setProperty('--e', v.colors[2]);
+  document.body.style.setProperty('--a', v.colors[9]);
 
   const svg = document.getElementById('svg');
   const stage = document.getElementById('stage');
@@ -82,8 +94,8 @@
   const add = (tag, a, p = svg) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
   const div = (cls, html, s) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; Object.assign(d.style, s); stage.appendChild(d); return d; };
 
-  const COLORS = ['#8e3fd6', '#6a4ff0', '#2f7de1', '#139fc0', '#3fb96a', '#97c93a', '#e8bb22', '#f39221', '#f07a1c', '#ea4f3a', '#e0336b'];
-  const CURVE = ['#13a5a5', '#f5a623'];
+  const COLORS = v.colors;
+  const CURVE = v.curveColors;
   const H = 46, T = 30;              // media altura de la banda, punta del chevrón
   const XL = 340, XR = 2060;         // extremos de las filas (centros de las curvas)
   const Y = [400, 900, 1400];        // centro de cada fila
