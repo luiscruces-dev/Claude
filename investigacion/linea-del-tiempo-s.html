@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Línea de tiempo en S</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 2400px; height: 1800px; background: #fbfbfd; font-family: "Inter", "Liberation Sans", "Noto Color Emoji", sans-serif; color: #1f2430; }
+  #stage { position: relative; width: 2400px; height: 1800px; overflow: hidden; }
+  svg { position: absolute; inset: 0; }
+  h1 { position: absolute; top: 34px; left: 0; right: 0; text-align: center; font-family: "Inter Display", "Inter", sans-serif; font-size: 54px; font-weight: 800; letter-spacing: -0.5px; }
+  .sub { position: absolute; top: 106px; left: 0; right: 0; text-align: center; font-size: 25px; color: #5b6475; }
+  .yr { position: absolute; transform: translate(-50%, -50%); color: #fff; font-size: 40px; font-weight: 800; letter-spacing: 0.5px; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,.15); }
+  .txt { position: absolute; transform: translateX(-50%); text-align: center; }
+  .txt h3 { font-size: 25px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px; line-height: 1.15; }
+  .txt p { font-size: 20px; line-height: 1.38; color: #4d5566; }
+  .ico { position: absolute; transform: translate(-50%, -50%); font-family: "Noto Color Emoji"; line-height: 1; }
+  .defs { position: absolute; left: 90px; right: 90px; top: 1660px; display: flex; gap: 24px; }
+  .defs div { flex: 1; border-radius: 14px; padding: 16px 22px; font-size: 22px; line-height: 1.35; background: #fff; box-shadow: 0 2px 10px rgba(30,40,60,.08); }
+  .defs .e { border-left: 8px solid #6a4ff0; }
+  .defs .a { border-left: 8px solid #f07a1c; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="svg" width="2400" height="1800" viewBox="0 0 2400 1800"></svg>
+  <h1 id="title"></h1>
+  <div class="sub" id="sub"></div>
+  <div class="defs">
+    <div class="e"><b>Curva de la experiencia:</b> mientras más veces hacemos algo, menos tiempo y dinero nos cuesta.</div>
+    <div class="a"><b>Antigüedad:</b> el tiempo que llevamos en un trabajo; nos da derechos como vacaciones y prima.</div>
+  </div>
+</div>
+
+<script>
+  // Dos versiones: ?v=maria (por defecto) y ?v=amigo
+  const DATA = {
+    maria: {
+      title: 'Curva de la experiencia y antigüedad',
+      sub: 'Línea de tiempo · María Alejandra · Trabajo individual',
+      curves: ['⚙️', '📈'],
+      ev: [
+        ['1885', '🧠', 'Ebbinghaus', 'Demuestra que aprendemos con la repetición.'],
+        ['1935', '⚖️', 'Ley Wagner', 'La antigüedad entra a los contratos sindicales (EE. UU.).'],
+        ['1936', '✈️', 'Curva de aprendizaje', 'T. P. Wright la crea estudiando la fabricación de aviones.'],
+        ['1939–45', '🏭', 'II Guerra Mundial', 'La curva se usa para fabricar aviones y barcos: ~20 % más rápido al duplicar.'],
+        ['1950s', '🇯🇵', 'Japón', 'Sueldo y ascensos según la antigüedad (nenkō).'],
+        ['1966', '📉', 'Curva de la experiencia', 'Bruce Henderson (BCG): más producción = menos costo total.'],
+        ['1970', '📜', 'Prima de antigüedad', 'México la vuelve derecho de todos (Ley Federal del Trabajo, art. 162).'],
+        ['1980–90', '💼', 'Pago por desempeño', 'Las empresas premian más los resultados que los años.'],
+        ['2000–20', '☀️', 'Energía más barata', 'Paneles solares y baterías bajan de precio con la experiencia.'],
+        ['2023', '🏖️', 'Vacaciones dignas', 'En México, más días de vacaciones según la antigüedad.'],
+        ['Hoy', '🚀', 'Experiencia + habilidades', 'Se valora lo que sabes hacer; la antigüedad protege derechos.'],
+      ],
+    },
+    amigo: {
+      title: 'Curva de la experiencia y antigüedad',
+      sub: 'Línea de tiempo · Nombre: ______________________ · Trabajo individual',
+      curves: ['🔧', '📊'],
+      ev: [
+        ['1776', '📌', 'Adam Smith', 'La división del trabajo: repetir una sola tarea hace más hábil al trabajador.'],
+        ['1908', '🚗', 'Ford Modelo T', 'Al fabricar más autos, el precio bajó de 850 a 260 dólares (1925).'],
+        ['1917', '📜', 'Artículo 123', 'La Constitución mexicana sienta las bases de los derechos laborales.'],
+        ['1936', '✈️', 'Curva de aprendizaje', 'T. P. Wright: cada vez que se duplica la producción, baja el tiempo.'],
+        ['1942', '🚢', 'Barcos Liberty', 'Con experiencia, construir un barco pasó de meses a pocas semanas.'],
+        ['1964', '⚖️', 'Derechos civiles', 'La ley de EE. UU. protege los sistemas de antigüedad legítimos.'],
+        ['1965', '💻', 'Ley de Moore', 'Los chips se vuelven más potentes y baratos año con año.'],
+        ['1986', '🔁', 'Kaizen', 'Mejora continua japonesa: pequeñas mejoras con la práctica diaria.'],
+        ['1997', '🧾', 'Semanas cotizadas', 'En México la pensión depende del tiempo cotizado al IMSS (reforma 2020).'],
+        ['2000', '💡', 'Ley de Haitz', 'Los focos LED se vuelven mucho más baratos y eficientes.'],
+        ['2021–hoy', '🏠', 'Teletrabajo', 'La gente cambia más de empleo; se valoran las habilidades.'],
+      ],
+    },
+  };
+  const v = DATA[new URLSearchParams(location.search).get('v') || 'maria'];
+  document.getElementById('title').textContent = v.title.toUpperCase();
+  document.getElementById('sub').textContent = v.sub;
+
+  const svg = document.getElementById('svg');
+  const stage = document.getElementById('stage');
+  const NS = 'http://www.w3.org/2000/svg';
+  const add = (tag, a, p = svg) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+  const div = (cls, html, s) => { const d = document.createElement('div'); d.className = cls; d.innerHTML = html; Object.assign(d.style, s); stage.appendChild(d); return d; };
+
+  const COLORS = ['#8e3fd6', '#6a4ff0', '#2f7de1', '#139fc0', '#3fb96a', '#97c93a', '#e8bb22', '#f39221', '#f07a1c', '#ea4f3a', '#e0336b'];
+  const CURVE = ['#13a5a5', '#f5a623'];
+  const H = 46, T = 30;              // media altura de la banda, punta del chevrón
+  const XL = 340, XR = 2060;         // extremos de las filas (centros de las curvas)
+  const Y = [400, 900, 1400];        // centro de cada fila
+  const R = (Y[1] - Y[0]) / 2;
+
+  // Curvas (se dibujan primero para quedar debajo de las bandas)
+  const arc = (d, c) => {
+    add('path', { d, fill: 'none', stroke: c, 'stroke-width': H * 2 });
+    add('path', { d, fill: 'none', stroke: '#fff', 'stroke-width': 5, 'stroke-dasharray': '2 16', 'stroke-linecap': 'round' });
+  };
+  arc(`M ${XR} ${Y[0]} A ${R} ${R} 0 0 1 ${XR} ${Y[1]}`, CURVE[0]);
+  arc(`M ${XL} ${Y[1]} A ${R} ${R} 0 0 0 ${XL} ${Y[2]}`, CURVE[1]);
+  div('ico', v.curves[0], { left: XR + R * 0.45 + 'px', top: (Y[0] + Y[1]) / 2 + 'px', fontSize: '84px' });
+  div('ico', v.curves[1], { left: XL - R * 0.45 + 'px', top: (Y[1] + Y[2]) / 2 + 'px', fontSize: '84px' });
+
+  // Segmentos: fila 1 (4, izq→der), fila 2 (3, der→izq), fila 3 (4, izq→der)
+  const rows = [
+    { n: 4, y: Y[0], dir: 1, x0: 170, x1: XR },
+    { n: 3, y: Y[1], dir: -1, x0: XR, x1: XL },
+    { n: 4, y: Y[2], dir: 1, x0: XL, x1: 2210 },
+  ];
+  let k = 0;
+  rows.forEach((row, ri) => {
+    const w = (row.x1 - row.x0) / row.n;
+    for (let i = 0; i < row.n; i++, k++) {
+      const a = row.x0 + w * i, b = a + w, y = row.y, c = COLORS[k], d = row.dir;
+      const first = i === 0, last = i === row.n - 1;
+      // Inicio con muesca salvo cuando viene de una curva; final con punta salvo cuando entra a una curva
+      const notch = !(first && ri > 0);
+      const tip = !(last && ri < 2);
+      const tipLen = last && ri === 2 ? 70 : T;
+      const pts = [
+        [a, y - H], [b, y - H],
+        ...(tip ? [[b + d * tipLen, y]] : []),
+        [b, y + H], [a, y + H],
+        ...(notch ? [[a + d * T, y]] : []),
+      ];
+      if (last && ri === 2) { pts.splice(2, 1, [b, y - H - 18], [b + tipLen, y], [b, y + H + 18]); }
+      add('polygon', { points: pts.map(p => p.join(',')).join(' '), fill: c });
+
+      const cx = (a + b) / 2 + d * (T / 2);
+      const [year, emoji, title, desc] = v.ev[k];
+      div('yr', year, { left: cx + 'px', top: y + 'px' });
+
+      // Marcador tipo "pin" sobre la banda
+      const py = y - H - 92;
+      add('path', { d: `M ${cx - 30} ${py + 22} Q ${cx} ${py + 70} ${cx} ${py + 80} Q ${cx} ${py + 70} ${cx + 30} ${py + 22} Z`, fill: c });
+      add('circle', { cx, cy: py, r: 44, fill: c });
+      add('circle', { cx, cy: py, r: 33, fill: '#fff' });
+      div('ico', emoji, { left: cx + 'px', top: py + 2 + 'px', fontSize: '36px' });
+
+      const t = div('txt', `<h3 style="color:${c}">${title}</h3><p>${desc}</p>`, { left: cx + 'px', top: y + H + 26 + 'px', width: Math.min(Math.abs(w) - 50, 470) + 'px' });
+    }
+  });
+</script>
+</body>
+</html>
