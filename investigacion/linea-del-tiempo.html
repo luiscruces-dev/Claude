@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Línea del tiempo: experiencia y antigüedad</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --ink: #1d2433;
+    --muted: #5b6475;
+    --line: #d9d4c7;
+    --card: #ffffff;
+    --exp: #2563a8;
+    --exp-soft: #e3edf8;
+    --ant: #c26a12;
+    --ant-soft: #fbeedd;
+    --era1: #6b5b95;
+    --era2: #9b2c2c;
+    --era3: #2f7d5b;
+    --era4: #8a6d1e;
+    --era5: #1f6f8b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 2000px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Inter", "Liberation Sans", sans-serif;
+    padding: 56px 64px 48px;
+  }
+
+  header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid var(--ink); padding-bottom: 22px; }
+  h1 { font-family: "Inter Display", "Inter", sans-serif; font-size: 54px; font-weight: 800; letter-spacing: -1px; line-height: 1.05; }
+  h1 span { color: var(--exp); }
+  h1 em { font-style: normal; color: var(--ant); }
+  .subtitle { font-size: 22px; color: var(--muted); margin-top: 10px; }
+  .who { text-align: right; font-size: 20px; color: var(--muted); line-height: 1.5; }
+  .who strong { display: block; color: var(--ink); font-size: 28px; font-weight: 700; }
+
+  /* Definiciones */
+  .defs { display: grid; grid-template-columns: 1fr 1fr 1fr 1.05fr; gap: 20px; margin-top: 30px; }
+  .def { background: var(--card); border-radius: 14px; padding: 20px 22px; border-top: 6px solid var(--exp); box-shadow: 0 1px 0 var(--line); }
+  .def.ant { border-top-color: var(--ant); }
+  .def h3 { font-size: 21px; font-weight: 700; margin-bottom: 4px; }
+  .def .tag { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; }
+  .def p { font-size: 17px; line-height: 1.45; color: #333b4a; }
+  .def p b { color: var(--ink); }
+  .chart h3 { font-size: 18px; margin-bottom: 2px; }
+  .chart .tag { margin-bottom: 4px; }
+  .chart svg text { font-family: "Inter", sans-serif; }
+
+  /* Leyenda */
+  .legend { display: flex; gap: 28px; align-items: center; margin: 34px 0 14px; font-size: 18px; color: var(--muted); }
+  .legend .sw { display: inline-block; width: 16px; height: 16px; border-radius: 4px; margin-right: 8px; vertical-align: -2px; }
+  .legend h2 { font-size: 28px; color: var(--ink); margin-right: auto; font-weight: 800; }
+
+  /* Eje */
+  .axis { display: grid; grid-template-columns: 1.55fr 0.85fr 1.35fr 1fr 1.25fr; gap: 0; position: relative; }
+  .era { padding: 14px 18px; color: #fff; position: relative; }
+  .era .range { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+  .era .name { font-size: 17px; opacity: 0.92; font-weight: 500; }
+  .era:not(:last-child)::after {
+    content: ""; position: absolute; right: -14px; top: 0; bottom: 0; width: 0;
+    border-top: 38px solid transparent; border-bottom: 38px solid transparent; border-left: 14px solid; z-index: 2;
+  }
+  .e1 { background: var(--era1); } .e1::after { border-left-color: var(--era1) !important; }
+  .e2 { background: var(--era2); } .e2::after { border-left-color: var(--era2) !important; }
+  .e3 { background: var(--era3); } .e3::after { border-left-color: var(--era3) !important; }
+  .e4 { background: var(--era4); } .e4::after { border-left-color: var(--era4) !important; }
+  .e5 { background: var(--era5); border-radius: 0 10px 10px 0; }
+  .e1 { border-radius: 10px 0 0 10px; }
+
+  .cols { display: grid; grid-template-columns: 1.55fr 0.85fr 1.35fr 1fr 1.25fr; gap: 0; }
+  .col { padding: 18px 12px 0; border-right: 2px dashed var(--line); display: flex; flex-direction: column; gap: 12px; }
+  .col:last-child { border-right: none; }
+  .ev { background: var(--card); border-radius: 10px; padding: 12px 14px 13px; border-left: 6px solid var(--exp); position: relative; }
+  .ev.ant { border-left-color: var(--ant); }
+  .ev.both { border-left-color: var(--exp); box-shadow: inset 6px 0 0 -0px var(--ant); }
+  .ev .yr { display: inline-block; font-size: 15px; font-weight: 800; color: #fff; background: var(--exp); border-radius: 6px; padding: 2px 9px; margin-bottom: 6px; }
+  .ev.ant .yr { background: var(--ant); }
+  .ev h4 { font-size: 18px; font-weight: 700; line-height: 1.25; margin-bottom: 3px; }
+  .ev p { font-size: 15.5px; line-height: 1.42; color: #3a4252; }
+  .ev.key { background: var(--exp-soft); }
+  .ev.ant.key { background: var(--ant-soft); }
+  .star { font-size: 13px; font-weight: 700; color: var(--exp); text-transform: uppercase; letter-spacing: 0.8px; margin-left: 6px; }
+  .ev.ant .star { color: var(--ant); }
+
+  /* Importancia */
+  .imp { margin-top: 38px; display: grid; grid-template-columns: 1fr 1fr 1.6fr; gap: 20px; }
+  .box { background: var(--ink); color: #eef1f6; border-radius: 14px; padding: 22px 24px; }
+  .box h3 { font-size: 23px; margin-bottom: 8px; color: #fff; }
+  .box p { font-size: 17px; line-height: 1.5; color: #cfd6e2; }
+  .box.light { background: var(--card); color: var(--ink); }
+  .box.light h3 { color: var(--ink); }
+  .ex { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .ex h4 { font-size: 17px; margin-bottom: 6px; }
+  .ex h4.e { color: var(--exp); } .ex h4.a { color: var(--ant); }
+  .ex ul { list-style: none; }
+  .ex li { font-size: 16px; line-height: 1.4; padding-left: 16px; position: relative; margin-bottom: 5px; color: #3a4252; }
+  .ex li::before { content: ""; position: absolute; left: 0; top: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--exp); }
+  .ex .ant li::before { background: var(--ant); }
+
+  .quote { margin-top: 22px; background: var(--card); border-radius: 14px; padding: 18px 26px; font-size: 20px; line-height: 1.5; color: var(--ink); border-left: 8px solid var(--ant); }
+  .quote b { color: var(--exp); }
+
+  footer { margin-top: 22px; font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1><span>Curva de la experiencia</span> y <em>antigüedad</em>: línea del tiempo</h1>
+    <div class="subtitle">De antes de la Segunda Guerra Mundial a la actualidad: definición, operación e importancia en la vida cotidiana</div>
+  </div>
+  <div class="who"><strong>María Alejandra</strong>Trabajo individual</div>
+</header>
+
+<section class="defs">
+  <div class="def">
+    <div class="tag">Definición · 1936</div>
+    <h3>Curva de aprendizaje</h3>
+    <p>Cada vez que se <b>duplica</b> la producción acumulada, el tiempo de trabajo por unidad baja un <b>porcentaje constante</b>. Fórmula: <b>C<sub>n</sub> = C<sub>1</sub> · n<sup>b</sup></b>.</p>
+  </div>
+  <div class="def">
+    <div class="tag">Definición · 1966</div>
+    <h3>Curva de la experiencia</h3>
+    <p>Extiende la idea al <b>costo total</b> por unidad (mano de obra, materiales, ventas), que cae entre un <b>20 % y un 30 %</b> con cada duplicación de la experiencia acumulada.</p>
+  </div>
+  <div class="def ant">
+    <div class="tag">Definición</div>
+    <h3>Antigüedad</h3>
+    <p><b>Tiempo acumulado</b> en una empresa, puesto o institución. Genera derechos: vacaciones, prima, liquidación y preferencia para ascensos. <b>Tiempo ≠ experiencia.</b></p>
+  </div>
+  <div class="def chart">
+    <div class="tag">Operación · curva del 80 %</div>
+    <h3>Horas por unidad producida</h3>
+    <svg id="curve" width="420" height="150" viewBox="0 0 420 150"></svg>
+  </div>
+</section>
+
+<div class="legend">
+  <h2>Línea del tiempo</h2>
+  <span><i class="sw" style="background:var(--exp)"></i>Curva de aprendizaje / experiencia</span>
+  <span><i class="sw" style="background:var(--ant)"></i>Antigüedad</span>
+  <span><i class="sw" style="background:var(--exp-soft);border:1px solid var(--exp)"></i>Hito clave</span>
+</div>
+
+<div class="axis">
+  <div class="era e1"><div class="range">Antes de 1939</div><div class="name">Antecedentes</div></div>
+  <div class="era e2"><div class="range">1939 – 1945</div><div class="name">Segunda Guerra Mundial</div></div>
+  <div class="era e3"><div class="range">1945 – 1970</div><div class="name">Posguerra</div></div>
+  <div class="era e4"><div class="range">1970 – 2000</div><div class="name">Crisis y revisión</div></div>
+  <div class="era e5"><div class="range">2000 – hoy</div><div class="name">Actualidad</div></div>
+</div>
+
+<div class="cols">
+  <div class="col">
+    <div class="ev ant"><span class="yr">Edad Media</span><h4>Gremios de artesanos</h4><p>Aprendiz → oficial → maestro: el tiempo en el oficio ordena el rango.</p></div>
+    <div class="ev"><span class="yr">1885</span><h4>Ebbinghaus: la memoria</h4><p>Mide cómo se aprende y se olvida con la repetición (curva del olvido).</p></div>
+    <div class="ev"><span class="yr">1897</span><h4>Bryan y Harter</h4><p>Grafican la "curva de mejora" de los telegrafistas: la habilidad sube con la práctica.</p></div>
+    <div class="ev ant"><span class="yr">1920s</span><h4>Weber: la burocracia</h4><p>La carrera avanza por antigüedad o mérito; nace el escalafón moderno.</p></div>
+    <div class="ev ant"><span class="yr">1931</span><h4>Ley Federal del Trabajo (México)</h4><p>La prima de antigüedad solo existe en algunos contratos colectivos.</p></div>
+    <div class="ev ant"><span class="yr">1935</span><h4>Ley Wagner (EE. UU.)</h4><p>La negociación colectiva lleva cláusulas de antigüedad a despidos, turnos y ascensos.</p></div>
+    <div class="ev key"><span class="yr">1936</span><span class="star">Hito</span><h4>T. P. Wright: curva de aprendizaje</h4><p>"Factors Affecting the Cost of Airplanes": el costo cae a ritmo fijo con cada duplicación.</p></div>
+  </div>
+
+  <div class="col">
+    <div class="ev key"><span class="yr">1939–45</span><span class="star">Hito</span><h4>La curva va a la guerra</h4><p>EE. UU. la usa para planear la producción de aviones, estimar costos y negociar contratos.</p></div>
+    <div class="ev"><span class="yr">80 %</span><h4>La regla del 20 %</h4><p>Las fábricas de aviones mejoran ~20 % por cada duplicación de unidades.</p></div>
+    <div class="ev"><span class="yr">Barcos Liberty</span><h4>Aprender haciendo</h4><p>El tiempo de construcción baja muchísimo a medida que los astilleros acumulan experiencia.</p></div>
+  </div>
+
+  <div class="col">
+    <div class="ev ant"><span class="yr">1945–60s</span><h4>Japón: nenkō joretsu</h4><p>Salario y ascenso por antigüedad, junto con el empleo de por vida y el sindicato de empresa.</p></div>
+    <div class="ev ant"><span class="yr">1958</span><h4>Abegglen: <i>The Japanese Factory</i></h4><p>Populariza los términos "empleo de por vida" y "sistema de antigüedad".</p></div>
+    <div class="ev"><span class="yr">1962</span><h4>Arrow: "aprender haciendo"</h4><p>Lleva la curva de aprendizaje a la teoría económica del crecimiento.</p></div>
+    <div class="ev key"><span class="yr">1966</span><span class="star">Hito</span><h4>BCG: curva de la experiencia</h4><p>Henderson la aplica al costo total: quien produce más baja costos y domina el mercado.</p></div>
+    <div class="ev"><span class="yr">1968–70</span><h4>Matriz BCG</h4><p>La cuota de mercado, como reflejo de la experiencia, se vuelve estrategia.</p></div>
+    <div class="ev ant key"><span class="yr">1970</span><span class="star">Hito</span><h4>Nueva LFT: prima de antigüedad</h4><p>México la vuelve un derecho general (art. 162): 12 días de salario por año de servicio.</p></div>
+  </div>
+
+  <div class="col">
+    <div class="ev"><span class="yr">1974</span><h4>Límites de la curva</h4><p>Abernathy y Wayne (HBR), con el Ford Modelo T: solo bajar costos frena la innovación.</p></div>
+    <div class="ev ant"><span class="yr">1980s–90s</span><h4>Del pago por antigüedad al pago por desempeño</h4><p>En Japón, el <i>nenkō</i> pierde fuerza tras el fin de la burbuja.</p></div>
+    <div class="ev"><span class="yr">1970–2000</span><h4>Electrónica más barata</h4><p>Calculadoras, computadoras y teléfonos bajan de precio año con año.</p></div>
+  </div>
+
+  <div class="col">
+    <div class="ev key"><span class="yr">2000s–hoy</span><span class="star">Hito</span><h4>Ley de Swanson (solar)</h4><p>Los paneles solares bajan ~20 % cada vez que se duplica la capacidad instalada mundial.</p></div>
+    <div class="ev"><span class="yr">2013</span><h4>Wright predice mejor</h4><p>Nagy y coautores: la ley de Wright pronostica costos tan bien o mejor que la de Moore.</p></div>
+    <div class="ev"><span class="yr">2010s–20s</span><h4>Baterías de litio</h4><p>Su costo cae más de 90 % en una década, lo que hace viables los autos eléctricos.</p></div>
+    <div class="ev ant key"><span class="yr">2023</span><span class="star">Hito</span><h4>"Vacaciones dignas" (México)</h4><p>Los días de vacaciones crecen según la antigüedad, con 12 días desde el primer año.</p></div>
+    <div class="ev ant"><span class="yr">2020s</span><h4>IA y trabajo remoto</h4><p>Se valoran más las habilidades demostrables, aunque la antigüedad sigue protegiendo derechos.</p></div>
+  </div>
+</div>
+
+<section class="imp">
+  <div class="box">
+    <h3>¿Por qué importa la definición?</h3>
+    <p>Distinguir <b style="color:#9cc3f0">experiencia</b> (práctica acumulada) de <b style="color:#f3b877">antigüedad</b> (tiempo acumulado) evita suponer que "más años = más saber" y permite comparar y decidir con justicia.</p>
+  </div>
+  <div class="box">
+    <h3>¿Por qué importa la operación?</h3>
+    <p>Medir convierte la idea en algo aplicable y verificable: la fórmula de la curva, los años de servicio, los días de vacaciones y la prima.</p>
+  </div>
+  <div class="box light">
+    <h3>En la vida cotidiana</h3>
+    <div class="ex">
+      <div>
+        <h4 class="e">Curva de experiencia</h4>
+        <ul>
+          <li>Una receta que cada vez preparas más rápido.</li>
+          <li>Aprender a manejar o a escribir en el teclado.</li>
+          <li>Estudiar con repasos espaciados (Ebbinghaus).</li>
+          <li>Celulares y paneles solares más baratos.</li>
+        </ul>
+      </div>
+      <div class="ant">
+        <h4 class="a">Antigüedad</h4>
+        <ul>
+          <li>Vacaciones, prima y liquidación en el trabajo.</li>
+          <li>Quién elige primero turno, plaza u horario.</li>
+          <li>Escalafón en la escuela, el sindicato o el gobierno.</li>
+          <li>"El que lleva más tiempo" en la familia o el grupo.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="quote">Equivocarse al principio es normal: <b>cada repetición nos hace más eficientes</b>. El tiempo genera derechos, pero lo que convierte el tiempo en experiencia es <b>la práctica consciente</b>.</div>
+
+<footer>Fuentes: Wright (1936), <i>Journal of the Aeronautical Sciences</i> 3(4) · CIA Reading Room, "Theory and Applications of the Learning Curve" · GAO Cost Guide · Henderson / BCG (1966) · NLRB, Ley Wagner (1935) · Abegglen (1958) · Arrow (1962) · Abernathy y Wayne (1974), HBR · Nagy et al. (2013), PLOS ONE · Our World in Data (2024) · Ley Federal del Trabajo de México (1931, 1970, reforma 2023) · Ebbinghaus (1885) · Bryan y Harter (1897).</footer>
+
+<script>
+  // Curva del 80 %: horas por unidad = 100 · n^log2(0.8)
+  const svg = document.getElementById('curve');
+  const ns = 'http://www.w3.org/2000/svg';
+  const W = 420, H = 150, L = 40, R = 12, T = 22, B = 26;
+  const b = Math.log2(0.8), N = 32;
+  const x = n => L + (n - 1) / (N - 1) * (W - L - R);
+  const y = v => T + (1 - v / 100) * (H - T - B);
+  const el = (tag, attrs, text) => {
+    const e = document.createElementNS(ns, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (text) e.textContent = text;
+    svg.appendChild(e); return e;
+  };
+  [0, 50, 100].forEach(v => {
+    el('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: '#e4dfd3' });
+    el('text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#5b6475' }, v + ' h');
+  });
+  let d = '';
+  for (let n = 1; n <= N; n += 0.25) d += (d ? 'L' : 'M') + x(n).toFixed(1) + ' ' + y(100 * Math.pow(n, b)).toFixed(1);
+  el('path', { d, fill: 'none', stroke: '#2563a8', 'stroke-width': 3 });
+  [1, 2, 4, 8, 16, 32].forEach(n => {
+    const v = 100 * Math.pow(n, b);
+    el('circle', { cx: x(n), cy: y(v), r: 4.5, fill: '#fff', stroke: '#2563a8', 'stroke-width': 2.5 });
+    el('text', { x: x(n) + (n === 32 ? -2 : 6), y: y(v) - 8, 'font-size': 11.5, 'font-weight': 700, fill: '#1d2433', 'text-anchor': n === 32 ? 'end' : 'start' }, v.toFixed(v < 100 ? 1 : 0).replace('.0', '').replace('.', ','));
+    el('text', { x: x(n), y: H - 8, 'text-anchor': 'middle', 'font-size': 11, fill: '#5b6475' }, n);
+  });
+  el('text', { x: W - R, y: H - 8 - 12, 'text-anchor': 'end', 'font-size': 10.5, fill: '#5b6475' }, 'unidades acumuladas →');
+</script>
+</body>
+</html>
