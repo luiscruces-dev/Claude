@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Línea de tiempo simple</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 2400px; height: 1380px; background: #ffffff; font-family: "Inter", "Liberation Sans", sans-serif; color: #1f2430; }
+  #stage { position: relative; width: 2400px; height: 1380px; }
+  svg { position: absolute; inset: 0; }
+  h1 {
+    position: absolute; top: 42px; left: 0; right: 0; text-align: center;
+    font-family: "DejaVu Serif", "Liberation Serif", serif; font-size: 52px; font-weight: 800; letter-spacing: 1px;
+  }
+  h1 u { text-decoration-thickness: 4px; text-underline-offset: 10px; }
+  .who { position: absolute; top: 128px; left: 0; right: 0; text-align: center; font-size: 24px; color: #5b6475; }
+  .lbl {
+    position: absolute; width: 210px; text-align: center; transform: translate(-50%, -100%);
+    font-size: 21px; line-height: 1.25; font-weight: 500; background: #fff; padding: 2px 4px;
+  }
+  .lbl b { font-weight: 800; }
+  .date { position: absolute; transform: translateX(-50%); font-size: 22px; font-weight: 800; white-space: nowrap; background: #fff; padding: 0 4px; }
+  .era { position: absolute; transform: translate(-50%, -50%); text-align: center; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+  .era .n { font-size: 36px; font-weight: 800; line-height: 1.1; }
+  .era .y { font-size: 22px; font-weight: 600; opacity: .95; margin-top: 4px; }
+  .cap { position: absolute; transform: translateX(-50%); width: 260px; text-align: center; font-size: 19px; color: #5b6475; font-weight: 600; }
+  .key {
+    position: absolute; left: 90px; right: 90px; top: 1250px; display: flex; gap: 24px; justify-content: center;
+  }
+  .key div { flex: 1; border-radius: 14px; padding: 16px 22px; font-size: 22px; line-height: 1.35; }
+  .key .e { background: #e7f0ff; border-left: 8px solid #2f6fd6; }
+  .key .a { background: #fff1e3; border-left: 8px solid #e07b16; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="svg" width="2400" height="1380" viewBox="0 0 2400 1380"></svg>
+  <h1><u>LÍNEA DE TIEMPO: CURVA DE LA EXPERIENCIA Y ANTIGÜEDAD</u></h1>
+  <div class="who">María Alejandra · Trabajo individual</div>
+</div>
+
+<script>
+  const svg = document.getElementById('svg');
+  const stage = document.getElementById('stage');
+  const NS = 'http://www.w3.org/2000/svg';
+  const add = (tag, attrs, parent = svg) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e); return e;
+  };
+  const div = (cls, html, style) => {
+    const d = document.createElement('div');
+    d.className = cls; d.innerHTML = html;
+    Object.assign(d.style, style); stage.appendChild(d); return d;
+  };
+
+  // Flecha
+  const TOP = 610, BOT = 770, MID = (TOP + BOT) / 2;
+  const eras = [
+    { x1: 190,  x2: 770,  c: '#f2766b', n: 'Antecedentes',     y: 'antes de 1939' },
+    { x1: 770,  x2: 1090, c: '#f5b335', n: 'II Guerra Mundial', y: '1939 – 1945' },
+    { x1: 1090, x2: 1590, c: '#3dbb78', n: 'Posguerra',         y: '1945 – 1970' },
+    { x1: 1590, x2: 1960, c: '#22bfd3', n: 'Cambios',           y: '1970 – 2000' },
+    { x1: 1960, x2: 2240, c: '#3b86f2', n: 'Actualidad',        y: '2000 – hoy' },
+  ];
+  add('polygon', { points: `90,${MID} 190,${TOP} 190,${BOT}`, fill: '#f7a8c4' });
+  eras.forEach(e => {
+    add('rect', { x: e.x1, y: TOP, width: e.x2 - e.x1, height: BOT - TOP, fill: e.c });
+    div('era', `<div class="n">${e.n}</div><div class="y">${e.y}</div>`, { left: (e.x1 + e.x2) / 2 + 'px', top: MID + 'px' });
+  });
+  add('polygon', { points: `2240,${TOP - 26} 2345,${MID} 2240,${BOT + 26}`, fill: '#1f63d1' });
+
+  // Eventos: [x, texto arriba, fecha abajo, fila arriba (0-2), fila abajo (0-1)]
+  const ROWS = [540, 420, 300];
+  const DROWS = [800, 848];
+  const ev = [
+    [265,  'Ebbinghaus: aprendemos con la <b>repetición</b>', '1885', 2, 0],
+    [470,  'Ley Wagner: la <b>antigüedad</b> entra a los contratos', '1935', 1, 0],
+    [680,  'Wright crea la <b>curva de aprendizaje</b> (aviones)', '1936', 0, 0],
+    [930,  'La curva se usa para fabricar <b>aviones y barcos</b>', '1939 – 1945', 2, 0],
+    [1185, 'Japón: sueldo y ascenso por <b>antigüedad</b>', '1950s', 1, 0],
+    [1370, 'BCG crea la <b>curva de la experiencia</b>', '1966', 0, 1],
+    [1520, 'México: <b>prima de antigüedad</b>', '1970', 2, 0],
+    [1775, 'Se paga más por <b>desempeño</b> que por antigüedad', '1980 – 1990', 1, 0],
+    [2030, 'Paneles solares y baterías <b>más baratos</b>', '2000 – 2020', 0, 0],
+    [2165, '<b>Vacaciones</b> según antigüedad (México)', '2023', 2, 1],
+    [2290, '<b>Hoy:</b> se valoran experiencia y habilidades', 'Hoy', 1, 0],
+  ];
+  const colorAt = x => (eras.find(e => x >= e.x1 && x <= e.x2) || { c: '#1f63d1' }).c;
+  ev.forEach(([x, t, d, r, dr]) => {
+    const c = colorAt(x);
+    const slope = (MID - (TOP - 26)) / 105;
+    const top = x > 2240 ? TOP - 26 + (x - 2240) * slope : TOP;
+    const bot = x > 2240 ? BOT + 26 - (x - 2240) * slope : BOT;
+    add('line', { x1: x, y1: ROWS[r] + 6, x2: x, y2: top, stroke: c, 'stroke-width': 3 });
+    add('circle', { cx: x, cy: ROWS[r] + 6, r: 6, fill: c });
+    add('line', { x1: x, y1: bot, x2: x, y2: DROWS[dr] + 2, stroke: c, 'stroke-width': 3 });
+    add('circle', { cx: x, cy: DROWS[dr] + 2, r: 5, fill: c });
+    div('lbl', t, { left: x + 'px', top: ROWS[r] + 'px' });
+    div('date', d, { left: x + 'px', top: DROWS[dr] + 8 + 'px' });
+  });
+
+  // Íconos dibujados con formas simples
+  const icon = (cx, draw, caption) => {
+    const g = add('g', { transform: `translate(${cx - 70}, 925)` });
+    draw(g);
+    div('cap', caption, { left: cx + 'px', top: '1095px' });
+  };
+  // Libro abierto
+  icon(480, g => {
+    add('path', { d: 'M70 30 C50 15 20 15 5 22 L5 130 C20 122 50 122 70 138 Z', fill: '#f2766b' }, g);
+    add('path', { d: 'M70 30 C90 15 120 15 135 22 L135 130 C120 122 90 122 70 138 Z', fill: '#f9a79f' }, g);
+    for (let i = 0; i < 4; i++) {
+      add('line', { x1: 18, y1: 48 + i * 18, x2: 58, y2: 52 + i * 18, stroke: '#fff', 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+      add('line', { x1: 82, y1: 52 + i * 18, x2: 122, y2: 48 + i * 18, stroke: '#fff', 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+    }
+  }, 'Estudios del aprendizaje y primeras leyes laborales');
+  // Avión
+  icon(930, g => {
+    const p = add('g', { transform: 'translate(70,75) rotate(-35)' }, g);
+    add('rect', { x: -12, y: -70, width: 24, height: 140, rx: 12, fill: '#e09a12' }, p);
+    add('polygon', { points: '-12,-10 -78,22 -78,36 -12,22 12,22 78,36 78,22 12,-10', fill: '#f5b335' }, p);
+    add('polygon', { points: '-8,48 -34,64 -34,72 -8,66 8,66 34,72 34,64 8,48', fill: '#f5b335' }, p);
+    add('circle', { cx: 0, cy: -48, r: 6, fill: '#fff' }, p);
+  }, 'Producción de aviones en la guerra');
+  // Fábrica con curva que baja
+  icon(1340, g => {
+    add('polygon', { points: '5,140 5,70 40,50 40,70 75,50 75,70 110,50 110,140', fill: '#3dbb78' }, g);
+    add('rect', { x: 112, y: 25, width: 20, height: 115, fill: '#2a9a5f' }, g);
+    add('rect', { x: 20, y: 95, width: 22, height: 22, fill: '#fff' }, g);
+    add('rect', { x: 58, y: 95, width: 22, height: 22, fill: '#fff' }, g);
+    add('path', { d: 'M10 10 C30 40 60 50 135 52', fill: 'none', stroke: '#1f2430', 'stroke-width': 4, 'stroke-dasharray': '2 0' }, g);
+    add('polygon', { points: '135,44 148,52 135,60', fill: '#1f2430' }, g);
+  }, 'Más producción = menos costo');
+  // Maletín
+  icon(1775, g => {
+    add('rect', { x: 45, y: 22, width: 50, height: 30, rx: 8, fill: 'none', stroke: '#1a9fb0', 'stroke-width': 9 }, g);
+    add('rect', { x: 5, y: 45, width: 130, height: 90, rx: 12, fill: '#22bfd3' }, g);
+    add('rect', { x: 5, y: 78, width: 130, height: 8, fill: '#1a9fb0' }, g);
+    add('rect', { x: 60, y: 70, width: 20, height: 24, rx: 4, fill: '#fff' }, g);
+  }, 'Trabajo: antigüedad y desempeño');
+  // Sol y panel solar
+  icon(2140, g => {
+    add('circle', { cx: 112, cy: 22, r: 16, fill: '#f5b335' }, g);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      add('line', { x1: 112 + Math.cos(a) * 22, y1: 22 + Math.sin(a) * 22, x2: 112 + Math.cos(a) * 30, y2: 22 + Math.sin(a) * 30, stroke: '#f5b335', 'stroke-width': 4, 'stroke-linecap': 'round' }, g);
+    }
+    add('polygon', { points: '20,60 110,60 130,118 0,118', fill: '#3b86f2' }, g);
+    add('line', { x1: 65, y1: 60, x2: 65, y2: 118, stroke: '#fff', 'stroke-width': 3 }, g);
+    add('line', { x1: 42, y1: 60, x2: 32, y2: 118, stroke: '#fff', 'stroke-width': 3 }, g);
+    add('line', { x1: 88, y1: 60, x2: 98, y2: 118, stroke: '#fff', 'stroke-width': 3 }, g);
+    add('line', { x1: 10, y1: 89, x2: 120, y2: 89, stroke: '#fff', 'stroke-width': 3 }, g);
+    add('rect', { x: 60, y: 118, width: 10, height: 22, fill: '#1f63d1' }, g);
+  }, 'Tecnología más barata y vacaciones por antigüedad');
+</script>
+
+<div class="key" style="position:absolute">
+  <div class="e"><b>Curva de la experiencia:</b> mientras más veces hacemos algo, menos tiempo y dinero nos cuesta.</div>
+  <div class="a"><b>Antigüedad:</b> el tiempo que llevamos en un trabajo; nos da derechos como vacaciones y prima.</div>
+</div>
+</body>
+</html>
